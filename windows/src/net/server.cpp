@@ -56,6 +56,8 @@ void Server::Close()
 {
 	logger << "[SERVER] Closing...\n";
 
+	adb::kill(port);
+
 	acceptor.close();
 	udpsocket.close();
 	
@@ -70,8 +72,6 @@ void Server::Close()
 	{
 		thread.join();
 	}
-
-	adb::kill(port);
 
 	logger << "[SERVER] Closed.\n";
 }
