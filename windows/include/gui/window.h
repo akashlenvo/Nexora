@@ -32,6 +32,7 @@ public:
 	wxButton* GetAdjustmentsButton();
 	wxButton* GetSwapButton();
 	wxStaticText* GetStatsText();
+	wxTaskBarIcon* GetTaskbarIcon();
 private:
 	wxTaskBarIcon* taskbarIcon;
 	Canvas* canvas;

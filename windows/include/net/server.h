@@ -38,8 +38,8 @@ public:
 
 	struct ConnectionListener
 	{
-		virtual void OnDeviceConnected() const = 0;
-		virtual void OnDeviceDisconnected() const = 0;
+		virtual void OnDeviceConnected(std::string device) const = 0;
+		virtual void OnDeviceDisconnected(std::string device) const = 0;
 	};
 
 	struct DeviceInfo

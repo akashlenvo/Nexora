@@ -92,13 +92,15 @@ bool Application::OnInit()
 	return true;
 }
 
-void Application::OnDeviceConnected() const
+void Application::OnDeviceConnected(std::string device) const
 {
+	mainWindow->GetTaskbarIcon()->ShowBalloon("Device connected", "Device " + device + " connected!", 10, wxICON_INFORMATION);
 	UpdateAvailableDevices();
 }
 
-void Application::OnDeviceDisconnected() const
+void Application::OnDeviceDisconnected(std::string device) const
 {
+	mainWindow->GetTaskbarIcon()->ShowBalloon("Device disconnected", "Device " + device + " disconnected!", 10, wxICON_INFORMATION);
 	UpdateAvailableDevices();
 }
 

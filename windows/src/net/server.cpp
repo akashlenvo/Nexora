@@ -194,7 +194,7 @@ void Server::TCPDoAccept()
 			auto conn = std::make_shared<Connection>(*this, std::move(socket), name, std::bind(&Server::OnConnectionDisconnected, this, std::placeholders::_1));
 			connections.push_back(std::move(conn));
 
-			connectionListener.OnDeviceConnected();
+			connectionListener.OnDeviceConnected(name);
 		}
 
 		TCPDoAccept();
@@ -223,5 +223,5 @@ void Server::StartReceive()
 void Server::OnConnectionDisconnected(std::shared_ptr<Connection> connection)
 {
 	connections.erase(std::remove(connections.begin(), connections.end(), connection), connections.end());
-	connectionListener.OnDeviceDisconnected();
+	connectionListener.OnDeviceDisconnected(connection->name);
 }

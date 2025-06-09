@@ -174,3 +174,8 @@ wxStaticText* Window::GetStatsText()
 {
 	return statsText;
 }
+
+wxTaskBarIcon* Window::GetTaskbarIcon()
+{
+	return taskbarIcon;
+}

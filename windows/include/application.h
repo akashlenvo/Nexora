@@ -15,8 +15,8 @@ public:
 
 	virtual bool OnInit();
 	
-	virtual void OnDeviceConnected() const override;
-	virtual void OnDeviceDisconnected() const override;
+	virtual void OnDeviceConnected(std::string device) const override;
+	virtual void OnDeviceDisconnected(std::string device) const override;
 
 private:
 	Window* mainWindow;
