@@ -218,7 +218,7 @@ class ConnectionManager private constructor() : Connection.Listener {
             try {
                 tcpConn = TCPConnection(ipAddress, port, false, this@ConnectionManager)
                 udpConn = UDPConnection(ipAddress, port)
-                tcpConn!!.send("AndroidClient".toByteArray())
+                tcpConn!!.send(android.os.Build.MODEL.toByteArray())
                 connectionStateCallback?.onConnectionSuccessful(Mode.WIFI)
             } catch (e: Connection.ConnectionFailedException) {
                 Log.e(TAG, "Connection manager: ${e.message}")
@@ -235,7 +235,7 @@ class ConnectionManager private constructor() : Connection.Listener {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 tcpConn = TCPConnection("127.0.0.1", port, true, this@ConnectionManager)
-                tcpConn!!.send("AndroidClient".toByteArray())
+                tcpConn!!.send(android.os.Build.MODEL.toByteArray())
                 connectionStateCallback?.onConnectionSuccessful(Mode.USB)
             } catch (e: Connection.ConnectionFailedException) {
                 Log.e(TAG, "Connection manager: ${e.message}")
