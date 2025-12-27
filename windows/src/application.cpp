@@ -10,6 +10,8 @@
 
 Application::Application()
 {
+	SetAppearance(Appearance::System);
+
 	Settings::load();
 	wxInitAllImageHandlers();
 	//wxImageHandler::
