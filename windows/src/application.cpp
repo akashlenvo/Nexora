@@ -25,8 +25,10 @@ Application::Application()
 		// in case the image is rotated
 		if (image.GetWidth() == cameraWidth && image.GetHeight() == cameraHeight || image.GetWidth() == cameraHeight && image.GetHeight() == cameraWidth)
 		{
-			mainWindow->GetCanvas()->Render(image);
 			UpdateFrameStats(stats);
+			this->CallAfter([this, image]() {
+				mainWindow->GetCanvas()->Render(image);
+			});
 
 			// Send the current image frame to the DirechShow Virtual Camera filter
 			scSendFrame(camera, stream->GetBGR(image));
@@ -248,6 +250,8 @@ void Application::SetVideoOptions(int width, int height, int aspectRatioW, int a
 	cameraHeight = height;
 	cameraAspectRatioW = aspectRatioW;
 	cameraAspectRatioH = aspectRatioH;
+
+	mainWindow->GetCanvas()->ClearBeforeNextRender();
 
 	// The canvas and scCamera should have the correct dimensions and aspect ratios
 	// corresponding to the indicated orientation to correctly display a rotated image
