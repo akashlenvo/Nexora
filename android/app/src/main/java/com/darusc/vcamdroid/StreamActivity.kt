@@ -1,97 +1,109 @@
 package com.darusc.vcamdroid
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.util.Size
+import android.view.SurfaceHolder
+import android.view.WindowManager
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.AspectRatio
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.ImageProxy
-import androidx.constraintlayout.widget.ConstraintSet
 import com.darusc.vcamdroid.databinding.ActivityStreamBinding
-import com.darusc.vcamdroid.networking.ConnectionManager
-import com.darusc.vcamdroid.video.Camera
-import com.darusc.vcamdroid.video.toJpeg
+import com.pedro.common.ConnectChecker
+import com.pedro.encoder.input.video.CameraHelper
+import com.pedro.rtspserver.RtspServerCamera2
 
-class StreamActivity : AppCompatActivity(), ConnectionManager.ConnectionStateCallback {
+class StreamActivity : AppCompatActivity(), ConnectChecker, SurfaceHolder.Callback {
 
     private val TAG = "VCamdroid"
-
     private lateinit var viewBinding: ActivityStreamBinding
+    private lateinit var rtspServer: RtspServerCamera2
 
-    private lateinit var camera: Camera
-    private var jpegQuality = 80
-    private val connectionManager: ConnectionManager = ConnectionManager.getInstance(this)
+    // Configuration
+    private val vBitrate = 12000 * 1024 // 12 Mbps for 4K
+    private val aBitrate = 128 * 1024
+    private val width = 3840
+    private val height = 2160
+    private val fps = 30
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
         viewBinding = ActivityStreamBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
 
-        camera = Camera(
-            viewBinding.viewFinder.surfaceProvider,
-            ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888,
-            ::processImage,
-            this,
-            this
-        )
+        rtspServer = RtspServerCamera2(viewBinding.surfaceView, this, 8554)
 
-        camera.start()
+        viewBinding.surfaceView.holder.addCallback(this)
 
-        connectionManager.setOnBytesReceivedCallback { buffer, bytes ->
-            val type = buffer[0]
-            when(type) {
-                ConnectionManager.PacketType.RESOLUTION -> {
-                    val width = (buffer[1].toInt() and 0xFF) or (buffer[2].toInt() shl 8)
-                    val height = (buffer[3].toInt() and 0xFF) or (buffer[4].toInt() shl 8)
-                    camera.start(Size(width, height))
-                    setPreviewAspectRatio(camera.aspectRation)
-                }
-                ConnectionManager.PacketType.CAMERA -> {
-                    val back = buffer[1].toInt() == 0x01;
-                    camera.start(
-                        if(back) CameraSelector.DEFAULT_BACK_CAMERA
-                        else CameraSelector.DEFAULT_FRONT_CAMERA
-                    )
-                }
-                ConnectionManager.PacketType.QUALITY -> {
-                    jpegQuality = buffer[1].toInt()
-                }
-                ConnectionManager.PacketType.WB -> {
-                    camera.start(buffer[1].toInt())
-                }
-                ConnectionManager.PacketType.EFFECT -> {
-                    camera.start(buffer[1].toShort())
-                }
+//        val resolutions = rtspServer.resolutionsBack
+//        for (size in resolutions) {
+//            Log.d(TAG, "Supported Size: ${size.width} x ${size.height}")
+//        }
+    }
+
+    override fun surfaceCreated(holder: SurfaceHolder) {
+        if (holder.surface != null && holder.surface.isValid) {
+            rtspServer.startPreview(CameraHelper.Facing.BACK, width, height)
+            startStream()
+        }
+    }
+
+    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+        // RtspServerCamera2 handles orientation automatically
+    }
+
+    override fun surfaceDestroyed(holder: SurfaceHolder) {
+        if (rtspServer.isStreaming) rtspServer.stopStream()
+        rtspServer.stopPreview()
+    }
+
+    private fun startStream() {
+        if (!rtspServer.isStreaming) {
+            val prepared = try {
+                rtspServer.prepareVideo(width, height, fps, vBitrate, 0)
+            } catch (e: Exception) {
+                false
+            }
+
+            if (prepared) {
+                // rtspServer.prepareAudio(aBitrate, 44100, true, true, true)
+                rtspServer.startStream("rtsp://localhost:8554/live")
+                Log.d(TAG, "Server started")
+            } else {
+                Toast.makeText(this, "Error preparing stream", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    override fun onDisconnected() {
-        Log.e(TAG, "Connection disconnected")
-        Toast.makeText(this, "Connection interrupted!", Toast.LENGTH_LONG).show()
-        finish()
+    override fun onConnectionSuccess() {
+        runOnUiThread { Toast.makeText(this, "Client Connected", Toast.LENGTH_SHORT).show() }
+        Log.d(TAG, "Connection success")
     }
 
-    private fun processImage(image: ImageProxy) {
-        val bytes = image.toJpeg(jpegQuality)
-        bytes?.let {
-            connectionManager.sendVideoStreamFrame(bytes)
-        }
-        image.close()
+    override fun onConnectionFailed(reason: String) {
+        runOnUiThread { Toast.makeText(this, "Connection failed: $reason", Toast.LENGTH_SHORT).show() }
+        rtspServer.stopStream()
     }
 
-    private fun setPreviewAspectRatio(aspectRatio: String) {
-        runOnUiThread {
-            val constraintSet = ConstraintSet().apply {
-                clone(viewBinding.root)
-                setDimensionRatio(viewBinding.viewFinder.id, aspectRatio)
-            }
-            constraintSet.applyTo(viewBinding.root)
-        }
+    override fun onConnectionStarted(url: String) {
+        Log.d(TAG, "Connection $url started")
+    }
+
+    override fun onNewBitrate(bitrate: Long) {
+        Log.d(TAG, "New bitrate: $bitrate")
+    }
+
+    override fun onDisconnect() {
+        runOnUiThread { Toast.makeText(this, "Client Disconnected", Toast.LENGTH_SHORT).show() }
+        Log.d(TAG, "Disconnected")
+    }
+
+    override fun onAuthError() {
+        runOnUiThread { Toast.makeText(this, "Auth Error", Toast.LENGTH_SHORT).show() }
+        rtspServer.stopStream()
+    }
+
+    override fun onAuthSuccess() {
+        Log.d(TAG, "Auth Success")
     }
 }
