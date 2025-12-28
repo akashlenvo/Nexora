@@ -7,11 +7,18 @@
 #include <wx/msw/private.h>
 #include <wx/dc.h>
 #include <wx/artprov.h>
+#include <wx/settings.h>
 
 Window::Window(Server::HostInfo hostinfo)
 	: wxFrame(nullptr, wxID_ANY, "VCamdroid", wxDefaultPosition, wxSize(500, 450), wxDEFAULT_FRAME_STYLE & ~wxMAXIMIZE_BOX & ~wxRESIZE_BORDER)
 {
 	wxPanel* panel = new wxPanel(this, wxID_ANY);
+	// Manually set panel's background color to system color for dark mode to work properly
+	if (wxSystemSettings::GetAppearance().IsDark())
+	{
+		panel->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
+	}
+
 	wxBoxSizer* topsizer = new wxBoxSizer(wxVERTICAL);
 
 	taskbarIcon = new wxTaskBarIcon();

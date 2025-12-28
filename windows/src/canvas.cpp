@@ -9,8 +9,12 @@ Canvas::Canvas(wxWindow* parent, wxPoint position, wxSize size)
 {
 	drawX = 0;
 	drawY = 0;
+	
 	SetBackgroundStyle(wxBG_STYLE_PAINT);
+	SetDoubleBuffered(false);
+	
 	this->Bind(wxEVT_PAINT, &Canvas::OnPaint, this);
+	this->Bind(wxEVT_ERASE_BACKGROUND, &Canvas::OnEraseBackground, this);
 }
 
 void Canvas::Render(const wxImage& image)
@@ -23,7 +27,7 @@ void Canvas::Render(const wxImage& image)
 		return;
 
 	shouldDraw = true;
-	this->Refresh();
+	this->Refresh(false);
 	this->Update();
 }
 
@@ -59,11 +63,21 @@ void Canvas::SetAspectRatio(int w, int h)
 	}
 }
 
+void Canvas::ClearBeforeNextRender()
+{
+	shouldClear = true;
+}
+
 void Canvas::OnPaint(wxPaintEvent& event)
 {
 	wxAutoBufferedPaintDC dc(this);
-	dc.Clear();
 	
+	if (shouldClear)
+	{
+		dc.Clear();
+		shouldClear = false;
+	}
+
 	if (shouldDraw)
 	{
 		dc.DrawBitmap(bitmap, drawX, drawY, false);
@@ -71,7 +85,13 @@ void Canvas::OnPaint(wxPaintEvent& event)
 	else
 	{
 		dc.SetBrush(*wxTRANSPARENT_BRUSH);
-		dc.SetPen(*wxGREY_PEN);
+		dc.SetPen(*wxBLACK_PEN);
 		dc.DrawRectangle(0, 0, size.x, size.y);
 	}
+}
+
+void Canvas::OnEraseBackground(wxEraseEvent& event)
+{
+	// Empty to remove flickering created by repainting the background
+	// before actually rendering the video frame
 }
