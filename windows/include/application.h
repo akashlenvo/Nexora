@@ -5,6 +5,7 @@
 #include "gui/window.h"
 #include "net/server.h"
 #include "stream.h"
+#include "rtsp/receiver.h"
 
 #include "softcam/softcam.h"
 
@@ -26,6 +27,7 @@ private:
 	int cameraAspectRatioW, cameraAspectRatioH;
 	std::unique_ptr<Server> server;
 	std::unique_ptr<Stream> stream;
+	std::unique_ptr<Receiver> receiver;
 	bool backCameraActive;
 
 	void UpdateAvailableDevices() const;

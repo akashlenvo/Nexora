@@ -35,8 +35,11 @@ Application::Application()
 		}
 	});
 
-	server = std::make_unique<Server>(6969, *this, *stream);
-	server->Start();
+	receiver = std::make_unique<Receiver>("rtsp://192.168.100.59:8554/live", *stream);
+	receiver->Start();
+
+	server = std::make_unique<Server>(6969, *this);
+	//server->Start();
 
 	mainWindow = new Window(server->GetHostInfo());
 
@@ -284,8 +287,8 @@ void Application::SetVideoOptions(int width, int height, int aspectRatioW, int a
 
 void Application::UpdateFrameStats(Stream::FrameStats stats)
 {
-	if (Settings::get("SHOW_STATS"))
+	/*if (Settings::get("SHOW_STATS"))
 	{
 		mainWindow->GetStatsText()->SetLabel(wxString::Format("frame time: %lldms | frame size: %lldkb", stats.time, stats.size / 1024));
-	}
+	}*/
 }

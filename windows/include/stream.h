@@ -6,7 +6,7 @@
 #include <vector>
 #include <chrono>
 
-#include "net/receiver.h"
+#include "rtsp/receiver.h"
 
 class Stream : public Receiver::FrameReceivedListener
 {
@@ -41,7 +41,7 @@ public:
 
 	Stream(OnFrameReadyCallback fn);
 	
-	virtual void OnFrameReceived(const unsigned char* bytes, size_t length) const override;
+	virtual void OnFrameReceived(unsigned char* bytes, int width, int height) const override;
 	
 	/// Rotates the image stream by 90 degrees counterclockwise
 	int RotateLeft();

@@ -155,7 +155,7 @@ xcopy "$(ProjectDir)3rdparty\softcam\examples\softcam_installer\x64\Release\soft
     <ClCompile Include="src\gui\imgadjdlg.cpp" />
     <ClCompile Include="src\gui\qrconview.cpp" />
     <ClCompile Include="src\net\connection.cpp" />
-    <ClCompile Include="src\net\receiver.cpp" />
+    <ClCompile Include="src\rtsp\framescaler.cpp" />
     <ClCompile Include="src\stream.cpp" />
     <ClCompile Include="src\canvas.cpp" />
     <ClCompile Include="src\main.cpp">
@@ -171,7 +171,9 @@ xcopy "$(ProjectDir)3rdparty\softcam\examples\softcam_installer\x64\Release\soft
     <ClInclude Include="include\gui\imgadjdlg.h" />
     <ClInclude Include="include\gui\qrconview.h" />
     <ClInclude Include="include\net\connection.h" />
-    <ClInclude Include="include\net\receiver.h" />
+    <ClInclude Include="include\rtsp\ffmpeg.h" />
+    <ClInclude Include="include\rtsp\framescaler.h" />
+    <ClInclude Include="include\rtsp\receiver.h" />
     <ClInclude Include="include\stream.h" />
     <ClInclude Include="include\canvas.h" />
     <ClInclude Include="include\logger.h" />
@@ -180,6 +182,9 @@ xcopy "$(ProjectDir)3rdparty\softcam\examples\softcam_installer\x64\Release\soft
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\resource.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\rtsp\receiver.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

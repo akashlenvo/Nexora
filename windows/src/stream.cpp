@@ -11,7 +11,7 @@ Stream::Stream(OnFrameReadyCallback fn) : onFrameReady(fn)
 	adjustments = { 0, 0, 80 };
 }
 
-void Stream::OnFrameReceived(const unsigned char* bytes, size_t length) const
+void Stream::OnFrameReceived(unsigned char* bytes, int width, int height) const
 {
 	if (closed || paused)
 		return;
@@ -21,17 +21,19 @@ void Stream::OnFrameReceived(const unsigned char* bytes, size_t length) const
 	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - previousTimepoint);
 	previousTimepoint = now;
 
-	// Load the image directly from memory
-	// https://docs.wxwidgets.org/trunk/classwx_memory_input_stream.html
-	wxMemoryInputStream stream(bytes, length);
-
 	// Disable error message box
 	wxLogNull noLog;
-	image.LoadFile(stream, wxBITMAP_TYPE_JPEG);
+	
+	wxImage img(width, height);
+	if (!img.IsOk())
+		return;
+
+	// *3 because the image format is always 24bit RGB
+	std::memcpy(img.GetData(), bytes, width * height * 3);
 
 	if (onFrameReady)
 	{
-		onFrameReady(ApplyFrameTransformsAndAdjustments(), { duration.count(), length });
+		onFrameReady(img, { duration.count(), (size_t)(width * height * 3)});
 	}
 }
 

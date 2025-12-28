@@ -45,7 +45,10 @@
     <ClCompile Include="src\net\connection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\net\receiver.cpp">
+    <ClCompile Include="src\rtsp\receiver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rtsp\framescaler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -80,10 +83,16 @@
     <ClInclude Include="include\net\connection.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\net\receiver.h">
+    <ClInclude Include="include\adb.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\adb.h">
+    <ClInclude Include="include\rtsp\receiver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\rtsp\framescaler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\rtsp\ffmpeg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
