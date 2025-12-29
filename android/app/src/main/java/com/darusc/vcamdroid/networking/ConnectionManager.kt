@@ -1,21 +1,13 @@
 package com.darusc.vcamdroid.networking
 
 import android.util.Log
-import androidx.camera.core.processing.Packet
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.InputStream
 import java.io.OutputStream
-import java.net.DatagramPacket
-import java.net.DatagramSocket
-import java.net.InetAddress
 import java.net.Socket
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.experimental.and
-import kotlin.experimental.or
-import kotlin.math.ceil
-import kotlin.math.min
 
 class ConnectionManager private constructor() : Connection.Listener {
 
@@ -62,14 +54,13 @@ class ConnectionManager private constructor() : Connection.Listener {
     private var onBytesReceivedCallback: ((buffer: ByteArray, bytes: Int) -> Unit)? = null
 
     private var tcpConn: TCPConnection? = null
-    private var udpConn: UDPConnection? = null
 
     /**
      * Active connection. Prioritize UDP connection if available
      * otherwise fall back to the TCP Conneciton
      */
     private val connection
-        get() = (udpConn ?: tcpConn) as Connection
+        get() = (tcpConn) as Connection
 
     private var streamingEnabled = false
 
@@ -83,7 +74,7 @@ class ConnectionManager private constructor() : Connection.Listener {
      * Wrapper around a socket to manage the TCP connection.
      * Using it only to send the video stream. No packet receiving implementation.
      */
-    private inner class UDPConnection(
+    /* private inner class UDPConnection(
         ipAddress: String,
         private val port: Int,
     ) : Connection() {
@@ -123,7 +114,7 @@ class ConnectionManager private constructor() : Connection.Listener {
         override fun close() {
             socket.close()
         }
-    }
+    }*/
 
     /**
      * Wrapper around a socket to manage the TCP connection
@@ -146,6 +137,9 @@ class ConnectionManager private constructor() : Connection.Listener {
 
         private var thread: Thread
         private val running = AtomicBoolean(true)
+
+        override val localIpAddress: String
+            get() = socket.localAddress.hostAddress!!
 
         init {
             try {
@@ -211,14 +205,19 @@ class ConnectionManager private constructor() : Connection.Listener {
 
     /**
      * Connect in WIFI mode.
-     * Tcp socket is used only for commands, video frames are streamed using Udp
      */
     fun connect(ipAddress: String, port: Int) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 tcpConn = TCPConnection(ipAddress, port, false, this@ConnectionManager)
-                udpConn = UDPConnection(ipAddress, port)
-                tcpConn!!.send(android.os.Build.MODEL.toByteArray())
+
+                val descriptor = DeviceDescriptor(
+                    android.os.Build.MODEL,
+                    "rtsp://${tcpConn!!.localIpAddress}:8554/live",
+                    listOf(Pair(640, 480))
+                )
+                tcpConn!!.send(descriptor.serialize())
+
                 connectionStateCallback?.onConnectionSuccessful(Mode.WIFI)
             } catch (e: Connection.ConnectionFailedException) {
                 Log.e(TAG, "Connection manager: ${e.message}")
@@ -229,56 +228,24 @@ class ConnectionManager private constructor() : Connection.Listener {
 
     /**
      * Connect in USB mode (through adb)
-     * Tcp socket is used both for connection and streaming (adb doesn't allow Udp port forwarding)
      */
     fun connect(port: Int) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 tcpConn = TCPConnection("127.0.0.1", port, true, this@ConnectionManager)
-                tcpConn!!.send(android.os.Build.MODEL.toByteArray())
+
+                val descriptor = DeviceDescriptor(
+                    android.os.Build.MODEL,
+                    "rtsp://${tcpConn!!.localIpAddress}:8554/live",
+                    listOf(Pair(640, 480))
+                )
+                tcpConn!!.send(descriptor.serialize())
+
                 connectionStateCallback?.onConnectionSuccessful(Mode.USB)
             } catch (e: Connection.ConnectionFailedException) {
                 Log.e(TAG, "Connection manager: ${e.message}")
                 connectionStateCallback?.onConnectionFailed(Mode.USB)
             }
-        }
-    }
-
-    fun sendVideoStreamFrame(frame: ByteArray, withCoroutine: Boolean = false) {
-        if (!streamingEnabled || connection == null) {
-            return
-        }
-
-        when (withCoroutine) {
-            false -> sendVideoStreamFrame(frame)
-            true -> CoroutineScope(Dispatchers.IO).launch { sendVideoStreamFrame(frame) }
-        }
-    }
-
-    private fun sendVideoStreamFrame(frame: ByteArray) {
-        // Split the frame in n segments of size maxPacketSize
-        // to send over the active connection
-        var segments = ceil(frame.size / (connection.maxPacketSize.toDouble() - 3)).toInt()
-
-        // Packet to send of size maxPacketSize
-        // First byte is the packet type
-        // Second byte is the current frame segment number
-        // Third byte is the total number of segments
-        val packet = ByteArray(connection.maxPacketSize)
-        packet[0] = PacketType.FRAME
-        packet[2] = segments.toByte()
-
-        var start = 0
-        for (i in 1..segments) {
-            packet[1] = i.toByte()
-
-            // Copy the segment section into the packet from frame bytes
-            val end = min(frame.size, start + connection.maxPacketSize - 3)
-            val size = end - start
-            System.arraycopy(frame, start, packet, 3, size)
-
-            connection.send(packet, size + 3)
-            start = end
         }
     }
 
@@ -293,7 +260,6 @@ class ConnectionManager private constructor() : Connection.Listener {
     override fun onDisconnected() {
         CoroutineScope(Dispatchers.Main).launch {
             streamingEnabled = false
-            udpConn?.close()
             tcpConn?.close()
             connectionStateCallback?.onDisconnected()
         }

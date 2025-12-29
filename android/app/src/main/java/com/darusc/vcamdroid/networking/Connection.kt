@@ -13,6 +13,8 @@ abstract class Connection {
         fun onDisconnected()
     }
 
+    abstract val localIpAddress: String
+
     abstract fun send(bytes: ByteArray)
     abstract fun send(bytes: ByteArray, size: Int)
     abstract fun close()

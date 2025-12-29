@@ -18,10 +18,10 @@ class StreamActivity : AppCompatActivity(), ConnectChecker, SurfaceHolder.Callba
     private lateinit var rtspServer: RtspServerCamera2
 
     // Configuration
-    private val vBitrate = 12000 * 1024 // 12 Mbps for 4K
+    private val vBitrate = 5000 * 1024 // 12 Mbps for 4K
     private val aBitrate = 128 * 1024
-    private val width = 3840
-    private val height = 2160
+    private val width = 640
+    private val height = 480
     private val fps = 30
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,11 +34,6 @@ class StreamActivity : AppCompatActivity(), ConnectChecker, SurfaceHolder.Callba
         rtspServer = RtspServerCamera2(viewBinding.surfaceView, this, 8554)
 
         viewBinding.surfaceView.holder.addCallback(this)
-
-//        val resolutions = rtspServer.resolutionsBack
-//        for (size in resolutions) {
-//            Log.d(TAG, "Supported Size: ${size.width} x ${size.height}")
-//        }
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
