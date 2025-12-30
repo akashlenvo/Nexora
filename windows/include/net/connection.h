@@ -4,7 +4,7 @@
 #include <functional>
 #include <asio.hpp>
 
-#include "receiver.h"
+#include "devicedescriptor.h"
 
 /// <summary>
 /// Manages a TCP connection
@@ -18,16 +18,16 @@ public:
 	using udp = asio::ip::udp;
 	using OnDisconnectedListener = std::function<void(std::shared_ptr<Connection>)>;
 
-	Connection(const Receiver& receiver, tcp::socket socket, std::string& name, OnDisconnectedListener onDisconnectedListener);
+	Connection(tcp::socket socket, DeviceDescriptor& descriptor, OnDisconnectedListener onDisconnectedListener);
 private:
 
 	OnDisconnectedListener onDisconnectedListener;
 
 	tcp::socket socket;
-	const Receiver& receiver;
+	unsigned char* byteBuffer;
 
 	bool active;
-	std::string name;
+	DeviceDescriptor descriptor;
 
 	/// <summary>
 	/// Connected devices only send their name once after connecting.

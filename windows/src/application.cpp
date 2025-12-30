@@ -35,11 +35,11 @@ Application::Application()
 		}
 	});
 
-	receiver = std::make_unique<Receiver>("rtsp://192.168.100.59:8554/live", *stream);
-	receiver->Start();
+	rtspManager = std::make_unique<RTSP::Manager>(*stream);
+	// receiver->Start();
 
 	server = std::make_unique<Server>(6969, *this);
-	//server->Start();
+	server->Start();
 
 	mainWindow = new Window(server->GetHostInfo());
 
@@ -49,11 +49,11 @@ Application::Application()
 	mainWindow->GetResolutionChoice()->Bind(wxEVT_CHOICE, &Application::OnResolutionChanged, this);
 	mainWindow->GetAdjustmentsButton()->Bind(wxEVT_BUTTON, &Application::ShowAdjustmentsDialog, this);
 
-	mainWindow->GetSourceChoice()->Bind(wxEVT_CHOICE, [&](const wxEvent& arg) {
+	mainWindow->GetSourceChoice()->Bind(wxEVT_CHOICE, [&](const wxCommandEvent& arg) {
 		int selection = mainWindow->GetSourceChoice()->GetSelection();
-		server->SetStreamingDevice(selection);
+		rtspManager->SetStreamingDevice(selection);
 
-		mainWindow->GetResolutionChoice()->SetSelection(0);
+		mainWindow->GetResolutionChoice()->SetSelection(1);
 	});
 
 	mainWindow->GetRotateLeftButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
@@ -84,7 +84,7 @@ Application::Application()
 
 	mainWindow->GetSwapButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
 		backCameraActive = !backCameraActive;
-		server->SetStreamingCamera(backCameraActive);
+		//server->SetStreamingCamera(backCameraActive);
 	});
 
 	// Create a camera handle to access the DirechShow Virtual Camera filter
@@ -99,29 +99,29 @@ bool Application::OnInit()
 	return true;
 }
 
-void Application::OnDeviceConnected(std::string device) const
+void Application::OnDeviceConnected(DeviceDescriptor& descriptor) const
 {
-	mainWindow->GetTaskbarIcon()->ShowBalloon("Device connected", "Device " + device + " connected!", 10, wxICON_INFORMATION);
+	mainWindow->GetTaskbarIcon()->ShowBalloon("New stream available", "Streaming device " + descriptor.name() + " available!", 10, wxICON_INFORMATION);
+	rtspManager->AddDescriptor(descriptor);
 	UpdateAvailableDevices();
 }
 
-void Application::OnDeviceDisconnected(std::string device) const
+void Application::OnDeviceDisconnected(DeviceDescriptor& descriptor) const
 {
-	mainWindow->GetTaskbarIcon()->ShowBalloon("Device disconnected", "Device " + device + " disconnected!", 10, wxICON_INFORMATION);
+	mainWindow->GetTaskbarIcon()->ShowBalloon("Stream eneded", "Streaming device " + descriptor.name() + " disconnected!", 10, wxICON_INFORMATION);
+	rtspManager->RemoveDescriptor(descriptor);
 	UpdateAvailableDevices();
 }
 
 void Application::UpdateAvailableDevices() const
-{
-	auto deviceInfo = server->GetConnectedDevicesInfo();
-	
+{	
 	mainWindow->GetSourceChoice()->Clear();
-	for (auto& info : deviceInfo)
+	for (auto& desc : rtspManager->GetDescriptors())
 	{
-		mainWindow->GetSourceChoice()->Append(info.name);
+		mainWindow->GetSourceChoice()->Append(desc.name());
 	}
 
-	mainWindow->GetSourceChoice()->SetSelection(server->GetStreamingDevice());
+	mainWindow->GetSourceChoice()->SetSelection(rtspManager->GetStreamingDevice());
 }
 
 void Application::OnMenuEvent(wxCommandEvent& event)
@@ -130,8 +130,8 @@ void Application::OnMenuEvent(wxCommandEvent& event)
 	{
 		case Window::MenuIDs::DEVICES:
 		{
-			DevicesView devlistview(server->GetConnectedDevicesInfo());
-			devlistview.ShowModal();
+			//DevicesView devlistview(server->GetConnectedDevicesInfo());
+			//devlistview.ShowModal();
 			break;
 		}
 
@@ -221,7 +221,7 @@ void Application::ShowAdjustmentsDialog(wxCommandEvent& event)
 {
 	ImgAdjDlg dialog(nullptr, stream->GetAdjustments());
 
-	dialog.Bind(EVT_BRIGHTNESS_CHANGED, [&](const wxCommandEvent& event) {
+	/*dialog.Bind(EVT_BRIGHTNESS_CHANGED, [&](const wxCommandEvent& event) {
 		stream->SetBrightnessAdjustment(event.GetInt());
 	});
 
@@ -242,7 +242,7 @@ void Application::ShowAdjustmentsDialog(wxCommandEvent& event)
 	dialog.Bind(EVT_EFFECT_CHANGED, [&](const wxCommandEvent& event) {
 		stream->SetEffectAdjustment(event.GetInt());
 		server->SetStreamingEffect(event.GetInt());
-	});
+	});*/
 
 	dialog.ShowModal();
 }
@@ -268,7 +268,7 @@ void Application::SetVideoOptions(int width, int height, int aspectRatioW, int a
 	}
 
 	// But the client should still stream in the landscape (default) orientation
-	server->SetStreamResolution(width, height);
+	//server->SetStreamResolution(width, height);
 
 	// Update scCamera resolution
 	if (camera != nullptr)

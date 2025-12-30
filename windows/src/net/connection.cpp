@@ -2,22 +2,22 @@
 
 #include "logger.h"
 
-Connection::Connection(const Receiver& receiver, tcp::socket socket, std::string& name, OnDisconnectedListener onDisconnectedListener)
-	: receiver(receiver),
+Connection::Connection(tcp::socket socket, DeviceDescriptor& descriptor, OnDisconnectedListener onDisconnectedListener) :
 	socket(std::move(socket)),
-	name(name),
+	descriptor(descriptor),
 	onDisconnectedListener(onDisconnectedListener)
 {
+	byteBuffer = new unsigned char[255];
 	active = false;
 	Read();
 }
 
 void Connection::Read()
 {
-	socket.async_read_some(receiver.GetBuffer(), [this](asio::error_code ec, size_t bytes) {
+	socket.async_read_some(asio::buffer(byteBuffer, 255), [this](asio::error_code ec, size_t bytes) {
 		if (!ec)
 		{
-			receiver.ReadSome(bytes);
+			/// TO DO...
 			Read();
 		}
 		else

@@ -6,43 +6,46 @@
 #include <thread>
 #include <atomic>
 
-class Receiver 
+namespace RTSP
 {
-public:
-
-    struct FrameReceivedListener
+    class Receiver 
     {
-        /// <summary>
-        /// Callback for when the full frame is received. 
-        /// Received frame will be in RGB 24bit format.
-        /// </summary>
-        /// <param name="bytes">Raw RGB data</param>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
-        virtual void OnFrameReceived(unsigned char* bytes, int width, int height) const = 0;
-    };
+    public:
+
+        struct FrameReceivedListener
+        {
+            /// <summary>
+            /// Callback for when the full frame is received. 
+            /// Received frame will be in RGB 24bit format.
+            /// </summary>
+            /// <param name="bytes">Raw RGB data</param>
+            /// <param name="width"></param>
+            /// <param name="height"></param>
+            virtual void OnFrameReceived(unsigned char* bytes, int width, int height) const = 0;
+        };
     
-    Receiver(std::string url, const FrameReceivedListener& frameReceivedListener);
-    ~Receiver();
+        Receiver(const FrameReceivedListener& frameReceivedListener);
+        ~Receiver();
 
-    void Start();
-    void Stop();
+        void Start(std::string url);
+        void Stop();
 
-private:
+    private:
 
-    /// <summary>
-    /// RTSP receving function that runs in its own thread 
-    /// </summary>
-    void Loop();
+        /// <summary>
+        /// RTSP receving function that runs in its own thread 
+        /// </summary>
+        void Loop();
 
-    bool OpenConnection(AVFormatContext** ctx);
-    bool FindVideoStream(AVFormatContext* ctx, int& streamIdx, AVCodecContext** codecCtx);
+        bool OpenConnection(AVFormatContext** ctx);
+        bool FindVideoStream(AVFormatContext* ctx, int& streamIdx, AVCodecContext** codecCtx);
 
-    std::string rtspUrl;
-    const FrameReceivedListener& frameReceivedListener;
+        std::string rtspUrl;
+        const FrameReceivedListener& frameReceivedListener;
 
-    std::thread workerThread;
-    std::atomic<bool> isRunning;
+        std::thread workerThread;
+        std::atomic<bool> isRunning;
 
-    FrameScaler scaler;
+        FrameScaler scaler;
+    };
 };

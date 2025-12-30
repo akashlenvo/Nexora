@@ -1,18 +1,16 @@
 #include "net/server.h"
 
+#include "net/devicedescriptor.h"
 #include "logger.h"
 #include "adb.h"
 
-Server::Server(int port, const ConnectionListener& connectionListener, const Receiver::FrameReceivedListener& frameReceivedListener)
-	: Receiver(1920 * 1080 * 3, 65472, frameReceivedListener),
+Server::Server(int port, const ConnectionListener& connectionListener) :
 	port(port),
 	connectionListener(connectionListener),
-	acceptor(tcp::acceptor(context, tcp::endpoint(tcp::v4(), port))),
-	udpsocket(context, udp::endpoint(asio::ip::udp::v4(), port))
+	acceptor(tcp::acceptor(context, tcp::endpoint(tcp::v4(), port)))
 {
 	streamingDevice = 0;
 	adb::start(port);
-	StartReceive();
 }
 
 Server::HostInfo Server::GetHostInfo()
@@ -59,7 +57,6 @@ void Server::Close()
 	adb::kill(port);
 
 	acceptor.close();
-	udpsocket.close();
 	
 	for (std::shared_ptr<Connection> conn : connections)
 	{
@@ -76,7 +73,7 @@ void Server::Close()
 	logger << "[SERVER] Closed.\n";
 }
 
-void Server::SetStreamResolution(unsigned short width, unsigned short height)
+/*void Server::SetStreamResolution(unsigned short width, unsigned short height)
 {
 	unsigned char bytes[5] = {
 		PacketType::RESOLUTION,							// First byte is the packet type
@@ -103,7 +100,7 @@ void Server::SetStreamingDevice(int device)
 	connections[device]->Send(startBytes, 2);
 	connections[device]->active = true;
 	
-	Reset();
+	// Reset();
 	logger << "[SERVER] Set UDP stream device: " << connections[device]->socket.remote_endpoint() << std::endl;
 
 	for (int i = 0; i < connections.size(); i++)
@@ -162,19 +159,7 @@ int Server::GetStreamingDevice()
 		}
 	}
 	return -1;
-}
-
-std::vector<Server::DeviceInfo> Server::GetConnectedDevicesInfo()
-{
-	std::vector<DeviceInfo> connectionInfo;
-	for (auto& connection : connections)
-	{
-		tcp::endpoint endpoint = connection->socket.remote_endpoint();
-		DeviceInfo info = { connection->name, endpoint.address().to_string(), endpoint.port() };
-		connectionInfo.push_back(info);
-	}
-	return connectionInfo;
-}
+}*/
 
 void Server::TCPDoAccept()
 {
@@ -183,45 +168,28 @@ void Server::TCPDoAccept()
 		{
 			logger << "[SERVER] Device connected." << socket.remote_endpoint() << std::endl;
 
-			// Read the only message sent by the client
+			// Read the only message sent by the client (the device descriptor)
 			// We need to read this here because the connection listener
 			// needs all the data sent by the client (trough GetConnectedDevicesInfo)
 			// otherwise the connection would need to be passed to the connection
-			std::array<char, 128> buf;
-			size_t bytes = socket.read_some(asio::buffer(buf, 128));
-			std::string name(buf.data(), bytes);
+			std::array<char, 512> buffer;
+			size_t size = socket.read_some(asio::buffer(buffer, 512));
+			
+			// auto ipaddress = socket.remote_endpoint().address().to_string();
+			auto descriptor = DeviceDescriptor::Create(buffer.data(), size);
 
-			auto conn = std::make_shared<Connection>(*this, std::move(socket), name, std::bind(&Server::OnConnectionDisconnected, this, std::placeholders::_1));
+			auto conn = std::make_shared<Connection>(std::move(socket), descriptor, std::bind(&Server::OnConnectionDisconnected, this, std::placeholders::_1));
 			connections.push_back(std::move(conn));
 
-			connectionListener.OnDeviceConnected(name);
+			connectionListener.OnDeviceConnected(descriptor);
 		}
 
 		TCPDoAccept();
 	});
 }
 
-void Server::StartReceive()
-{
-	udpsocket.async_receive_from(GetBuffer(), remote_endpoint, [&](const std::error_code& ec, size_t bytesReceived) {
-		if (!ec)
-		{
-			ReadSome(bytesReceived);
-
-			// Mechanism to synchronize the server with the client
-			// otherwise client might send the next segment of the 
-			// frame before the server finished processing the current 
-			// one result in loss of data
-			// The client waits to read some bytes after between sending segments
-			// udpsocket.send_to(asio::buffer("done"), remote_endpoint);
-
-			StartReceive();
-		}
-	});
-}
-
 void Server::OnConnectionDisconnected(std::shared_ptr<Connection> connection)
 {
 	connections.erase(std::remove(connections.begin(), connections.end(), connection), connections.end());
-	connectionListener.OnDeviceDisconnected(connection->name);
+	connectionListener.OnDeviceDisconnected(connection->descriptor);
 }

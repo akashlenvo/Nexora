@@ -5,7 +5,7 @@
 #include "gui/window.h"
 #include "net/server.h"
 #include "stream.h"
-#include "rtsp/receiver.h"
+#include "rtsp/manager.h"
 
 #include "softcam/softcam.h"
 
@@ -16,8 +16,8 @@ public:
 
 	virtual bool OnInit();
 	
-	virtual void OnDeviceConnected(std::string device) const override;
-	virtual void OnDeviceDisconnected(std::string device) const override;
+	virtual void OnDeviceConnected(DeviceDescriptor& descriptor) const override;
+	virtual void OnDeviceDisconnected(DeviceDescriptor& descriptor) const override;
 
 private:
 	Window* mainWindow;
@@ -27,7 +27,7 @@ private:
 	int cameraAspectRatioW, cameraAspectRatioH;
 	std::unique_ptr<Server> server;
 	std::unique_ptr<Stream> stream;
-	std::unique_ptr<Receiver> receiver;
+	std::unique_ptr<RTSP::Manager> rtspManager;
 	bool backCameraActive;
 
 	void UpdateAvailableDevices() const;

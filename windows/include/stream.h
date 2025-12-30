@@ -8,7 +8,7 @@
 
 #include "rtsp/receiver.h"
 
-class Stream : public Receiver::FrameReceivedListener
+class Stream : public RTSP::Receiver::FrameReceivedListener
 {
 public:
 	struct FrameStats
