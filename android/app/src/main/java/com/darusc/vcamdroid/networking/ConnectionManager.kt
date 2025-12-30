@@ -1,5 +1,6 @@
 package com.darusc.vcamdroid.networking
 
+import android.util.DisplayMetrics
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -50,25 +51,21 @@ class ConnectionManager private constructor() : Connection.Listener {
         }
     }
 
-    private var connectionStateCallback: ConnectionStateCallback? = null
-    private var onBytesReceivedCallback: ((buffer: ByteArray, bytes: Int) -> Unit)? = null
-
-    private var tcpConn: TCPConnection? = null
-
-    /**
-     * Active connection. Prioritize UDP connection if available
-     * otherwise fall back to the TCP Conneciton
-     */
-    private val connection
-        get() = (tcpConn) as Connection
-
-    private var streamingEnabled = false
-
     interface ConnectionStateCallback {
         fun onConnectionSuccessful(connectionMode: Mode) { }
         fun onConnectionFailed(connectionMode: Mode) { }
         fun onDisconnected() { }
     }
+
+    val localIpAddress: String
+        get() = tcpConn!!.localIpAddress
+
+    private var connectionStateCallback: ConnectionStateCallback? = null
+    private var onBytesReceivedCallback: ((buffer: ByteArray, bytes: Int) -> Unit)? = null
+
+    private var tcpConn: TCPConnection? = null
+
+    private var streamingEnabled = false
 
     /**
      * Wrapper around a socket to manage the TCP connection.
@@ -153,7 +150,7 @@ class ConnectionManager private constructor() : Connection.Listener {
                 thread = Thread { startReceiveBytesLoop() }
                 thread.start()
             } catch (e: Exception) {
-                throw ConnectionFailedException("$ipAddress:$port")
+                throw ConnectionFailedException("$ipAddress:$port", e.message ?: "")
             }
         }
 
@@ -210,14 +207,6 @@ class ConnectionManager private constructor() : Connection.Listener {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 tcpConn = TCPConnection(ipAddress, port, false, this@ConnectionManager)
-
-                val descriptor = DeviceDescriptor(
-                    android.os.Build.MODEL,
-                    "rtsp://${tcpConn!!.localIpAddress}:8554/live",
-                    listOf(Pair(640, 480))
-                )
-                tcpConn!!.send(descriptor.serialize())
-
                 connectionStateCallback?.onConnectionSuccessful(Mode.WIFI)
             } catch (e: Connection.ConnectionFailedException) {
                 Log.e(TAG, "Connection manager: ${e.message}")
@@ -233,19 +222,17 @@ class ConnectionManager private constructor() : Connection.Listener {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 tcpConn = TCPConnection("127.0.0.1", port, true, this@ConnectionManager)
-
-                val descriptor = DeviceDescriptor(
-                    android.os.Build.MODEL,
-                    "rtsp://${tcpConn!!.localIpAddress}:8554/live",
-                    listOf(Pair(640, 480))
-                )
-                tcpConn!!.send(descriptor.serialize())
-
                 connectionStateCallback?.onConnectionSuccessful(Mode.USB)
             } catch (e: Connection.ConnectionFailedException) {
                 Log.e(TAG, "Connection manager: ${e.message}")
                 connectionStateCallback?.onConnectionFailed(Mode.USB)
             }
+        }
+    }
+
+    fun sendDescriptor(descriptor: DeviceDescriptor) {
+        CoroutineScope(Dispatchers.IO).launch {
+            tcpConn?.send(descriptor.serialize())
         }
     }
 

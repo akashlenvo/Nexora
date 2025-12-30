@@ -29,22 +29,38 @@ DeviceDescriptor DeviceDescriptor::Create(const char* bytes, int size)
 
 	offset += 2 + url.size();
 	// Represents how many resolutions are provided
-	uint16_t resolutionCount = ReadInt16(bytes + offset);
+	uint16_t frontResolutionCount = ReadInt16(bytes + offset);
 	offset += 2;
 
-	std::vector<DeviceDescriptor::Resolution> resolutions;
-	for (int i = 0; i < resolutionCount; i++)
+	std::vector<DeviceDescriptor::Resolution> frontResolutions;
+	for (int i = 0; i < frontResolutionCount; i++)
 	{
 		// Each resolutions is given in pairs, first 2 bytes represents 
 		// the width, the next 2 bytes represents the height
 		auto w = ReadInt16(bytes + offset);
 		auto h = ReadInt16(bytes + offset + 2);
 
-		resolutions.push_back(DeviceDescriptor::Resolution(w, h));
+		frontResolutions.push_back(DeviceDescriptor::Resolution(w, h));
 		
 		offset += 4;
 	}
 
+	uint16_t backResolutionCount = ReadInt16(bytes + offset);
+	offset += 2;
 
-	return DeviceDescriptor(name, url, protocol, resolutions);
+	std::vector<DeviceDescriptor::Resolution> backResolutions;
+	for (int i = 0; i < backResolutionCount; i++)
+	{
+		// Each resolutions is given in pairs, first 2 bytes represents 
+		// the width, the next 2 bytes represents the height
+		auto w = ReadInt16(bytes + offset);
+		auto h = ReadInt16(bytes + offset + 2);
+
+		backResolutions.push_back(DeviceDescriptor::Resolution(w, h));
+
+		offset += 4;
+	}
+
+
+	return DeviceDescriptor(name, url, protocol, frontResolutions, backResolutions);
 }

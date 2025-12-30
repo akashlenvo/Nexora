@@ -44,9 +44,19 @@ struct DeviceDescriptor
 		return rtspUrl;
 	}
 
-	const std::vector<Resolution>& resolutions() const
+	const std::string& protocol() const
 	{
-		return availableResolutions;
+		return rtspProtocol;
+	}
+
+	const std::vector<Resolution>& frontResolutions() const
+	{
+		return availableFrontResolutions;
+	}
+
+	const std::vector<Resolution>& backResolutions() const
+	{
+		return availableBackResolutions;
 	}
 
 	bool operator==(const DeviceDescriptor& other) const
@@ -55,12 +65,16 @@ struct DeviceDescriptor
 	}
 
 private:
-	DeviceDescriptor(std::string name, std::string url, std::vector<Resolution> resolutions) 
+	DeviceDescriptor(std::string name, std::string url, std::string protocol, std::vector<Resolution> frontResolutions, std::vector<Resolution> backResolutions) 
 		: deviceName(name), 
 		rtspUrl(url), 
-		availableResolutions(resolutions) {}
+		rtspProtocol(protocol),
+		availableFrontResolutions(frontResolutions),
+		availableBackResolutions(backResolutions) {}
 	
 	std::string deviceName;
 	std::string rtspUrl;
-	std::vector<Resolution> availableResolutions;
+	std::string rtspProtocol;
+	std::vector<Resolution> availableFrontResolutions;
+	std::vector<Resolution> availableBackResolutions;
 };
