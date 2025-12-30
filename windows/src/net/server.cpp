@@ -10,7 +10,8 @@ Server::Server(int port, const ConnectionListener& connectionListener) :
 	acceptor(tcp::acceptor(context, tcp::endpoint(tcp::v4(), port)))
 {
 	streamingDevice = 0;
-	adb::start(port);
+	adb::reverse(port);
+	adb::forward(8554);
 }
 
 Server::HostInfo Server::GetHostInfo()

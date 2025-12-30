@@ -22,11 +22,17 @@ namespace RTSP
 		descriptors.erase(std::remove(descriptors.begin(), descriptors.end(), descriptor));
 	}
 
-	void Manager::SetStreamingDevice(int device)
+	void Manager::Connect2Stream(int descriptorId, int resolutionId)
 	{
-		logger << "[RTSP Manager] Set streaming device to " << descriptors[device].url() << "\n";
+		auto descriptor = descriptors[descriptorId];
+		auto url = descriptor.url();
+		auto resolution = descriptor.resolutions()[resolutionId];
+
+		logger << "[RTSP Manager] Connecting to stream " << url << "\n";
+		
 		Stop();
-		Start(descriptors[device].url());
+		
+		Start(url, descriptor.protocol(), resolution.first, resolution.second);
 	}
 
 	const std::vector<DeviceDescriptor>& Manager::GetDescriptors() const

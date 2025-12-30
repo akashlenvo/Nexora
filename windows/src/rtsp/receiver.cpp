@@ -15,14 +15,15 @@ namespace RTSP
 		Stop();
 	}
 
-	void Receiver::Start(std::string url) 
+	void Receiver::Start(std::string url, std::string protocol, int width, int height) 
 	{
 		if (isRunning)
 			return;
 	
+		this->rtspProtocol = protocol;
 		this->rtspUrl = url;
 		isRunning = true;
-		workerThread = std::thread(&Receiver::Loop, this);
+		workerThread = std::thread(&Receiver::Loop, this, width, height);
 	}
 
 	void Receiver::Stop() {
@@ -37,49 +38,68 @@ namespace RTSP
 
 	bool Receiver::OpenConnection(AVFormatContext** ctx) {
 		AVDictionary* options = nullptr;
-	
+		
+		av_dict_set(&options, "rtsp_transport", rtspProtocol.c_str(), 0);
+
 		// Low latency settings
-		av_dict_set(&options, "rtsp_transport", "udp", 0);
 		av_dict_set(&options, "fflags", "nobuffer", 0);
 		av_dict_set(&options, "flags", "low_delay", 0);
 
-		if (avformat_open_input(ctx, rtspUrl.c_str(), nullptr, &options) != 0) 
+		av_dict_set(&options, "probesize", "32768", 0);
+		av_dict_set(&options, "analyzeduration", "1000000", 0);
+
+		if (avformat_open_input(ctx, rtspUrl.c_str(), nullptr, &options) != 0)
 		{
 			logger << "[RTSP] Error: Could not open stream\n";
 			return false;
 		}
 
-		if (avformat_find_stream_info(*ctx, nullptr) < 0) 
+		// The resolution is known beforehand and the codec is always h264
+		// so we can skip this part
+		/*if (avformat_find_stream_info(*ctx, nullptr) < 0)
 		{
 			logger << "[RTSP] Error: Could not find stream info\n";
 			return false;
-		}
+		}*/
 
 		return true;
 	}
 
-	bool Receiver::FindVideoStream(AVFormatContext* ctx, int& streamIdx, AVCodecContext** codecCtx) {
+	bool Receiver::FindVideoStream(AVFormatContext* ctx, int& streamIdx, AVCodecContext** codecCtx, int width, int height) {
 		streamIdx = -1;
-		const AVCodec* codec = nullptr;
 
 		for (unsigned int i = 0; i < ctx->nb_streams; i++) 
 		{
 			if (ctx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) 
 			{
 				streamIdx = i;
-				AVCodecParameters* params = ctx->streams[i]->codecpar;
-				codec = avcodec_find_decoder(params->codec_id);
-
-				*codecCtx = avcodec_alloc_context3(codec);
-				avcodec_parameters_to_context(*codecCtx, params);
 				break;
 			}
 		}
 
-		if (streamIdx == -1 || !codec) 
+		if (streamIdx == -1) 
 		{
 			logger << "[RTSP] Error: No video stream found\n";
 			return false;
+		}
+
+		const AVCodec* codec = avcodec_find_decoder(AV_CODEC_ID_H264);
+		if (!codec)
+		{
+			logger << "[RTSP] Error: H264 decoder not found\n";
+			return false;
+		}
+
+		*codecCtx = avcodec_alloc_context3(codec);
+
+		avcodec_parameters_to_context(*codecCtx, ctx->streams[streamIdx]->codecpar);
+
+		(*codecCtx)->width = width;
+		(*codecCtx)->height = height;
+
+		if ((*codecCtx)->pix_fmt == AV_PIX_FMT_NONE) 
+		{
+			(*codecCtx)->pix_fmt = AV_PIX_FMT_YUV420P;
 		}
 
 		// Enable multithreading for decoding
@@ -94,7 +114,7 @@ namespace RTSP
 		return true;
 	}
 
-	void Receiver::Loop() 
+	void Receiver::Loop(int width, int height) 
 	{
 		AVFormatContext* formatCtx = nullptr;
 		AVCodecContext* codecCtx = nullptr;
@@ -104,7 +124,7 @@ namespace RTSP
 		if (!OpenConnection(&formatCtx))
 			return;
 
-		if (!FindVideoStream(formatCtx, videoStreamIdx, &codecCtx)) 
+		if (!FindVideoStream(formatCtx, videoStreamIdx, &codecCtx, width, height)) 
 		{
 			avformat_close_input(&formatCtx);
 			return;

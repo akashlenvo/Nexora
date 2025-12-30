@@ -51,7 +51,7 @@ Application::Application()
 
 	mainWindow->GetSourceChoice()->Bind(wxEVT_CHOICE, [&](const wxCommandEvent& arg) {
 		int selection = mainWindow->GetSourceChoice()->GetSelection();
-		rtspManager->SetStreamingDevice(selection);
+		rtspManager->Connect2Stream(selection, 0);
 
 		mainWindow->GetResolutionChoice()->SetSelection(1);
 	});

@@ -20,6 +20,13 @@ DeviceDescriptor DeviceDescriptor::Create(const char* bytes, int size)
 	offset += 2 + name.size();
 	auto url = std::string(&bytes[offset + 2], ReadInt16(bytes + offset));
 
+	// Default protocol is udp. If it is a usb connection (via adb) switch to tcp
+	std::string protocol = "udp";
+	if (url.find("127.0.0.1") != std::string::npos)
+	{
+		protocol = "tcp";
+	} 
+
 	offset += 2 + url.size();
 	// Represents how many resolutions are provided
 	uint16_t resolutionCount = ReadInt16(bytes + offset);
@@ -38,5 +45,6 @@ DeviceDescriptor DeviceDescriptor::Create(const char* bytes, int size)
 		offset += 4;
 	}
 
-	return DeviceDescriptor(name, url, resolutions);
+
+	return DeviceDescriptor(name, url, protocol, resolutions);
 }
