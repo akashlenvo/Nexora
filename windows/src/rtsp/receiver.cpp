@@ -13,6 +13,7 @@ namespace RTSP
 	Receiver::~Receiver() 
 	{
 		Stop();
+		avformat_network_deinit();
 	}
 
 	void Receiver::Start(std::string url, std::string protocol, int width, int height) 
@@ -26,33 +27,44 @@ namespace RTSP
 		workerThread = std::thread(&Receiver::Loop, this, width, height);
 	}
 
-	void Receiver::Stop() {
+	void Receiver::Stop() 
+	{
 		if (!isRunning)
 			return;
 
 		isRunning = false;
+		state.stopRequested = true;
 
 		if (workerThread.joinable()) 
 			workerThread.join();
 	}
 
 	bool Receiver::OpenConnection(AVFormatContext** ctx) {
-		AVDictionary* options = nullptr;
-		
-		av_dict_set(&options, "rtsp_transport", rtspProtocol.c_str(), 0);
+		*ctx = avformat_alloc_context();
+		(*ctx)->interrupt_callback.callback = FFmpegInterrupt::Callback;
+		(*ctx)->interrupt_callback.opaque = &this->state;
 
+		state.stopRequested = false;
+		state.lastActivityTime = FFmpegInterrupt::GetTimeMs();
+
+		AVDictionary* options = nullptr;
+		av_dict_set(&options, "rtsp_transport", rtspProtocol.c_str(), 0);
 		// Low latency settings
 		av_dict_set(&options, "fflags", "nobuffer", 0);
 		av_dict_set(&options, "flags", "low_delay", 0);
-
+		// Immediate start
 		av_dict_set(&options, "probesize", "32768", 0);
 		av_dict_set(&options, "analyzeduration", "1000000", 0);
 
-		if (avformat_open_input(ctx, rtspUrl.c_str(), nullptr, &options) != 0)
+		int ret = avformat_open_input(ctx, rtspUrl.c_str(), nullptr, &options);
+		if (ret != 0)
 		{
+			char buffer[512];
+			av_strerror(ret, buffer, 512);
 			logger << "[RTSP] Error: Could not open stream\n";
 			return false;
 		}
+
 
 		// The resolution is known beforehand and the codec is always h264
 		// so we can skip this part
@@ -61,6 +73,8 @@ namespace RTSP
 			logger << "[RTSP] Error: Could not find stream info\n";
 			return false;
 		}*/
+
+		this->state.lastActivityTime = FFmpegInterrupt::GetTimeMs();
 
 		return true;
 	}
@@ -137,8 +151,15 @@ namespace RTSP
 
 		logger << "[RTSP] Decoding started...\n";
 
-		while (isRunning && av_read_frame(formatCtx, pPacket) >= 0) 
+		while (isRunning) 
 		{
+			this->state.lastActivityTime = FFmpegInterrupt::GetTimeMs();
+
+			if (av_read_frame(formatCtx, pPacket) < 0)
+				break;
+
+			this->state.lastActivityTime = FFmpegInterrupt::GetTimeMs();
+
 			if (pPacket->stream_index != videoStreamIdx)
 				continue;
 
@@ -151,6 +172,7 @@ namespace RTSP
 				// If conversion is successfull notify the listener the complete frame is received
 				if (scaler.Convert(pFrame, pFrameRGB)) 
 				{
+
 					frameReceivedListener.OnFrameReceived(pFrameRGB->data[0], pFrameRGB->width, pFrameRGB->height);
 				}
 			}

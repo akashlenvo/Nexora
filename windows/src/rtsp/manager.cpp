@@ -8,10 +8,6 @@ namespace RTSP
 	{
 	}
 
-	Manager::~Manager()
-	{
-	}
-
 	void Manager::AddDescriptor(DeviceDescriptor& descriptor)
 	{
 		descriptors.push_back(std::move(descriptor));

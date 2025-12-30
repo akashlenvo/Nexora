@@ -175,6 +175,7 @@ xcopy "$(ProjectDir)3rdparty\softcam\examples\softcam_installer\x64\Release\soft
     <ClInclude Include="include\net\connection.h" />
     <ClInclude Include="include\net\devicedescriptor.h" />
     <ClInclude Include="include\rtsp\ffmpeg.h" />
+    <ClInclude Include="include\rtsp\ffmpeginterrupt.h" />
     <ClInclude Include="include\rtsp\framescaler.h" />
     <ClInclude Include="include\rtsp\receiver.h" />
     <ClInclude Include="include\rtsp\manager.h" />

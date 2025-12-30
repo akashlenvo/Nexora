@@ -7,21 +7,25 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.darusc.vcamdroid.databinding.ActivityStreamBinding
+import com.darusc.vcamdroid.networking.ConnectionManager
 import com.pedro.common.ConnectChecker
 import com.pedro.encoder.input.video.CameraHelper
 import com.pedro.rtspserver.RtspServerCamera2
 
-class StreamActivity : AppCompatActivity(), ConnectChecker, SurfaceHolder.Callback {
+class StreamActivity : AppCompatActivity(), ConnectChecker, SurfaceHolder.Callback, ConnectionManager.ConnectionStateCallback {
 
     private val TAG = "VCamdroid"
+
     private lateinit var viewBinding: ActivityStreamBinding
+
+    private val connectionManager = ConnectionManager.getInstance(this)
     private lateinit var rtspServer: RtspServerCamera2
 
     // Configuration
-    private val vBitrate = 5000 * 1024 // 12 Mbps for 4K
+    private val vBitrate = 8000 * 1024 // 12 Mbps for 4K
     private val aBitrate = 128 * 1024
-    private val width = 640
-    private val height = 480
+    private val width = 1920
+    private val height = 1080
     private val fps = 30
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -100,5 +104,12 @@ class StreamActivity : AppCompatActivity(), ConnectChecker, SurfaceHolder.Callba
 
     override fun onAuthSuccess() {
         Log.d(TAG, "Auth Success")
+    }
+
+    override fun onDisconnected() {
+        Log.d(TAG, "TCP server disconnected")
+        rtspServer.stopStream()
+        rtspServer.stopPreview()
+        finish()
     }
 }

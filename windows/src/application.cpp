@@ -161,10 +161,16 @@ void Application::OnMenuEvent(wxCommandEvent& event)
 
 void Application::OnWindowCloseEvent(wxCloseEvent& event)
 {
+	// Hide window for reponsive UI 
+	// Actual closing sequence can take longer (couple hundred milliseconds)
+	mainWindow->Hide();
+
 	stream->Close();
+	rtspManager.reset();
 	server->Close();
+
 	Settings::save();
-	mainWindow->Destroy();
+	event.Skip();
 }
 
 void Application::OnResolutionChanged(wxEvent& event)

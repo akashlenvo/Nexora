@@ -55,8 +55,6 @@ void Server::Close()
 {
 	logger << "[SERVER] Closing...\n";
 
-	adb::kill(port);
-
 	acceptor.close();
 	
 	for (std::shared_ptr<Connection> conn : connections)
@@ -72,6 +70,8 @@ void Server::Close()
 	}
 
 	logger << "[SERVER] Closed.\n";
+
+	adb::kill(port);
 }
 
 /*void Server::SetStreamResolution(unsigned short width, unsigned short height)
