@@ -40,7 +40,7 @@ void Connection::Send(std::string message)
 	socket.send(asio::buffer(message));
 }
 
-void Connection::Send(unsigned char* bytes, size_t size)
+void Connection::Send(const unsigned char* bytes, size_t size)
 {
 	socket.send(asio::buffer(bytes, size));
 }

@@ -37,6 +37,6 @@ private:
 	void Read();
 
 	void Send(std::string message);
-	void Send(unsigned char* bytes, size_t size);
+	void Send(const unsigned char* bytes, size_t size);
 	void Close(bool stoppedByServer = false);
 };

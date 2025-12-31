@@ -7,6 +7,7 @@ import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import com.darusc.vcamdroid.databinding.ActivityStreamBinding
 import com.darusc.vcamdroid.networking.ConnectionManager
+import com.darusc.vcamdroid.networking.PacketType
 import com.darusc.vcamdroid.rtsp.Streamer
 import com.darusc.vcamdroid.rtsp.StreamOptions
 
@@ -52,5 +53,15 @@ class StreamActivity : AppCompatActivity(), SurfaceHolder.Callback, ConnectionMa
 
     private fun onBytesReceived(buffer: ByteArray, bytes: Int) {
         println(buffer)
+        val type = buffer[0]
+
+        when (type) {
+            PacketType.CAMERA -> streamer.switchCamera()
+            PacketType.RESOLUTION -> {
+                val width = (buffer[1].toInt() and 0xFF) or (buffer[2].toInt() shl 8)
+                val height = (buffer[3].toInt() and 0xFF) or (buffer[4].toInt() shl 8)
+                streamer.setResolution(width, height)
+            }
+        }
     }
 }

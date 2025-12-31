@@ -32,7 +32,16 @@ private:
 
 	void UpdateAvailableDevices() const;
 
+	/*
+		Update avaialble resolutions of the device with given id
+		for the given camera (0 for back, 1 for front)
+
+		Returns the id of the default initial resolution (640x480)
+	*/
+	int UpdateAvailableResolutions(int id, int camera);
+
 	void OnMenuEvent(wxCommandEvent& event);
+	void OnSourceChanged(wxEvent& event);
 	void OnResolutionChanged(wxEvent& event);
 	void ShowAdjustmentsDialog(wxCommandEvent& event);
 	void OnWindowCloseEvent(wxCloseEvent& event);

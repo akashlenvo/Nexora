@@ -9,7 +9,6 @@ Server::Server(int port, const ConnectionListener& connectionListener) :
 	connectionListener(connectionListener),
 	acceptor(tcp::acceptor(context, tcp::endpoint(tcp::v4(), port)))
 {
-	streamingDevice = 0;
 	adb::reverse(port);
 	adb::forward(8554);
 }
@@ -33,6 +32,14 @@ Server::HostInfo Server::GetHostInfo()
 	socket.close();
 
 	return { name, local_addr.to_string(), std::to_string(port)};
+}
+
+void Server::Send(int id, const unsigned char* bytes, size_t size) const
+{
+	if (id >= 0 && id < connections.size())
+	{
+		connections[id]->Send(bytes, size);
+	}
 }
 
 void Server::Start()
@@ -74,93 +81,45 @@ void Server::Close()
 	adb::kill(port);
 }
 
-/*void Server::SetStreamResolution(unsigned short width, unsigned short height)
-{
-	unsigned char bytes[5] = {
-		PacketType::RESOLUTION,							// First byte is the packet type
-		static_cast<unsigned char>(width & 0xFF),		// Low byte of width
-		static_cast<unsigned char>(width >> 8),			// High byte of width
-		static_cast<unsigned char>(height & 0xFF),		// Low byte of height
-		static_cast<unsigned char>(height >> 8),		// High byte of height
-	};
-
-	for (auto& conn : connections)
-	{
-		conn->Send(bytes, 5);
-	}
-}
-
-void Server::SetStreamingDevice(int device)
-{
-	if (device < 0 || device >= connections.size())
-		return;
-
-	unsigned char startBytes[2] = { PacketType::ACTIVATION, 0x01 };
-	unsigned char stopBytes[2] = { PacketType::ACTIVATION, 0x00 };
-
-	connections[device]->Send(startBytes, 2);
-	connections[device]->active = true;
-	
-	// Reset();
-	logger << "[SERVER] Set UDP stream device: " << connections[device]->socket.remote_endpoint() << std::endl;
-
-	for (int i = 0; i < connections.size(); i++)
-	{
-		if(i != device)
-		{
-			connections[i]->active = false;
-			connections[i]->Send(stopBytes, 2);
-		}
-	}
-}
-
-void Server::SetStreamingCamera(bool back)
-{
-	unsigned char bytes[2] = { PacketType::CAMERA, back ? 0x01 : 0x00 };
-	for (auto& conn : connections)
-	{
-		conn->Send(bytes, 2);
-	}
-}
-
-void Server::SetStreamingQuality(uint8_t quality)
-{
-	unsigned char bytes[2] = { PacketType::QUALITY, quality };
-	for (auto& conn : connections)
-	{
-		conn->Send(bytes, 2);
-	}
-}
-
-void Server::SetStreamingWB(int wb)
-{
-	unsigned char bytes[2] = { PacketType::WB, wb };
-	for (auto& conn : connections)
-	{
-		conn->Send(bytes, 2);
-	}
-}
-
-void Server::SetStreamingEffect(int effect)
-{
-	unsigned char bytes[2] = { PacketType::EFFECT, effect };
-	for (auto& conn : connections)
-	{
-		conn->Send(bytes, 2);
-	}
-}
-
-int Server::GetStreamingDevice()
-{
-	for (int i = 0; i < connections.size(); i++)
-	{
-		if (connections[i]->active)
-		{
-			return i;
-		}
-	}
-	return -1;
-}*/
+//
+//void Server::SetStreamingQuality(uint8_t quality)
+//{
+//	unsigned char bytes[2] = { PacketType::QUALITY, quality };
+//	for (auto& conn : connections)
+//	{
+//		conn->Send(bytes, 2);
+//	}
+//}
+//
+//void Server::SetStreamingWB(int wb)
+//{
+//	unsigned char bytes[2] = { PacketType::WB, wb };
+//	for (auto& conn : connections)
+//	{
+//		conn->Send(bytes, 2);
+//	}
+//}
+//
+//void Server::SetStreamingEffect(int effect)
+//{
+//	unsigned char bytes[2] = { PacketType::EFFECT, effect };
+//	for (auto& conn : connections)
+//	{
+//		conn->Send(bytes, 2);
+//	}
+//}
+//
+//int Server::GetStreamingDevice()
+//{
+//	for (int i = 0; i < connections.size(); i++)
+//	{
+//		if (connections[i]->active)
+//		{
+//			return i;
+//		}
+//	}
+//	return -1;
+//}
 
 void Server::TCPDoAccept()
 {

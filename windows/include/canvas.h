@@ -5,6 +5,9 @@
 class Canvas : public wxPanel
 {
 public:
+	const int WIDTH = 400;
+	const int HEIGHT = 300;
+
 	Canvas(wxWindow* parent, wxPoint position, wxSize size);
 
 	void Render(const wxImage& image);

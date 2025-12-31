@@ -14,17 +14,6 @@ public:
 	using udp = asio::ip::udp;
 	using HostInfo = std::tuple<std::string, std::string, std::string>;
 
-	struct PacketType
-	{
-		static const int FRAME = 0x00;
-		static const int RESOLUTION = 0x01;
-		static const int ACTIVATION = 0x02;
-		static const int CAMERA = 0x03;
-		static const int QUALITY = 0x04;
-		static const int WB = 0x05;
-		static const int EFFECT = 0x06;
-	};
-
 	struct ConnectionListener
 	{
 		virtual void OnDeviceConnected(DeviceDescriptor& descriptor) const = 0;
@@ -45,14 +34,13 @@ public:
 	/// </summary>
 	HostInfo GetHostInfo();
 
+	void Send(int id, const unsigned char* bytes, size_t size) const;
 	void Start();
 	void Close();
 
-	/*void SetStreamResolution(unsigned short width, unsigned short height);
-	void SetStreamingCamera(bool back = true);
-	void SetStreamingQuality(uint8_t quality);
-	void SetStreamingWB(int wb);
-	void SetStreamingEffect(int effect);*/
+	//void SetStreamingQuality(uint8_t quality);
+	//void SetStreamingWB(int wb);
+	//void SetStreamingEffect(int effect);
 
 private:
 	int port;
@@ -67,7 +55,6 @@ private:
 
 	std::thread thread;
 
-	int streamingDevice;
 	std::vector<std::shared_ptr<Connection>> connections;
 
 	void TCPDoAccept();

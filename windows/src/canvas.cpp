@@ -15,6 +15,8 @@ Canvas::Canvas(wxWindow* parent, wxPoint position, wxSize size)
 	
 	this->Bind(wxEVT_PAINT, &Canvas::OnPaint, this);
 	this->Bind(wxEVT_ERASE_BACKGROUND, &Canvas::OnEraseBackground, this);
+
+	SetAspectRatio(WIDTH, HEIGHT);
 }
 
 void Canvas::Render(const wxImage& image)
@@ -33,34 +35,34 @@ void Canvas::Render(const wxImage& image)
 
 void Canvas::SetAspectRatio(int w, int h)
 {
-	if (w == 4 && h == 3) 
-	{
-		size = wxSize(400, 300);
-		bitmap = wxBitmap(400, 300);
-		drawX = 0;
-		drawY = 0;
-	}
-	else if (w == 16 && h == 9) 
-	{
-		size = wxSize(400, 225);
-		bitmap = wxBitmap(400, 225);
-		drawX = 0;
-		drawY = 37;
-	}
-	else if (h == 4 && w == 3)
-	{
-		size = wxSize(225, 300);
-		bitmap = wxBitmap(225, 300);
-		drawX = 87;
-		drawY = 0;
-	}
-	else if (h == 16 && w == 9)
-	{
-		size = wxSize(169, 300);
-		bitmap = wxBitmap(169, 300);
-		drawX = 115;
-		drawY = 0;
-	}
+	if (h == 0 || w == 0) return;
+
+    double targetRatio = static_cast<double>(w) / h;
+    double containerRatio = static_cast<double>(WIDTH) / HEIGHT;
+
+    int finalW, finalH;
+
+    // Aspect Fit Logic
+    if (targetRatio > containerRatio) 
+    {
+        // Landscape mode (image si wider)
+        finalW = WIDTH;
+        finalH = static_cast<int>(WIDTH / targetRatio);
+    } 
+    else 
+    {
+		// Portrait mode (image is taller)
+        finalH = HEIGHT;
+        finalW = static_cast<int>(HEIGHT * targetRatio);
+    }
+
+    size = wxSize(finalW, finalH);
+    bitmap = wxBitmap(finalW, finalH);
+
+    // Calculate Centering Offsets
+    // (Container Size - Content Size) / 2
+    drawX = (WIDTH - finalW) / 2;
+    drawY = (HEIGHT - finalH) / 2;
 }
 
 void Canvas::ClearBeforeNextRender()

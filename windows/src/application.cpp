@@ -23,59 +23,53 @@ Application::Application()
 		// 
 		// Also check the image width/height against the camera height/width
 		// in case the image is rotated
-		if (image.GetWidth() == cameraWidth && image.GetHeight() == cameraHeight || image.GetWidth() == cameraHeight && image.GetHeight() == cameraWidth)
-		{
+		//if (image.GetWidth() == cameraWidth && image.GetHeight() == cameraHeight || image.GetWidth() == cameraHeight && image.GetHeight() == cameraWidth)
+		//{
 			UpdateFrameStats(stats);
 			this->CallAfter([this, image]() {
 				mainWindow->GetCanvas()->Render(image);
 			});
 
 			// Send the current image frame to the DirechShow Virtual Camera filter
-			scSendFrame(camera, stream->GetBGR(image));
-		}
+			//scSendFrame(camera, stream->GetBGR(image));
+		//}
 	});
-
-	rtspManager = std::make_unique<RTSP::Manager>(*stream);
-	// receiver->Start();
 
 	server = std::make_unique<Server>(6969, *this);
 	server->Start();
+
+	rtspManager = std::make_unique<RTSP::Manager>(*server, *stream);
+	// receiver->Start();
 
 	mainWindow = new Window(server->GetHostInfo());
 
 	mainWindow->Bind(wxEVT_CLOSE_WINDOW, &Application::OnWindowCloseEvent, this);
 	mainWindow->Bind(wxEVT_MENU, &Application::OnMenuEvent, this);
 
+	mainWindow->GetSourceChoice()->Bind(wxEVT_CHOICE, &Application::OnSourceChanged, this);
 	mainWindow->GetResolutionChoice()->Bind(wxEVT_CHOICE, &Application::OnResolutionChanged, this);
 	mainWindow->GetAdjustmentsButton()->Bind(wxEVT_BUTTON, &Application::ShowAdjustmentsDialog, this);
 
-	mainWindow->GetSourceChoice()->Bind(wxEVT_CHOICE, [&](const wxCommandEvent& arg) {
-		int selection = mainWindow->GetSourceChoice()->GetSelection();
-		rtspManager->Connect2Stream(selection, 0);
-
-		mainWindow->GetResolutionChoice()->SetSelection(1);
-	});
-
 	mainWindow->GetRotateLeftButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
 		int rotation = stream->RotateLeft();
-		SetVideoOptions(
+		/*SetVideoOptions(
 			cameraWidth, 
 			cameraHeight, 
 			cameraAspectRatioW, 
 			cameraAspectRatioH, 
 			rotation == Stream::Transforms::ROTATE_90 || rotation == Stream::Transforms::ROTATE_270
-		);
+		);*/
 	});
 
 	mainWindow->GetRotateRightButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
 		int rotation = stream->RotateRight();
-		SetVideoOptions(
+		/*SetVideoOptions(
 			cameraWidth,
 			cameraHeight,
 			cameraAspectRatioW,
 			cameraAspectRatioH,
 			rotation == Stream::Transforms::ROTATE_90 || rotation == Stream::Transforms::ROTATE_270
-		);
+		);*/
 	});
 
 	mainWindow->GetFlipButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
@@ -84,13 +78,14 @@ Application::Application()
 
 	mainWindow->GetSwapButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
 		backCameraActive = !backCameraActive;
-		//server->SetStreamingCamera(backCameraActive);
+		auto deviceId = rtspManager->GetStreamingDevice();
+		UpdateAvailableResolutions(deviceId, backCameraActive ? 0 : 1);
+		rtspManager->SwapCamera();
 	});
 
 	// Create a camera handle to access the DirechShow Virtual Camera filter
 	backCameraActive = true;
 	camera = nullptr;
-	SetVideoOptions(640, 480, 4, 3);
 }
 
 bool Application::OnInit()
@@ -122,6 +117,26 @@ void Application::UpdateAvailableDevices() const
 	}
 
 	mainWindow->GetSourceChoice()->SetSelection(rtspManager->GetStreamingDevice());
+}
+
+int Application::UpdateAvailableResolutions(int id, int camera)
+{
+	mainWindow->GetResolutionChoice()->Clear();
+
+	const auto& resolutions = camera == 0 ? rtspManager->GetDescriptors()[id].backResolutions() : rtspManager->GetDescriptors()[id].frontResolutions();
+	int defaultResolutionPos = 0;
+
+	for (int i = 0; i < resolutions.size(); i++)
+	{
+		const auto& resolution = resolutions[i];
+		mainWindow->GetResolutionChoice()->Append(std::to_string(resolution.first) + " x " + std::to_string(resolution.second));
+
+		if (resolution.first == 640 && resolution.second == 480)
+			defaultResolutionPos = i;
+	}
+
+	mainWindow->GetResolutionChoice()->SetSelection(defaultResolutionPos);
+	return defaultResolutionPos;
 }
 
 void Application::OnMenuEvent(wxCommandEvent& event)
@@ -159,6 +174,14 @@ void Application::OnMenuEvent(wxCommandEvent& event)
 	}
 }
 
+void Application::OnSourceChanged(wxEvent& event)
+{
+	int selection = mainWindow->GetSourceChoice()->GetSelection();
+	int resoltution = UpdateAvailableResolutions(selection, 0);
+
+	rtspManager->Connect2Stream(selection, resoltution);
+}
+
 void Application::OnWindowCloseEvent(wxCloseEvent& event)
 {
 	// Hide window for reponsive UI 
@@ -168,6 +191,7 @@ void Application::OnWindowCloseEvent(wxCloseEvent& event)
 	stream->Close();
 	rtspManager.reset();
 	server->Close();
+
 
 	Settings::save();
 	event.Skip();
@@ -187,39 +211,24 @@ void Application::OnResolutionChanged(wxEvent& event)
 	// (not ideal -> TODO: add a better synchronization mechanism)
 	stream->Pause();
 
-	int selection = mainWindow->GetResolutionChoice()->GetSelection();
+	auto resolutionStr = mainWindow->GetResolutionChoice()->GetStringSelection();
+	int width, height;
+	std::sscanf(resolutionStr.c_str(), "%d x %d", &width, &height);
 
-	if (selection == 0)
+	mainWindow->GetCanvas()->ClearBeforeNextRender();
+	mainWindow->GetCanvas()->SetAspectRatio(width, height);
+
+	cameraWidth = width;
+	cameraHeight = height;
+
+	rtspManager->SetStreamResolution(width, height);
+
+	// Update scCamera resolution
+	/*if (camera != nullptr)
 	{
-		logger << "[STREAM] Set stream resolution to 640x480\n";
-		SetVideoOptions(640, 480, 4, 3);
-		//mainWindow->GetCanvas()->SetAspectRatio(4, 3);
-		//server->SetStreamResolution(640, 480);
-
-		// Update scCamera resolution
-		//ScCameraInit(640, 480);
+		scDeleteCamera(camera);
 	}
-	else
-	{
-		//mainWindow->GetCanvas()->SetAspectRatio(16, 9);
-		if (selection == 1)
-		{
-			SetVideoOptions(1280, 720, 16, 9);
-			logger << "[STREAM] Set stream resolution to 1280x720\n";
-			//server->SetStreamResolution(1280, 720);
-			// Update scCamera resolution
-			//ScCameraInit(1280, 720);
-		}
-		else if (selection == 2)
-		{
-			SetVideoOptions(1920, 1080, 16, 9);
-			logger << "[STREAM] Set stream resolution to 1920x1080\n";
-			//server->SetStreamResolution(1920, 1080);
-			// Update scCamera resolution
-			//ScCameraInit(1920, 1080);
-		}
-	}
-
+	camera = scCreateCamera(cameraWidth, cameraHeight, 0);*/
 	stream->Unpause();
 }
 
@@ -228,7 +237,7 @@ void Application::ShowAdjustmentsDialog(wxCommandEvent& event)
 	ImgAdjDlg dialog(nullptr, stream->GetAdjustments());
 
 	/*dialog.Bind(EVT_BRIGHTNESS_CHANGED, [&](const wxCommandEvent& event) {
-		stream->SetBrightnessAdjustment(event.GetInt());
+		stream->SetBrightnessAdjustment(event.GetInt());f
 	});
 
 	dialog.Bind(EVT_SATURATION_CHANGED, [&](const wxCommandEvent& event) {
@@ -249,46 +258,7 @@ void Application::ShowAdjustmentsDialog(wxCommandEvent& event)
 		stream->SetEffectAdjustment(event.GetInt());
 		server->SetStreamingEffect(event.GetInt());
 	});*/
-
 	dialog.ShowModal();
-}
-
-void Application::SetVideoOptions(int width, int height, int aspectRatioW, int aspectRatioH, bool portrait)
-{
-	cameraWidth = width;
-	cameraHeight = height;
-	cameraAspectRatioW = aspectRatioW;
-	cameraAspectRatioH = aspectRatioH;
-
-	mainWindow->GetCanvas()->ClearBeforeNextRender();
-
-	// The canvas and scCamera should have the correct dimensions and aspect ratios
-	// corresponding to the indicated orientation to correctly display a rotated image
-	if (portrait)
-	{
-		mainWindow->GetCanvas()->SetAspectRatio(cameraAspectRatioH, cameraAspectRatioW);
-	}
-	else
-	{
-		mainWindow->GetCanvas()->SetAspectRatio(cameraAspectRatioW, cameraAspectRatioH);
-	}
-
-	// But the client should still stream in the landscape (default) orientation
-	//server->SetStreamResolution(width, height);
-
-	// Update scCamera resolution
-	if (camera != nullptr)
-	{
-		scDeleteCamera(camera);
-	}
-	if (portrait)
-	{
-		camera = scCreateCamera(cameraHeight, cameraWidth, 0);
-	}
-	else
-	{
-		camera = scCreateCamera(cameraWidth, cameraHeight, 0);
-	}
 }
 
 void Application::UpdateFrameStats(Stream::FrameStats stats)

@@ -1,14 +1,11 @@
 package com.darusc.vcamdroid.networking
 
-import android.util.DisplayMetrics
 import android.util.Log
+import com.darusc.vcamdroid.networking.connection.Connection
+import com.darusc.vcamdroid.networking.connection.TCPConnection
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.InputStream
-import java.io.OutputStream
-import java.net.Socket
-import java.util.concurrent.atomic.AtomicBoolean
 
 class ConnectionManager private constructor() : Connection.Listener {
 
@@ -39,18 +36,6 @@ class ConnectionManager private constructor() : Connection.Listener {
         WIFI
     }
 
-    class PacketType {
-        companion object {
-            const val FRAME: Byte = 0x00
-            const val RESOLUTION: Byte = 0x01
-            const val ACTIVATION: Byte = 0x02
-            const val CAMERA: Byte = 0x03
-            const val QUALITY: Byte = 0x04
-            const val WB: Byte = 0x05
-            const val EFFECT: Byte = 0x06
-        }
-    }
-
     interface ConnectionStateCallback {
         fun onConnectionSuccessful(connectionMode: Mode) { }
         fun onConnectionFailed(connectionMode: Mode) { }
@@ -66,127 +51,6 @@ class ConnectionManager private constructor() : Connection.Listener {
     private var tcpConn: TCPConnection? = null
 
     private var streamingEnabled = false
-
-    /**
-     * Wrapper around a socket to manage the TCP connection.
-     * Using it only to send the video stream. No packet receiving implementation.
-     */
-    /* private inner class UDPConnection(
-        ipAddress: String,
-        private val port: Int,
-    ) : Connection() {
-
-        private val address: InetAddress = InetAddress.getByName(ipAddress)
-
-        override val maxPacketSize = 65472
-
-        private var socket: DatagramSocket
-
-        init {
-            try {
-                socket = DatagramSocket()
-                socket.connect(address, port)
-                socket.sendBufferSize = 921600
-
-                Log.d(TAG, "UDP Connected to $ipAddress:$port")
-            } catch (e: Exception) {
-                throw ConnectionFailedException("$ipAddress:$port")
-            }
-        }
-
-        override fun send(bytes: ByteArray) {
-            try {
-                socket.send(DatagramPacket(bytes, bytes.size, address, port))
-                //socket.receive(DatagramPacket(ByteArray(5), 5, address, port))
-            } catch (_: Exception) {}
-        }
-
-        override fun send(bytes: ByteArray, size: Int) {
-            try {
-                socket.send(DatagramPacket(bytes, size, address, port))
-                //socket.receive(DatagramPacket(ByteArray(5), 5, address, port))
-            } catch (_: Exception) {}
-        }
-
-        override fun close() {
-            socket.close()
-        }
-    }*/
-
-    /**
-     * Wrapper around a socket to manage the TCP connection
-     * @param ipAddress Remote endpoint's IPv4 address
-     * @param port Remote endpoint's port
-     * @param listener The registered listener for callbacks
-     */
-    class TCPConnection(
-        ipAddress: String,
-        port: Int,
-        private val isOverAdb: Boolean,
-        private val listener: Connection.Listener
-    ) : Connection() {
-
-        override val maxPacketSize = 65472
-
-        private var socket: Socket
-        private var outputStream: OutputStream? = null
-        private var inputStream: InputStream? = null
-
-        private var thread: Thread
-        private val running = AtomicBoolean(true)
-
-        override val localIpAddress: String
-            get() = socket.localAddress.hostAddress!!
-
-        init {
-            try {
-                socket = Socket(ipAddress, port)
-
-                outputStream = socket.getOutputStream()
-                inputStream = socket.getInputStream()
-
-                Log.d(TAG, "TCP Connected to $ipAddress:$port")
-
-                thread = Thread { startReceiveBytesLoop() }
-                thread.start()
-            } catch (e: Exception) {
-                throw ConnectionFailedException("$ipAddress:$port", e.message ?: "")
-            }
-        }
-
-        override fun send(bytes: ByteArray) {
-            socket.getOutputStream().write(bytes)
-        }
-
-        override fun send(bytes: ByteArray, size: Int) {
-            socket.getOutputStream().write(bytes, 0, size)
-        }
-
-        private fun startReceiveBytesLoop() {
-            val buf = ByteArray(15)
-            while (running.get()) {
-                try {
-                    val bytes = inputStream?.read(buf)
-                    // When connected over ADB stream end of file might be reached
-                    if(isOverAdb && bytes == -1) {
-                        listener.onDisconnected()
-                        break
-                    }
-                    listener.onBytesReceived(buf, bytes ?: 0)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error while reading. Closing socket. ${e.message}")
-                    listener.onDisconnected()
-                    break
-                }
-            }
-        }
-
-        override fun close() {
-            running.set(false)
-            socket.close()
-            thread.join()
-        }
-    }
 
     private fun setConnectionStateCallback(connectionStateCallback: ConnectionStateCallback) {
         this.connectionStateCallback = connectionStateCallback
@@ -237,11 +101,7 @@ class ConnectionManager private constructor() : Connection.Listener {
     }
 
     override fun onBytesReceived(buffer: ByteArray, bytes: Int) {
-        val packetType = buffer[0]
-        when(packetType) {
-            PacketType.ACTIVATION -> streamingEnabled = buffer[1] == (0x01.toByte())
-            else -> onBytesReceivedCallback?.let { it(buffer, bytes) }
-        }
+        onBytesReceivedCallback?.let { it(buffer, bytes) }
     }
 
     override fun onDisconnected() {

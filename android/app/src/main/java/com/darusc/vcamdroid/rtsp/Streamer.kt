@@ -11,6 +11,7 @@ import com.pedro.common.ConnectChecker
 import com.pedro.encoder.input.video.CameraOpenException
 import com.pedro.library.view.OpenGlView
 import com.pedro.rtspserver.RtspServerCamera2
+import kotlin.math.max
 
 class Streamer(
     private var options: StreamOptions,
@@ -20,7 +21,7 @@ class Streamer(
 
     companion object {
         const val PORT = 8554
-        const val URL = "rtsp://localhost$PORT/live"
+        const val URL = "rtsp://localhost:$PORT/live"
     }
 
     private val TAG = "VCamdroid"
@@ -80,6 +81,7 @@ class Streamer(
         Log.d(TAG, "Changing resolution to ${width}x${height}...")
         options.width = width
         options.height = height
+        options.bitrate = calculateOptimalBitrate(width, height, options.fps)
         restartStream()
     }
 
@@ -150,6 +152,22 @@ class Streamer(
                 startStream()
             }
         }
+    }
+
+    /**
+     * Calculate the optimal bitrate for given resolution and fps.
+     * Uses 1080p 30fps @ 4000Mbps as a standard reference
+     */
+    private fun calculateOptimalBitrate(width: Int, height: Int, fps: Int): Int {
+        val targetPixelCount = width.toLong() * height.toLong() * fps
+        val referencePixelCount = 1920L * 1080L * 30L
+        val referenceBitrate = 4000 * 1024L
+
+        val calculatedBitrate = (targetPixelCount.toDouble() / referencePixelCount.toDouble()) * referenceBitrate
+        val minBitrate = 500 * 1024
+        val maxBitrate = 12000 * 1024
+
+        return calculatedBitrate.toInt().coerceIn(minBitrate, maxBitrate)
     }
 
     override fun onAuthError() {}
