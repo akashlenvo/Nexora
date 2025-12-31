@@ -5,8 +5,7 @@
 #include "gui/window.h"
 #include "net/server.h"
 #include "rtsp/manager.h"
-
-#include "softcam/softcam.h"
+#include "directshowsource.h"
 
 class Application : public wxApp, public Server::ConnectionListener
 {
@@ -21,12 +20,12 @@ public:
 private:
 	Window* mainWindow;
 
-	scCamera camera;
 	int cameraWidth, cameraHeight;
 	int cameraAspectRatioW, cameraAspectRatioH;
 
 	std::unique_ptr<Server> server;
 	std::unique_ptr<RTSP::Manager> rtspManager;
+	std::unique_ptr<DirectShowSource> dsSource;
 
 	bool backCameraActive;
 

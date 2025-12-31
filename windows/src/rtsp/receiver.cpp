@@ -158,9 +158,8 @@ namespace RTSP
 			return;
 		}
 
-		// Allocate memory for the incoming frames
+		// Allocate memory for the incoming frame
 		AVFrame* pFrame = av_frame_alloc();
-		AVFrame* pFrameRGB = av_frame_alloc();
 		AVPacket* pPacket = av_packet_alloc();
 
 		int currentWidth = -1;
@@ -185,11 +184,9 @@ namespace RTSP
 
 			while (avcodec_receive_frame(codecCtx, pFrame) == 0) 
 			{
-				// Convert from YUV to RGB. Scaler also checks if current frame resolution changed and handles it
-				// If conversion is successfull notify the listener the complete frame is received
-				if (scaler.Convert(pFrame, pFrameRGB) && onFrameReceivedCallback) 
+				if (onFrameReceivedCallback) 
 				{
-					onFrameReceivedCallback(pFrameRGB->data[0], pFrameRGB->width, pFrameRGB->height);
+					onFrameReceivedCallback(pFrame);
 				}
 			}
 			av_packet_unref(pPacket);
@@ -198,10 +195,8 @@ namespace RTSP
 		logger << "[RTSP] Thread stopping, cleaning up...\n";
 
 		av_frame_free(&pFrame);
-		av_frame_free(&pFrameRGB);
 		av_packet_free(&pPacket);
 		avcodec_free_context(&codecCtx);
 		avformat_close_input(&formatCtx);
-		// Frame scaler cleans itself up in its destructor automatically
 	}
 };

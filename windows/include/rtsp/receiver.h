@@ -1,7 +1,7 @@
 #pragma once
 
-#include "framescaler.h"
 #include "ffmpeginterrupt.h"
+#include "ffmpeg.h"
 
 #include <memory>
 #include <thread>
@@ -19,7 +19,7 @@ namespace RTSP
         /// Received frame will be in RGB 24bit format.
         /// </summary>
         /// <param name="bytes">Raw RGB data</param>
-        using OnFrameReceivedCallback = std::function<void(const uint8_t* bytes, int width, int height)>;
+        using OnFrameReceivedCallback = std::function<void(AVFrame* frame)>;
 
         Receiver(OnFrameReceivedCallback frameReceivedListener);
         virtual ~Receiver();
@@ -47,7 +47,5 @@ namespace RTSP
 
         std::thread workerThread;
         std::atomic<bool> isRunning;
-
-        FrameScaler scaler;
     };
 };

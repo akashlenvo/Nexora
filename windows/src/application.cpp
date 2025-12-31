@@ -5,6 +5,8 @@
 #include "gui/qrconview.h"
 #include "settings.h"
 #include "logger.h"
+#include "video/guipreviewscaler.h"
+#include "video/directshowscaler.h"
 
 #include <qrcodegen.hpp>
 
@@ -16,17 +18,15 @@ Application::Application()
 	wxInitAllImageHandlers();
 	//wxImageHandler::
 
+	dsSource = std::make_unique<DirectShowSource>(1280, 720);
+
 	server = std::make_unique<Server>(6969, *this);
 	server->Start();
 
-	rtspManager = std::make_unique<RTSP::Manager>(*server, [&](const uint8_t* bytes, int width, int height) {
-		
-		mainWindow->GetCanvas()->ProcessFrameAsync(bytes, width, height);
-
-		// Send the current image frame to the DirechShow Virtual Camera filter
-		//scSendFrame(camera, stream->GetBGR(image));
+	rtspManager = std::make_unique<RTSP::Manager>(*server, [&](AVFrame* frame) {
+		mainWindow->GetCanvas()->ProcessRawFrameAsync(frame);
+		dsSource->SendRawFrame(frame);
 	});
-	// receiver->Start();
 
 	mainWindow = new Window(server->GetHostInfo());
 
@@ -72,7 +72,6 @@ Application::Application()
 
 	// Create a camera handle to access the DirechShow Virtual Camera filter
 	backCameraActive = true;
-	camera = nullptr;
 }
 
 bool Application::OnInit()
@@ -194,7 +193,6 @@ void Application::OnResolutionChanged(wxEvent& event)
 	// delay so the previous frame is done writing to the video buffer
 	// 
 	// (not ideal -> TODO: add a better synchronization mechanism)
-	// stream->Pause();
 
 	auto resolutionStr = mainWindow->GetResolutionChoice()->GetStringSelection();
 	int width, height;
@@ -206,14 +204,6 @@ void Application::OnResolutionChanged(wxEvent& event)
 	cameraHeight = height;
 
 	rtspManager->SetStreamResolution(width, height);
-
-	// Update scCamera resolution
-	/*if (camera != nullptr)
-	{
-		scDeleteCamera(camera);
-	}
-	camera = scCreateCamera(cameraWidth, cameraHeight, 0);*/
-	// stream->Unpause();
 }
 
 void Application::ShowAdjustmentsDialog(wxCommandEvent& event)

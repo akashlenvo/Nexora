@@ -27,9 +27,6 @@
     <ClCompile Include="src\canvas.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\stream.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\net\server.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -48,13 +45,25 @@
     <ClCompile Include="src\rtsp\receiver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\rtsp\framescaler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\net\devicedescriptor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\rtsp\manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\video\framescaler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\video\guipreviewscaler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\video\directshowscaler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\directshowsource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\stream.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -66,9 +75,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\canvas.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\stream.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\net\server.h">
@@ -95,9 +101,6 @@
     <ClInclude Include="include\rtsp\receiver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\rtsp\framescaler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\rtsp\ffmpeg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -108,6 +111,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\rtsp\ffmpeginterrupt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\directshowsource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\video\framescaler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\video\guipreviewscaler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\video\directshowscaler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

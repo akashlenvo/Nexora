@@ -151,24 +151,28 @@ xcopy "$(ProjectDir)3rdparty\softcam\examples\softcam_installer\x64\Release\soft
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\application.cpp" />
+    <ClCompile Include="src\directshowsource.cpp" />
     <ClCompile Include="src\gui\devicesview.cpp" />
     <ClCompile Include="src\gui\imgadjdlg.cpp" />
     <ClCompile Include="src\gui\qrconview.cpp" />
     <ClCompile Include="src\net\connection.cpp" />
     <ClCompile Include="src\net\devicedescriptor.cpp" />
-    <ClCompile Include="src\rtsp\framescaler.cpp" />
     <ClCompile Include="src\rtsp\manager.cpp" />
-    <ClCompile Include="src\stream.cpp" />
     <ClCompile Include="src\canvas.cpp" />
     <ClCompile Include="src\main.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="src\net\server.cpp" />
     <ClCompile Include="src\gui\window.cpp" />
+    <ClCompile Include="src\stream.cpp" />
+    <ClCompile Include="src\video\directshowscaler.cpp" />
+    <ClCompile Include="src\video\framescaler.cpp" />
+    <ClCompile Include="src\video\guipreviewscaler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\adb.h" />
     <ClInclude Include="include\application.h" />
+    <ClInclude Include="include\directshowsource.h" />
     <ClInclude Include="include\gui\devicesview.h" />
     <ClInclude Include="include\gui\imgadjdlg.h" />
     <ClInclude Include="include\gui\qrconview.h" />
@@ -176,14 +180,15 @@ xcopy "$(ProjectDir)3rdparty\softcam\examples\softcam_installer\x64\Release\soft
     <ClInclude Include="include\net\devicedescriptor.h" />
     <ClInclude Include="include\rtsp\ffmpeg.h" />
     <ClInclude Include="include\rtsp\ffmpeginterrupt.h" />
-    <ClInclude Include="include\rtsp\framescaler.h" />
     <ClInclude Include="include\rtsp\receiver.h" />
     <ClInclude Include="include\rtsp\manager.h" />
-    <ClInclude Include="include\stream.h" />
     <ClInclude Include="include\canvas.h" />
     <ClInclude Include="include\logger.h" />
     <ClInclude Include="include\net\server.h" />
     <ClInclude Include="include\gui\window.h" />
+    <ClInclude Include="include\video\directshowscaler.h" />
+    <ClInclude Include="include\video\framescaler.h" />
+    <ClInclude Include="include\video\guipreviewscaler.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\resource.rc" />
