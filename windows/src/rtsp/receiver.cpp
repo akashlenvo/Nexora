@@ -3,8 +3,8 @@
 
 namespace RTSP
 {
-	Receiver::Receiver(const FrameReceivedListener& listener)
-		: frameReceivedListener(listener),
+	Receiver::Receiver(OnFrameReceivedCallback callback)
+		: onFrameReceivedCallback(callback),
 		isRunning(false)
 	{
 		avformat_network_init();
@@ -24,7 +24,7 @@ namespace RTSP
 		this->rtspProtocol = protocol;
 		this->rtspUrl = url;
 		isRunning = true;
-		workerThread = std::thread(&Receiver::Loop, this, width, height);
+		workerThread = std::thread(&Receiver::WorkerFunc, this);
 	}
 
 	void Receiver::Stop() 
@@ -128,7 +128,21 @@ namespace RTSP
 		return true;
 	}
 
-	void Receiver::Loop(int width, int height) 
+	void Receiver::WorkerFunc()
+	{
+		while (isRunning)
+		{
+			Loop(0, 0);
+
+			if (isRunning)
+			{
+				logger << "[RTSP] Connection lost (Resolution change?). Retrying in 500ms...\n";
+				std::this_thread::sleep_for(std::chrono::milliseconds(500));
+			}
+		}
+	}
+
+	void Receiver::Loop(int expectedWidth, int expectedHeight) 
 	{
 		AVFormatContext* formatCtx = nullptr;
 		AVCodecContext* codecCtx = nullptr;
@@ -138,7 +152,7 @@ namespace RTSP
 		if (!OpenConnection(&formatCtx))
 			return;
 
-		if (!FindVideoStream(formatCtx, videoStreamIdx, &codecCtx, width, height)) 
+		if (!FindVideoStream(formatCtx, videoStreamIdx, &codecCtx, expectedWidth, expectedHeight))
 		{
 			avformat_close_input(&formatCtx);
 			return;
@@ -148,6 +162,9 @@ namespace RTSP
 		AVFrame* pFrame = av_frame_alloc();
 		AVFrame* pFrameRGB = av_frame_alloc();
 		AVPacket* pPacket = av_packet_alloc();
+
+		int currentWidth = -1;
+		int currentHeight = -1;
 
 		logger << "[RTSP] Decoding started...\n";
 
@@ -168,12 +185,11 @@ namespace RTSP
 
 			while (avcodec_receive_frame(codecCtx, pFrame) == 0) 
 			{
-				// Convert from YUV to RGB
+				// Convert from YUV to RGB. Scaler also checks if current frame resolution changed and handles it
 				// If conversion is successfull notify the listener the complete frame is received
-				if (scaler.Convert(pFrame, pFrameRGB)) 
+				if (scaler.Convert(pFrame, pFrameRGB) && onFrameReceivedCallback) 
 				{
-
-					frameReceivedListener.OnFrameReceived(pFrameRGB->data[0], pFrameRGB->width, pFrameRGB->height);
+					onFrameReceivedCallback(pFrameRGB->data[0], pFrameRGB->width, pFrameRGB->height);
 				}
 			}
 			av_packet_unref(pPacket);

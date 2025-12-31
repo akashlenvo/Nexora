@@ -10,8 +10,7 @@ public:
 
 	Canvas(wxWindow* parent, wxPoint position, wxSize size);
 
-	void Render(const wxImage& image);
-	void SetAspectRatio(int w, int h);
+	void ProcessFrameAsync(const uint8_t* rawData, int width, int height);
 
 	void ClearBeforeNextRender();
 
@@ -22,7 +21,12 @@ private:
 	bool shouldDraw = false;
 	bool shouldClear = false;
 	int drawX, drawY;
-	
+
+	std::atomic<bool> isRendering{ false };
+
+	void Render(const uint8_t* bytes, int width, int height);
+	void SetAspectRatio(int w, int h);
+
 	void OnPaint(wxPaintEvent& event);
 	void OnEraseBackground(wxEraseEvent& event);
 };

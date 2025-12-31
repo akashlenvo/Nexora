@@ -4,7 +4,6 @@
 
 #include "gui/window.h"
 #include "net/server.h"
-#include "stream.h"
 #include "rtsp/manager.h"
 
 #include "softcam/softcam.h"
@@ -25,9 +24,10 @@ private:
 	scCamera camera;
 	int cameraWidth, cameraHeight;
 	int cameraAspectRatioW, cameraAspectRatioH;
+
 	std::unique_ptr<Server> server;
-	std::unique_ptr<Stream> stream;
 	std::unique_ptr<RTSP::Manager> rtspManager;
+
 	bool backCameraActive;
 
 	void UpdateAvailableDevices() const;
@@ -46,7 +46,5 @@ private:
 	void ShowAdjustmentsDialog(wxCommandEvent& event);
 	void OnWindowCloseEvent(wxCloseEvent& event);
 
-	void SetVideoOptions(int width, int height, int aspectRatioW, int aspectRatioH, bool portrait = false);
-
-	void UpdateFrameStats(Stream::FrameStats stats);
+	// void SetVideoOptions(int width, int height, int aspectRatioW, int aspectRatioH, bool portrait = false);
 };

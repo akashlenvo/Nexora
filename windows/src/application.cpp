@@ -16,29 +16,16 @@ Application::Application()
 	wxInitAllImageHandlers();
 	//wxImageHandler::
 
-	stream = std::make_unique<Stream>([&](const wxImage& image, Stream::FrameStats stats) {
-		// Check the image dimensions
-		// After changing the resolution there might still be incoming 
-		// frames with the previous resolution and those need to be skipped
-		// 
-		// Also check the image width/height against the camera height/width
-		// in case the image is rotated
-		//if (image.GetWidth() == cameraWidth && image.GetHeight() == cameraHeight || image.GetWidth() == cameraHeight && image.GetHeight() == cameraWidth)
-		//{
-			UpdateFrameStats(stats);
-			this->CallAfter([this, image]() {
-				mainWindow->GetCanvas()->Render(image);
-			});
-
-			// Send the current image frame to the DirechShow Virtual Camera filter
-			//scSendFrame(camera, stream->GetBGR(image));
-		//}
-	});
-
 	server = std::make_unique<Server>(6969, *this);
 	server->Start();
 
-	rtspManager = std::make_unique<RTSP::Manager>(*server, *stream);
+	rtspManager = std::make_unique<RTSP::Manager>(*server, [&](const uint8_t* bytes, int width, int height) {
+		
+		mainWindow->GetCanvas()->ProcessFrameAsync(bytes, width, height);
+
+		// Send the current image frame to the DirechShow Virtual Camera filter
+		//scSendFrame(camera, stream->GetBGR(image));
+	});
 	// receiver->Start();
 
 	mainWindow = new Window(server->GetHostInfo());
@@ -51,7 +38,7 @@ Application::Application()
 	mainWindow->GetAdjustmentsButton()->Bind(wxEVT_BUTTON, &Application::ShowAdjustmentsDialog, this);
 
 	mainWindow->GetRotateLeftButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
-		int rotation = stream->RotateLeft();
+		//int rotation = stream->RotateLeft();
 		/*SetVideoOptions(
 			cameraWidth, 
 			cameraHeight, 
@@ -62,7 +49,7 @@ Application::Application()
 	});
 
 	mainWindow->GetRotateRightButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
-		int rotation = stream->RotateRight();
+		//int rotation = stream->RotateRight();
 		/*SetVideoOptions(
 			cameraWidth,
 			cameraHeight,
@@ -73,7 +60,7 @@ Application::Application()
 	});
 
 	mainWindow->GetFlipButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
-		stream->Mirror();
+		//stream->Mirror();
 	});
 
 	mainWindow->GetSwapButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
@@ -188,10 +175,8 @@ void Application::OnWindowCloseEvent(wxCloseEvent& event)
 	// Actual closing sequence can take longer (couple hundred milliseconds)
 	mainWindow->Hide();
 
-	stream->Close();
 	rtspManager.reset();
 	server->Close();
-
 
 	Settings::save();
 	event.Skip();
@@ -209,14 +194,13 @@ void Application::OnResolutionChanged(wxEvent& event)
 	// delay so the previous frame is done writing to the video buffer
 	// 
 	// (not ideal -> TODO: add a better synchronization mechanism)
-	stream->Pause();
+	// stream->Pause();
 
 	auto resolutionStr = mainWindow->GetResolutionChoice()->GetStringSelection();
 	int width, height;
 	std::sscanf(resolutionStr.c_str(), "%d x %d", &width, &height);
 
-	mainWindow->GetCanvas()->ClearBeforeNextRender();
-	mainWindow->GetCanvas()->SetAspectRatio(width, height);
+	// mainWindow->GetCanvas()->SetAspectRatio(width, height);
 
 	cameraWidth = width;
 	cameraHeight = height;
@@ -229,12 +213,12 @@ void Application::OnResolutionChanged(wxEvent& event)
 		scDeleteCamera(camera);
 	}
 	camera = scCreateCamera(cameraWidth, cameraHeight, 0);*/
-	stream->Unpause();
+	// stream->Unpause();
 }
 
 void Application::ShowAdjustmentsDialog(wxCommandEvent& event)
 {
-	ImgAdjDlg dialog(nullptr, stream->GetAdjustments());
+	// ImgAdjDlg dialog(nullptr, stream->GetAdjustments());
 
 	/*dialog.Bind(EVT_BRIGHTNESS_CHANGED, [&](const wxCommandEvent& event) {
 		stream->SetBrightnessAdjustment(event.GetInt());f
@@ -258,13 +242,5 @@ void Application::ShowAdjustmentsDialog(wxCommandEvent& event)
 		stream->SetEffectAdjustment(event.GetInt());
 		server->SetStreamingEffect(event.GetInt());
 	});*/
-	dialog.ShowModal();
-}
-
-void Application::UpdateFrameStats(Stream::FrameStats stats)
-{
-	/*if (Settings::get("SHOW_STATS"))
-	{
-		mainWindow->GetStatsText()->SetLabel(wxString::Format("frame time: %lldms | frame size: %lldkb", stats.time, stats.size / 1024));
-	}*/
+	// dialog.ShowModal();
 }

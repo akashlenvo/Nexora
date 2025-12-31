@@ -161,7 +161,7 @@ class Streamer(
     private fun calculateOptimalBitrate(width: Int, height: Int, fps: Int): Int {
         val targetPixelCount = width.toLong() * height.toLong() * fps
         val referencePixelCount = 1920L * 1080L * 30L
-        val referenceBitrate = 4000 * 1024L
+        val referenceBitrate = 6000 * 1024L
 
         val calculatedBitrate = (targetPixelCount.toDouble() / referencePixelCount.toDouble()) * referenceBitrate
         val minBitrate = 500 * 1024

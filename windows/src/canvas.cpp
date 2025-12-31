@@ -1,6 +1,7 @@
 #include "canvas.h"
 
 #include <wx/dcbuffer.h>
+#include <wx/rawbmp.h>
 
 Canvas::Canvas(wxWindow* parent, wxPoint position, wxSize size) 
 	: wxPanel(parent, wxID_ANY, position, size), 
@@ -19,14 +20,38 @@ Canvas::Canvas(wxWindow* parent, wxPoint position, wxSize size)
 	SetAspectRatio(WIDTH, HEIGHT);
 }
 
-void Canvas::Render(const wxImage& image)
+void Canvas::Render(const uint8_t* bytes, int width, int height)
 {
-	if (!image.IsOk())
+	// Create the bitmap if the resolution changed or if the bitmap cannot be used
+	if (!bitmap.IsOk() || bitmap.GetWidth() != width || bitmap.GetHeight() != height)
+	{
+		bitmap.Create(width, height, 24);
+		SetAspectRatio(width, height);
+	}
+
+	wxNativePixelData data(bitmap);
+	if (!data)
 		return;
 
-	this->bitmap = wxBitmap(image.Scale(size.x, size.y));
-	if (!bitmap.IsOk())
-		return;
+	wxNativePixelData::Iterator p(data);
+	const uint8_t* src = bytes;
+
+	// Manually copy the source bytes in the bitmap object
+	for (int y = 0; y < height; y++)
+	{
+		wxNativePixelData::Iterator rowStart = p;
+		for (int x = 0; x < width; x++)
+		{
+			p.Red() = *src++;
+			p.Green() = *src++;
+			p.Blue() = *src++;
+
+			++p;
+		}
+
+		p = rowStart;
+		p.OffsetY(data, 1);
+	}
 
 	shouldDraw = true;
 	this->Refresh(false);
@@ -57,12 +82,30 @@ void Canvas::SetAspectRatio(int w, int h)
     }
 
     size = wxSize(finalW, finalH);
-    bitmap = wxBitmap(finalW, finalH);
+    // bitmap = wxBitmap(finalW, finalH);
 
     // Calculate Centering Offsets
     // (Container Size - Content Size) / 2
     drawX = (WIDTH - finalW) / 2;
     drawY = (HEIGHT - finalH) / 2;
+
+	shouldClear = true;
+}
+
+void Canvas::ProcessFrameAsync(const uint8_t* frame, int width, int height)
+{
+	if (isRendering)
+		return;
+
+	isRendering = true;
+
+	size_t size = width * height * 3;
+	std::vector<uint8_t> safeFrame(frame, frame + size);
+
+	this->CallAfter([this, bytes = std::move(safeFrame), width, height]() {
+		this->Render(bytes.data(), width, height);
+		this->isRendering = false;
+	});
 }
 
 void Canvas::ClearBeforeNextRender()
@@ -82,7 +125,11 @@ void Canvas::OnPaint(wxPaintEvent& event)
 
 	if (shouldDraw)
 	{
-		dc.DrawBitmap(bitmap, drawX, drawY, false);
+		if (bitmap.IsOk())
+		{
+			wxMemoryDC memdc(bitmap);
+			dc.StretchBlit(drawX, drawY, size.GetWidth(), size.GetHeight(), &memdc, 0, 0, bitmap.GetWidth(), bitmap.GetHeight());
+		}
 	}
 	else
 	{

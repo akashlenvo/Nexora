@@ -23,7 +23,7 @@ namespace RTSP
 			static const int EFFECT = 0x06;
 		};
 
-		Manager(const Server& server, const FrameReceivedListener& frameReceivedListener);
+		Manager(const Server& server, OnFrameReceivedCallback onFrameReceivedCallback);
 
 		void AddDescriptor(DeviceDescriptor& descriptor);
 		void RemoveDescriptor(DeviceDescriptor& descriptor);
