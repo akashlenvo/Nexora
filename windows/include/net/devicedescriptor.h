@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include "video/filter.h"
+
 /*
 	Describes information about a RTSP streaming device.
 	
@@ -59,22 +61,29 @@ struct DeviceDescriptor
 		return availableBackResolutions;
 	}
 
+	const Video::Filter::Registry& filters() const
+	{
+		return availableFilters;
+	}
+
 	bool operator==(const DeviceDescriptor& other) const
 	{
 		return this->rtspUrl == other.rtspUrl && this->deviceName == other.deviceName;
 	}
 
 private:
-	DeviceDescriptor(std::string name, std::string url, std::string protocol, std::vector<Resolution> frontResolutions, std::vector<Resolution> backResolutions) 
+	DeviceDescriptor(std::string name, std::string url, std::string protocol, std::vector<Resolution> frontResolutions, std::vector<Resolution> backResolutions, Video::Filter::Registry filters) 
 		: deviceName(name), 
 		rtspUrl(url), 
 		rtspProtocol(protocol),
 		availableFrontResolutions(frontResolutions),
-		availableBackResolutions(backResolutions) {}
+		availableBackResolutions(backResolutions),
+		availableFilters(filters) {}
 	
 	std::string deviceName;
 	std::string rtspUrl;
 	std::string rtspProtocol;
 	std::vector<Resolution> availableFrontResolutions;
 	std::vector<Resolution> availableBackResolutions;
+	Video::Filter::Registry availableFilters;
 };

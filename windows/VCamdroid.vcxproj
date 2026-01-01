@@ -187,6 +187,7 @@ xcopy "$(ProjectDir)3rdparty\softcam\examples\softcam_installer\x64\Release\soft
     <ClInclude Include="include\net\server.h" />
     <ClInclude Include="include\gui\window.h" />
     <ClInclude Include="include\video\directshowscaler.h" />
+    <ClInclude Include="include\video\filter.h" />
     <ClInclude Include="include\video\framescaler.h" />
     <ClInclude Include="include\video\guipreviewscaler.h" />
   </ItemGroup>

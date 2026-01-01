@@ -20,7 +20,8 @@ namespace RTSP
 			static const int CAMERA = 0x03;
 			static const int QUALITY = 0x04;
 			static const int WB = 0x05;
-			static const int EFFECT = 0x06;
+			static const int FILTER = 0x06;
+			static const int ROTATION = 0x07;
 		};
 
 		Manager(const Server& server, OnFrameReceivedCallback onFrameReceivedCallback);
@@ -35,6 +36,8 @@ namespace RTSP
 
 		void SetStreamResolution(unsigned short width, unsigned short height);
 		void SwapCamera();
+		void Rotate(uint8_t degrees);
+		void ApplyFilter(std::string filterName, int value = 0);
 
 	private:
 

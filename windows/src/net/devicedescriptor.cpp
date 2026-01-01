@@ -61,6 +61,23 @@ DeviceDescriptor DeviceDescriptor::Create(const char* bytes, int size)
 		offset += 4;
 	}
 
+	// How many filters
+	uint16_t filterCount = ReadInt16(bytes + offset);
+	offset += 2;
+	
+	Video::Filter::Registry filters;
+	for (int i = 0; i < filterCount; i++)
+	{
+		// First 2 bytes represent the length of the filter name,
+		// followed by the actual string
+		auto name = std::string(&bytes[offset + 2], ReadInt16(bytes + offset));
+		offset += 2 + name.size();
+		// And 1 more byte for the category
+		auto cat = static_cast<Video::Filter::Category>(bytes[offset]);
+		offset++;
 
-	return DeviceDescriptor(name, url, protocol, frontResolutions, backResolutions);
+		filters[cat].push_back(name);
+	}
+
+	return DeviceDescriptor(name, url, protocol, frontResolutions, backResolutions, filters);
 }

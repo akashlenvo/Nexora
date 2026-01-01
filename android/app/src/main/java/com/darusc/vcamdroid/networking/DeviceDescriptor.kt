@@ -1,5 +1,6 @@
 package com.darusc.vcamdroid.networking
 
+import com.darusc.vcamdroid.video.filters.FilterRepository
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.charset.StandardCharsets
@@ -14,7 +15,8 @@ data class DeviceDescriptor(
     val name: String,
     val url: String,
     val backResolutions: List<Pair<Int, Int>>,
-    val frontResolutions: List<Pair<Int, Int>>
+    val frontResolutions: List<Pair<Int, Int>>,
+    val filterInfos: List<FilterRepository.FilterInfo>
 ) {
 
     fun serialize(): ByteArray {
@@ -28,6 +30,11 @@ data class DeviceDescriptor(
         // for each resolution we need 4 bytes (2 for width, 2 for height)
         requiredSize += 2 + frontResolutions.size * 4
         requiredSize += 2 + backResolutions.size * 4
+
+        // 1 byte needed for header (number of filters less that 255)
+        // + the sizes of each filter's name and filter's category (1 byte)
+        requiredSize += 2
+        requiredSize += filterInfos.sumOf { 2 + it.name.toByteArray(StandardCharsets.UTF_8).size + 1 }
 
         val buffer = ByteBuffer.allocate(requiredSize)
         buffer.order(ByteOrder.BIG_ENDIAN)
@@ -52,6 +59,12 @@ data class DeviceDescriptor(
         backResolutions.forEach { (w, h) ->
             buffer.putShort(w.toShort())
             buffer.putShort(h.toShort())
+        }
+
+        buffer.putShort(filterInfos.size.toShort())
+        filterInfos.forEach { (name, _, category) ->
+            putString(name)
+            buffer.put(category.ordinal.toByte())
         }
 
         return buffer.array()

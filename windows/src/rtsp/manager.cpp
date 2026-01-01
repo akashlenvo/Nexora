@@ -52,6 +52,31 @@ namespace RTSP
 		server.Send(streamingDevice, bytes, 1);
 	}
 
+	void Manager::Rotate(uint8_t degrees)
+	{
+		const unsigned char bytes[2] = { Command::ROTATION, degrees };
+		server.Send(streamingDevice, bytes, 2);
+	}
+
+	void Manager::ApplyFilter(std::string filterName, int value)
+	{
+		uint8_t nameLen = static_cast<uint8_t>(filterName.size());
+
+		std::vector<uint8_t> packet;
+		packet.reserve(3 + nameLen);
+
+		// byte 0 -> Command::Filter
+		// byte 1 -> Name string length (UTF8)
+		// byte 2.. -> Name string
+		// byte n -> Value
+		packet.push_back(Command::FILTER);
+		packet.push_back(nameLen);
+		packet.insert(packet.end(), filterName.begin(), filterName.end());
+		packet.push_back(static_cast<uint8_t>(value));
+
+		server.Send(streamingDevice, packet.data(), packet.size());
+	}
+
 	const std::vector<DeviceDescriptor>& Manager::GetDescriptors() const
 	{
 		return descriptors;

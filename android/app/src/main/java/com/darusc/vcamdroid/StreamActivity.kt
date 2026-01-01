@@ -53,6 +53,7 @@ class StreamActivity : AppCompatActivity(), SurfaceHolder.Callback, ConnectionMa
 
     private fun onBytesReceived(buffer: ByteArray, bytes: Int) {
         println(buffer)
+        // Packet type is always the first byte
         val type = buffer[0]
 
         when (type) {
@@ -61,6 +62,15 @@ class StreamActivity : AppCompatActivity(), SurfaceHolder.Callback, ConnectionMa
                 val width = (buffer[1].toInt() and 0xFF) or (buffer[2].toInt() shl 8)
                 val height = (buffer[3].toInt() and 0xFF) or (buffer[4].toInt() shl 8)
                 streamer.setResolution(width, height)
+            }
+            PacketType.ROTATION -> {
+                val degrees = buffer[1].toInt();
+                streamer.rotate(degrees)
+            }
+            PacketType.FILTER -> {
+                val filterName = String(buffer, 2, buffer[1].toInt(), Charsets.UTF_8)
+                val value = buffer[2 + buffer[1].toInt()].toInt()
+                streamer.applyFilter(filterName, value)
             }
         }
     }

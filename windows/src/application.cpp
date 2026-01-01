@@ -38,25 +38,11 @@ Application::Application()
 	mainWindow->GetAdjustmentsButton()->Bind(wxEVT_BUTTON, &Application::ShowAdjustmentsDialog, this);
 
 	mainWindow->GetRotateLeftButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
-		//int rotation = stream->RotateLeft();
-		/*SetVideoOptions(
-			cameraWidth, 
-			cameraHeight, 
-			cameraAspectRatioW, 
-			cameraAspectRatioH, 
-			rotation == Stream::Transforms::ROTATE_90 || rotation == Stream::Transforms::ROTATE_270
-		);*/
+		rtspManager->Rotate(-90);
 	});
 
 	mainWindow->GetRotateRightButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
-		//int rotation = stream->RotateRight();
-		/*SetVideoOptions(
-			cameraWidth,
-			cameraHeight,
-			cameraAspectRatioW,
-			cameraAspectRatioH,
-			rotation == Stream::Transforms::ROTATE_90 || rotation == Stream::Transforms::ROTATE_270
-		);*/
+		rtspManager->Rotate(90);
 	});
 
 	mainWindow->GetFlipButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
@@ -65,12 +51,10 @@ Application::Application()
 
 	mainWindow->GetSwapButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
 		backCameraActive = !backCameraActive;
-		auto deviceId = rtspManager->GetStreamingDevice();
-		UpdateAvailableResolutions(deviceId, backCameraActive ? 0 : 1);
+		UpdateAvailableResolutions(rtspManager->GetStreamingDevice(), backCameraActive ? 0 : 1);
 		rtspManager->SwapCamera();
 	});
 
-	// Create a camera handle to access the DirechShow Virtual Camera filter
 	backCameraActive = true;
 }
 
@@ -208,29 +192,23 @@ void Application::OnResolutionChanged(wxEvent& event)
 
 void Application::ShowAdjustmentsDialog(wxCommandEvent& event)
 {
-	// ImgAdjDlg dialog(nullptr, stream->GetAdjustments());
+	if (rtspManager->GetDescriptors().size() > 0)
+	{
+		ImgAdjDlg dialog(nullptr, rtspManager->GetDescriptors()[rtspManager->GetStreamingDevice()]);
 
-	/*dialog.Bind(EVT_BRIGHTNESS_CHANGED, [&](const wxCommandEvent& event) {
-		stream->SetBrightnessAdjustment(event.GetInt());f
-	});
+		dialog.Bind(EVT_FILTER_PARAM_CHANGED, [&](const wxCommandEvent& event) {		
+			rtspManager->ApplyFilter(
+				event.GetString().ToStdString(), 
+				event.GetInt()
+			);
+		});
 
-	dialog.Bind(EVT_SATURATION_CHANGED, [&](const wxCommandEvent& event) {
-		stream->SetSaturationAdjustment(event.GetInt());
-	});
+		dialog.Bind(EVT_FILTER_SWITCH_CHANGED, [&](const wxCommandEvent& event) {
+			rtspManager->ApplyFilter(
+				event.GetString().ToStdString()
+			);
+		});
 
-	dialog.Bind(EVT_JPEGQUALITY_CHANGED, [&](const wxCommandEvent& event) {
-		stream->SetQualityAdjustment(event.GetInt());
-		server->SetStreamingQuality(event.GetInt());
-	});
-
-	dialog.Bind(EVT_WB_CHANGED, [&](const wxCommandEvent& event) {
-		stream->SetWBAdjustment(event.GetInt());
-		server->SetStreamingWB(event.GetInt());
-	});
-
-	dialog.Bind(EVT_EFFECT_CHANGED, [&](const wxCommandEvent& event) {
-		stream->SetEffectAdjustment(event.GetInt());
-		server->SetStreamingEffect(event.GetInt());
-	});*/
-	// dialog.ShowModal();
+		dialog.ShowModal();
+	}
 }

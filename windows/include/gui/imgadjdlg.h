@@ -1,67 +1,28 @@
 #pragma once
 
 #include <wx/wx.h>
-#include "stream.h"
+#include <map>
+#include <vector>
+#include <string>
+#include "net/devicedescriptor.h"
 
-wxDECLARE_EVENT(EVT_BRIGHTNESS_CHANGED, wxCommandEvent);
-wxDECLARE_EVENT(EVT_SATURATION_CHANGED, wxCommandEvent);
-wxDECLARE_EVENT(EVT_JPEGQUALITY_CHANGED, wxCommandEvent);
-wxDECLARE_EVENT(EVT_WB_CHANGED, wxCommandEvent);
-wxDECLARE_EVENT(EVT_EFFECT_CHANGED, wxCommandEvent);
+// Events
+wxDECLARE_EVENT(EVT_FILTER_PARAM_CHANGED, wxCommandEvent); // Int value
+wxDECLARE_EVENT(EVT_FILTER_SWITCH_CHANGED, wxCommandEvent); // String name
 
 class ImgAdjDlg : public wxDialog
 {
 public:
-	
-	ImgAdjDlg(wxWindow* parent, const Stream::Adjustments& initial);
+	ImgAdjDlg(wxWindow* parent, const DeviceDescriptor& deviceDesc);
 	~ImgAdjDlg();
 
-	const wxString whiteBalances[9] = {
-		"Off",
-		"Auto",
-		"Incandescent",
-		"Fluorescent",
-		"Warm fluorescent",
-		"Daylight",
-		"Cloudy daylight",
-		"Twilight",
-		"Shade"
-	};
-
-	const wxString effects[9] = {
-		"Off",
-		"Mono",
-		"Negative",
-		"Solarize",
-		"Sepia",
-		"Posterize",
-		"Whiteboard",
-		"Blackboard",
-		"Aqua"
-	};
-
 private:
-	wxStaticText* brightnessLabel;
-	wxSlider* brightnessSlider;
+	void AddSlider(wxWindow* parent, wxSizer* sizer, const std::string& label, int initialValue);
 
-	wxStaticText* saturationLabel;
-	wxSlider* saturationSlider;
+	void OnReset(wxCommandEvent& event);
 
-	wxStaticText* qualityLabel;
-	wxSlider* qualitySlider;
-
-	wxStaticText* wbLabel;
-	wxChoice* wbChoice;
-
-	wxStaticText* effectLabel;
-	wxChoice* effectChoice;
-
-	void OnBrightnessSliderChanged(wxCommandEvent& event);
-	void OnSaturationSliderChanged(wxCommandEvent& event);
-	void OnQualitySliderChanged(wxCommandEvent& event);
-	void OnWBChoiceChanged(wxCommandEvent& event);
-	void OnEffectChoiceChanged(wxCommandEvent& event);
-
-	void ResetSliders(wxCommandEvent& event);
-	void SendEvent(int event, int value);
+	// Store controls for reset logic
+	std::map<std::string, wxSlider*> sliders;
+	std::map<std::string, wxStaticText*> sliderLabels;
+	std::map<int, wxChoice*> categoryChoices;
 };

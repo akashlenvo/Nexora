@@ -8,10 +8,11 @@ data class StreamOptions(
     var width: Int,
     var height: Int,
     var fps: Int,
+    var rotation: Int
 ) {
     companion object {
         fun default(): StreamOptions {
-            return StreamOptions(CameraHelper.Facing.BACK, 4000 * 1024, 640, 480, 30)
+            return StreamOptions(CameraHelper.Facing.BACK, 4000 * 1024, 640, 480, 30, 0)
         }
     }
 }

@@ -6,12 +6,17 @@ import android.os.Looper
 import android.util.Log
 import com.darusc.vcamdroid.networking.ConnectionManager
 import com.darusc.vcamdroid.networking.DeviceDescriptor
+import com.darusc.vcamdroid.video.filters.FilterAdjuster
+import com.darusc.vcamdroid.video.filters.FilterRepository
 import com.darusc.vcamdroid.video.getSupportedResolutions
 import com.pedro.common.ConnectChecker
 import com.pedro.encoder.input.video.CameraOpenException
 import com.pedro.library.view.OpenGlView
 import com.pedro.rtspserver.RtspServerCamera2
-import kotlin.math.max
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.util.logging.Filter
 
 class Streamer(
     private var options: StreamOptions,
@@ -37,7 +42,8 @@ class Streamer(
                 android.os.Build.MODEL,
                 URL.replace("localhost", localIpAddress),
                 back,
-                front
+                front,
+                FilterRepository.filters
             )
 
             connectionManager.sendDescriptor(descriptor)
@@ -83,6 +89,36 @@ class Streamer(
         options.height = height
         options.bitrate = calculateOptimalBitrate(width, height, options.fps)
         restartStream()
+    }
+
+    fun rotate(degress: Int) {
+        options.rotation += degress
+        rtspServerCamera2.glInterface.setStreamRotation(options.rotation)
+        // rtspServerCamera2.glInterface.setRotation(options.rotation)
+    }
+
+    /**
+     * Apply a filter. If is is a CORRECTION filter it will be adjusted
+     * with the given value, otherwise the value is ignored
+     * @param filterName Filter's name
+     * @param value Filter's adjustment value
+     */
+    fun applyFilter(filterName: String, value: Int) {
+        val category = FilterRepository.getCategory(filterName)
+        val filter = FilterRepository.create(filterName)
+
+        if (filter == null) {
+            Log.d(TAG, "Unknown filter, $filterName")
+            return
+        }
+
+        if (category == FilterRepository.Category.CORRECTION) {
+            FilterAdjuster.adjust(filter, value)
+        }
+
+        CoroutineScope(Dispatchers.Main).launch {
+            rtspServerCamera2.glInterface.setFilter(filter)
+        }
     }
 
     /**
@@ -163,7 +199,8 @@ class Streamer(
         val referencePixelCount = 1920L * 1080L * 30L
         val referenceBitrate = 6000 * 1024L
 
-        val calculatedBitrate = (targetPixelCount.toDouble() / referencePixelCount.toDouble()) * referenceBitrate
+        val calculatedBitrate =
+            (targetPixelCount.toDouble() / referencePixelCount.toDouble()) * referenceBitrate
         val minBitrate = 500 * 1024
         val maxBitrate = 12000 * 1024
 
