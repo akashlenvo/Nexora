@@ -5,11 +5,10 @@ QrconView::QrconView(std::string name, std::string address, std::string port, wx
 	auto sizer = new wxBoxSizer(wxVERTICAL);
 	auto wrapper = new wxBoxSizer(wxVERTICAL);
 
-	auto canvas = new Canvas(this, wxDefaultPosition, displaySize);
-
 	auto qrcode = GenerateQRCode(address + ":" + port);
 	auto image = GenerateImageFromQR(qrcode);
-	canvas->Render(image);
+
+	wxStaticBitmap* canvas = new wxStaticBitmap(this, wxID_ANY, wxBitmap(image.Scale(displaySize)));
 
 	wrapper->Add(new wxStaticText(this, wxID_ANY, "Scan the QR to connect automatically"), 0, wxALIGN_CENTER | wxTOP, FromDIP(30));
 	wrapper->Add(canvas, 0, wxALIGN_CENTER | wxALL, FromDIP(15));
