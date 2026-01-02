@@ -6,29 +6,11 @@
 #include "net/server.h"
 #include "rtsp/manager.h"
 #include "directshowsource.h"
+#include "state.h"
 
 class Application : public wxApp, public Server::ConnectionListener
 {
 public:
-
-	/*
-		State store for a connected device
-	*/
-	struct State
-	{
-		// State registry mapping device name to its cached state store
-		using Registry = std::map<std::string, State>;
-
-		int fps = 30;
-		std::pair<int, int> resolution = { 640, 480 };
-		bool backCameraActive = false;
-
-		// Cached values of adjustment filters
-		std::map<std::string, int> filterSliderValues;
-		// Cached selected filters per every effect category
-		std::map<int, std::string> activeFilters;
-	};
-
 	Application();
 
 	virtual bool OnInit();

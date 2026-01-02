@@ -164,6 +164,7 @@ xcopy "$(ProjectDir)3rdparty\softcam\examples\softcam_installer\x64\Release\soft
     </ClCompile>
     <ClCompile Include="src\net\server.cpp" />
     <ClCompile Include="src\gui\window.cpp" />
+    <ClCompile Include="src\settings.cpp" />
     <ClCompile Include="src\video\directshowscaler.cpp" />
     <ClCompile Include="src\video\framescaler.cpp" />
     <ClCompile Include="src\video\guipreviewscaler.cpp" />
@@ -185,6 +186,7 @@ xcopy "$(ProjectDir)3rdparty\softcam\examples\softcam_installer\x64\Release\soft
     <ClInclude Include="include\logger.h" />
     <ClInclude Include="include\net\server.h" />
     <ClInclude Include="include\gui\window.h" />
+    <ClInclude Include="include\state.h" />
     <ClInclude Include="include\video\directshowscaler.h" />
     <ClInclude Include="include\video\filter.h" />
     <ClInclude Include="include\video\framescaler.h" />

@@ -46,10 +46,13 @@ void Window::InitializeMenu(Server::HostInfo hostinfo)
 	wxMenu* file = new wxMenu();
 	
 	auto c1 = file->AppendCheckItem(MenuIDs::HIDE2TRAY, "Hide to tray");
-	c1->Check(Settings::get("MINIMIZE_TASKBAR") == 1);
+	c1->Check(Settings::Get("MINIMIZE_TASKBAR") == 1);
 
 	auto c2 = file->AppendCheckItem(MenuIDs::SHOWSTATS, "Show frame stats");
-	c2->Check(Settings::get("SHOW_STATS") == 1);
+	c2->Check(Settings::Get("SHOW_STATS") == 1);
+
+	auto c3 = file->AppendCheckItem(MenuIDs::SAVESTATE, "Save device presets");
+	c3->Check(Settings::Get("SAVE_DEVICE_STATE") == 1);
 
 	file->Append(wxID_ANY, "About");
 	file->AppendSeparator();
@@ -113,7 +116,7 @@ void Window::InitializeControlPanel(wxPanel* parent, wxBoxSizer* topsizer)
 	sizer->Add(controlsSizer, 0, wxALIGN_CENTER_VERTICAL);
 
 	statsText = new wxStaticText(parent, wxID_ANY, "frame time: -ms | frame size: -kb");
-	statsText->Show(Settings::get("SHOW_STATS") == 1);
+	statsText->Show(Settings::Get("SHOW_STATS") == 1);
 	sizer->AddSpacer(0);
 	sizer->Add(statsText, 0, wxALIGN_RIGHT);
 
@@ -122,7 +125,7 @@ void Window::InitializeControlPanel(wxPanel* parent, wxBoxSizer* topsizer)
 
 void Window::MinimizeToTaskbar(wxIconizeEvent& evt)
 {
-	if (Settings::get("MINIMIZE_TASKBAR") == 1)
+	if (Settings::Get("MINIMIZE_TASKBAR") == 1)
 	{
 		this->Hide();
 		evt.Skip();

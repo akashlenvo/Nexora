@@ -16,6 +16,7 @@ public:
 		static const int DEVICES = 101;
 		static const int HIDE2TRAY = 102;
 		static const int SHOWSTATS = 103;
+		static const int SAVESTATE = 104;
 	};
 
 	Window(Server::HostInfo hostInfo);

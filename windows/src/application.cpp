@@ -13,10 +13,11 @@
 Application::Application()
 {
 	SetAppearance(Appearance::System);
-
-	Settings::load();
 	wxInitAllImageHandlers();
 	//wxImageHandler::
+
+	Settings::Load();
+	stateRegistry = Settings::GetDeviceStates();
 
 	dsSource = std::make_unique<DirectShowSource>(1280, 720);
 
@@ -133,14 +134,20 @@ void Application::OnMenuEvent(wxCommandEvent& event)
 		
 		case Window::MenuIDs::HIDE2TRAY:
 		{
-			Settings::set("MINIMIZE_TASKBAR", event.IsChecked() ? 1 : 0);
+			Settings::Set("MINIMIZE_TASKBAR", event.IsChecked() ? 1 : 0);
 			break;
 		}
 
 		case Window::MenuIDs::SHOWSTATS:
 		{
-			Settings::set("SHOW_STATS", event.IsChecked() ? 1 : 0);
+			Settings::Set("SHOW_STATS", event.IsChecked() ? 1 : 0);
 			mainWindow->GetStatsText()->Show(event.IsChecked());
+			break;
+		}
+
+		case Window::MenuIDs::SAVESTATE:
+		{
+			Settings::Set("SAVE_DEVICE_STATES", event.IsChecked() ? 1 : 0);
 			break;
 		}
 	}
@@ -174,13 +181,17 @@ void Application::OnWindowCloseEvent(wxCloseEvent& event)
 	rtspManager.reset();
 	server->Close();
 
-	Settings::save();
+	Settings::UpdateDeviceStates(stateRegistry);
+	Settings::Save();
+
 	event.Skip();
 }
 
 void Application::EnsureStateInitialized(std::string name, const DeviceDescriptor& descriptor)
 {
 	auto& state = stateRegistry[name];
+
+	state.backCameraActive = true;
 
 	// 1. Initialize Sliders (Default 50 if empty)
 	if (descriptor.filters().count(Video::Filter::Category::CORRECTION)) 
