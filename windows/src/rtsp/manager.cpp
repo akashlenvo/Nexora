@@ -33,7 +33,7 @@ namespace RTSP
 		Start(url, descriptor.protocol(), resolution.first, resolution.second);
 	}
 
-	void Manager::SetStreamResolution(unsigned short width, unsigned short height)
+	void Manager::SetResolution(unsigned short width, unsigned short height)
 	{
 		const unsigned char bytes[5] = {
 			Command::RESOLUTION,							// First byte is the packet type
@@ -44,6 +44,58 @@ namespace RTSP
 		};
 
 		server.Send(streamingDevice, bytes, 5);
+	}
+
+	void Manager::SetFPS(int fps)
+	{
+		const unsigned char bytes[2] = { Command::FPS, (uint8_t)fps };
+		server.Send(streamingDevice, bytes, 2);
+	}
+
+	void Manager::SetBitrate(int bitrate)
+	{
+		const unsigned char bytes[3] = { 
+			Command::BITRATE, 
+			static_cast<unsigned char>(bitrate & 0xFF),		// Low byte of bitrate
+			static_cast<unsigned char>(bitrate >> 8),         // High byte of bitrate
+		};
+		server.Send(streamingDevice, bytes, 3);
+	}
+
+	void Manager::SetAdaptiveBitrate(int min, int max)
+	{
+		const unsigned char bytes[5] = {
+			Command::ADAPTIVE_BITRATE,
+			static_cast<unsigned char>(min & 0xFF),		// Low byte of bitrate
+			static_cast<unsigned char>(min >> 8),         // High byte of bitrate
+			static_cast<unsigned char>(max & 0xFF),		// Low byte of bitrate
+			static_cast<unsigned char>(max >> 8),         // High byte of bitrate
+		};
+		server.Send(streamingDevice, bytes, 5);
+	}
+
+	void Manager::SetStabilization(bool enabled)
+	{
+		const unsigned char bytes[2] = { Command::STABILIZATION, enabled ? 1 : 0 };
+		server.Send(streamingDevice, bytes, 2);
+	}
+
+	void Manager::SetFlash(bool enabled)
+	{
+		const unsigned char bytes[2] = { Command::FLASH, enabled ? 1 : 0 };
+		server.Send(streamingDevice, bytes, 2);
+	}
+
+	void Manager::SetFocusMode(int mode)
+	{
+		const unsigned char bytes[2] = { Command::FOCUS, (uint8_t)mode };
+		server.Send(streamingDevice, bytes, 2);
+	}
+
+	void Manager::SetH265Codec(bool enabled)
+	{
+		const unsigned char bytes[2] = { Command::CODEC, enabled ? 1 : 0 };
+		server.Send(streamingDevice, bytes, 2);
 	}
 
 	void Manager::SwapCamera()

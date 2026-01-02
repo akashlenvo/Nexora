@@ -28,6 +28,13 @@ namespace RTSP
 			static const int CORRECTION_FILTER = 0x05;
 			static const int EFFECT_FILTER = 0x06;
 			static const int ROTATION = 0x07;
+			static const int BITRATE = 0x08;
+			static const int ADAPTIVE_BITRATE = 0x09;
+			static const int STABILIZATION = 0xA;
+			static const int FLASH = 0xB;
+			static const int FOCUS = 0xC;
+			static const int CODEC = 0xD;
+			static const int FPS = 0xE;
 		};
 
 		Manager(const Server& server, OnFrameReceivedCallback onFrameReceivedCallback);
@@ -40,7 +47,14 @@ namespace RTSP
 		const std::vector<DeviceDescriptor>& GetDescriptors() const;
 		const int& GetStreamingDevice() const;
 
-		void SetStreamResolution(unsigned short width, unsigned short height);
+		void SetResolution(unsigned short width, unsigned short height);
+		void SetFPS(int fps);
+		void SetBitrate(int bitrate);
+		void SetAdaptiveBitrate(int min, int max);
+		void SetStabilization(bool enabled);
+		void SetFlash(bool enabled);
+		void SetFocusMode(int mode);
+		void SetH265Codec(bool enabled);
 		void SwapCamera();
 		void Rotate(uint8_t degrees);
 		

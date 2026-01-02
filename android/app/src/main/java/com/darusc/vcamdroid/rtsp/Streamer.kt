@@ -10,8 +10,10 @@ import com.darusc.vcamdroid.video.filters.FilterAdjuster
 import com.darusc.vcamdroid.video.filters.FilterRepository
 import com.darusc.vcamdroid.video.getSupportedResolutions
 import com.pedro.common.ConnectChecker
+import com.pedro.common.VideoCodec
 import com.pedro.encoder.input.gl.render.filters.BaseFilterRender
 import com.pedro.encoder.input.video.CameraOpenException
+import com.pedro.library.util.BitrateAdapter
 import com.pedro.library.view.OpenGlView
 import com.pedro.rtspserver.RtspServerCamera2
 import kotlinx.coroutines.CoroutineScope
@@ -34,11 +36,11 @@ class Streamer(
 
     private val rtspServerCamera2 = RtspServerCamera2(openGlView, this, PORT)
 
-    // The active effect filter. Only one can be active at a time
-    private var activeEffectFilter: BaseFilterRender? = null
-
-    // All the active correction filters. Multiple can be active at a time
-    private var activeCorrectionFilters: MutableSet<BaseFilterRender> = HashSet()
+    private var bitrateAdapter = BitrateAdapter {
+        if (options.adaptiveBitrateEnabled) {
+            rtspServerCamera2.setVideoBitrateOnFly(it)
+        }
+    }
 
     init {
         val connectionManager = ConnectionManager.getInstance()
@@ -116,7 +118,7 @@ class Streamer(
 
         CoroutineScope(Dispatchers.Main).launch {
             // Remove the current filter if there is one
-            activeEffectFilter?.let { rtspServerCamera2.glInterface.removeFilter(it) }
+            options.activeEffectFilter?.let { rtspServerCamera2.glInterface.removeFilter(it) }
             // Only apply the new requested effect filter if it is different than the NONE filter
             // Applying the NONE filter would completely remove all filters, including the correction filters
             // This behaviour results in deleting the effect filter but keeping the corrections
@@ -124,10 +126,10 @@ class Streamer(
                 val filter = FilterRepository.create(filterName)
                 if (filter != null) {
                     rtspServerCamera2.glInterface.addFilter(filter)
-                    activeEffectFilter = filter
+                    options.activeEffectFilter = filter
                 }
             } else {
-                activeEffectFilter = null
+                options.activeEffectFilter = null
             }
         }
     }
@@ -144,8 +146,8 @@ class Streamer(
             return
         }
 
-        val existingFilter = activeCorrectionFilters.find { it::class.java == fclass }
-        if(existingFilter != null) {
+        val existingFilter = options.activeCorrectionFilters.find { it::class.java == fclass }
+        if (existingFilter != null) {
             // If the filter already exist just update its adjustment value
             FilterAdjuster.adjust(existingFilter, value)
         } else {
@@ -153,7 +155,7 @@ class Streamer(
             val filter = FilterRepository.create(filterName)
             CoroutineScope(Dispatchers.Main).launch {
                 FilterAdjuster.adjust(filter!!, value)
-                activeCorrectionFilters.add(filter)
+                options.activeCorrectionFilters.add(filter)
                 rtspServerCamera2.glInterface.addFilter(filter)
             }
         }
@@ -175,16 +177,43 @@ class Streamer(
      * Set a new bitrate
      */
     fun setBitrate(bitrate: Int) {
-        if (options.bitrate == bitrate)
-            return
+        options.adaptiveBitrateEnabled = false
+        rtspServerCamera2.setVideoBitrateOnFly(bitrate * 1024)
+    }
 
-        options.bitrate = bitrate
-        try {
-            rtspServerCamera2.setVideoBitrateOnFly(bitrate)
-            Log.d(TAG, "Switched bitrate to $bitrate")
-        } catch (e: Exception) {
-            Log.d(TAG, "Error while switching bitrate", e)
+    fun setAdaptiveBitrate(min: Int, max: Int) {
+        options.adaptiveBitrateEnabled = true
+        options.adaptiveBitrateMin = min * 1024
+        options.adaptiveBitrateMax = max * 1024
+
+        bitrateAdapter.setMaxBitrate(options.adaptiveBitrateMax)
+        rtspServerCamera2.setVideoBitrateOnFly(options.adaptiveBitrateMax)
+    }
+
+    fun setStabilization(enabled: Boolean) {
+        when (enabled) {
+            true -> rtspServerCamera2.enableVideoStabilization()
+            false -> rtspServerCamera2.disableVideoStabilization()
         }
+    }
+
+    fun setFlash(enabled: Boolean) {
+        when (enabled) {
+            true -> rtspServerCamera2.enableLantern()
+            false -> rtspServerCamera2.disableLantern()
+        }
+    }
+
+    fun setFocus(mode: Int) {
+        when (mode) {
+            0 -> rtspServerCamera2.enableAutoFocus()
+            1 -> rtspServerCamera2.disableAutoFocus()
+        }
+    }
+
+    fun setH265Codec(enabled: Boolean) {
+        rtspServerCamera2.setVideoCodec(if (enabled) VideoCodec.H265 else VideoCodec.H264)
+        restartStream()
     }
 
     private fun startPreview() {
@@ -243,6 +272,10 @@ class Streamer(
         val maxBitrate = 12000 * 1024
 
         return calculatedBitrate.toInt().coerceIn(minBitrate, maxBitrate)
+    }
+
+    override fun onNewBitrate(bitrate: Long) {
+        bitrateAdapter.adaptBitrate(bitrate)
     }
 
     override fun onAuthError() {}

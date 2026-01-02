@@ -122,7 +122,6 @@ void Settings::Save()
             f << "bitrate=" << state.bitrate << std::endl;
             f << "min_br=" << state.minBitrate << std::endl;
             f << "max_br=" << state.maxBitrate << std::endl;
-            f << "audio=" << (state.audioEnabled ? 1 : 0) << std::endl;
             f << "stab=" << (state.stabilizationEnabled ? 1 : 0) << std::endl;
             f << "flash=" << (state.flashEnabled ? 1 : 0) << std::endl;
             f << "h265=" << (state.h265Enabled ? 1 : 0) << std::endl;
@@ -177,7 +176,6 @@ void Settings::ParseDeviceLine(State& state, const std::string& key, const std::
     else if (key == "bitrate") state.bitrate = std::atoi(val.c_str());
     else if (key == "min_br") state.minBitrate = std::atoi(val.c_str());
     else if (key == "max_br") state.maxBitrate = std::atoi(val.c_str());
-    else if (key == "audio") state.audioEnabled = (val == "1");
     else if (key == "stab") state.stabilizationEnabled = (val == "1");
     else if (key == "flash") state.flashEnabled = (val == "1");
     else if (key == "h265") state.h265Enabled = (val == "1");

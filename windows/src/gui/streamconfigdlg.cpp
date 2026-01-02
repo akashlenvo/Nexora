@@ -149,7 +149,6 @@ StreamConfigDlg::StreamConfigDlg(wxWindow* parent,
     focusChoice = new wxChoice(hwBox->GetStaticBox(), wxID_ANY);
     focusChoice->Append("Continuous Video (Auto)");
     focusChoice->Append("Fixed / Infinity");
-    focusChoice->Append("Macro");
     focusChoice->SetSelection(currentConfig.focusMode);
     focusChoice->Bind(wxEVT_CHOICE, &StreamConfigDlg::OnSimpleSettingChanged, this);
     hwGrid->Add(focusChoice, 1, wxEXPAND);

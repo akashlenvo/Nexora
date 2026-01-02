@@ -25,7 +25,6 @@ public:
         int minBitrate;
         int maxBitrate;
 
-        bool audioEnabled;
         bool stabilizationEnabled;
         bool h265Enabled;
         int focusMode;
@@ -40,7 +39,6 @@ public:
     int GetMinBitrate() const;
     int GetMaxBitrate() const;
 
-    bool IsAudioEnabled() const { return audioCheck->GetValue(); }
     bool IsStabilizationEnabled() const { return stabilizationCheck->GetValue(); }
     bool IsFlashEnabled() const { return flashCheck->GetValue(); }
     int GetFocusMode() const { return focusChoice->GetSelection(); }
@@ -66,7 +64,6 @@ private:
     wxStaticText* maxLabel;
     // --------------------------
 
-    wxCheckBox* audioCheck;
     wxCheckBox* stabilizationCheck;
     wxChoice* codecChoice;
     wxChoice* focusChoice;

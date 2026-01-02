@@ -268,7 +268,6 @@ void Application::ShowStreamConfigDialog(wxCommandEvent& event)
 	config.minBitrate = state.minBitrate;
 	config.maxBitrate = state.maxBitrate;
 
-	config.audioEnabled = state.audioEnabled;
 	config.stabilizationEnabled = state.stabilizationEnabled;
 	config.flashEnabled = state.flashEnabled;
 	config.focusMode = state.focusMode;
@@ -283,13 +282,13 @@ void Application::ShowStreamConfigDialog(wxCommandEvent& event)
 		resStr.BeforeFirst('x').ToLong(&w);
 		resStr.AfterFirst('x').ToLong(&h);
 
-		rtspManager->SetStreamResolution((uint16_t)w, (uint16_t)h);
+		rtspManager->SetResolution((uint16_t)w, (uint16_t)h);
 		stateRegistry[deviceName].resolution = { (int)w, (int)h };
 	});
 
 	dlg.Bind(EVT_STREAM_FPS_CHANGED, [this, deviceName](wxCommandEvent& e) {
 		int fps = e.GetInt();
-		//rtspManager->SetFPS(fps);
+		rtspManager->SetFPS(fps);
 		stateRegistry[deviceName].fps = fps;
 	});
 
@@ -305,40 +304,40 @@ void Application::ShowStreamConfigDialog(wxCommandEvent& event)
 
 		if (regState.adaptiveBitrate) 
 		{
-			//rtspManager->SetAdaptiveBitrate(regState.minBitrate, regState.maxBitrate);
+			rtspManager->SetAdaptiveBitrate(regState.minBitrate, regState.maxBitrate);
 		}
 		else 
 		{
-			//rtspManager->SetBitrate(regState.bitrate);
+			rtspManager->SetBitrate(regState.bitrate);
 		}
 	});
 
-	// Hardware Toggles (Audio, Stab, Flash, etc.)
+	// Hardware Toggles
 	dlg.Bind(EVT_STREAM_CONFIG_CHANGED, [this, deviceName, &dlg](wxCommandEvent& e) {
 		auto& regState = stateRegistry[deviceName];
 
 		if (regState.stabilizationEnabled != dlg.IsStabilizationEnabled()) 
 		{
 			regState.stabilizationEnabled = dlg.IsStabilizationEnabled();
-			// rtspManager->SetStabilization(regState.stabilizationEnabled);
+			rtspManager->SetStabilization(regState.stabilizationEnabled);
 		}
 
 		if (regState.flashEnabled != dlg.IsFlashEnabled()) 
 		{
 			regState.flashEnabled = dlg.IsFlashEnabled();
-			// rtspManager->SetFlash(regState.flashEnabled);
+			rtspManager->SetFlash(regState.flashEnabled);
 		}
 
 		if (regState.focusMode != dlg.GetFocusMode()) 
 		{
 			regState.focusMode = dlg.GetFocusMode();
-			// rtspManager->SetFocusMode(regState.focusMode);
+			rtspManager->SetFocusMode(regState.focusMode);
 		}
 
 		if (regState.h265Enabled != dlg.IsH265Enabled()) 
 		{
 			regState.h265Enabled = dlg.IsH265Enabled();
-			// rtspManager->SetCodec(regState.h265Enabled);
+			rtspManager->SetH265Codec(regState.h265Enabled);
 		}
 	});
 

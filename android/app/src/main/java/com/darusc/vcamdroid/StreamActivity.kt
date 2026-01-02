@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.SurfaceHolder
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.processing.Packet
 import com.darusc.vcamdroid.databinding.ActivityStreamBinding
 import com.darusc.vcamdroid.networking.ConnectionManager
 import com.darusc.vcamdroid.networking.PacketType
@@ -57,7 +58,9 @@ class StreamActivity : AppCompatActivity(), SurfaceHolder.Callback, ConnectionMa
         val type = buffer[0]
 
         when (type) {
-            PacketType.CAMERA -> streamer.switchCamera()
+            PacketType.CAMERA -> {
+                streamer.switchCamera()
+            }
             PacketType.RESOLUTION -> {
                 val width = (buffer[1].toInt() and 0xFF) or (buffer[2].toInt() shl 8)
                 val height = (buffer[3].toInt() and 0xFF) or (buffer[4].toInt() shl 8)
@@ -75,6 +78,30 @@ class StreamActivity : AppCompatActivity(), SurfaceHolder.Callback, ConnectionMa
                 val filterName = String(buffer, 2, buffer[1].toInt(), Charsets.UTF_8)
                 val value = buffer[2 + buffer[1].toInt()].toInt()
                 streamer.applyCorrectionFilter(filterName, value)
+            }
+            PacketType.BITRATE -> {
+                val bitrate = (buffer[1].toInt() and 0xFF) or (buffer[2].toInt() shl 8)
+                streamer.setBitrate(bitrate)
+            }
+            PacketType.ADAPTIVE_BITRATE ->  {
+                val min = (buffer[1].toInt() and 0xFF) or (buffer[2].toInt() shl 8)
+                val max = (buffer[3].toInt() and 0xFF) or (buffer[4].toInt() shl 8)
+                streamer.setAdaptiveBitrate(min, max)
+            }
+            PacketType.STABILIZATION -> {
+                streamer.setStabilization(buffer[1].toInt() == 1)
+            }
+            PacketType.FLASH -> {
+                streamer.setFlash(buffer[1].toInt() == 1)
+            }
+            PacketType.FOCUS -> {
+                streamer.setFocus(buffer[1].toInt())
+            }
+            PacketType.CODEC -> {
+                streamer.setH265Codec(buffer[1].toInt() == 1)
+            }
+            PacketType.FPS -> {
+                streamer.setFps(buffer[1].toInt())
             }
         }
     }
