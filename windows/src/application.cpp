@@ -265,7 +265,7 @@ void Application::ShowAdjustmentsDialog(wxCommandEvent& event)
 		auto name = event.GetString().ToStdString();
 		auto value = event.GetInt();
 
-		rtspManager->ApplyFilter(name, value);
+		rtspManager->ApplyCorrectionFilter(name, value);
 		state.filterSliderValues[name] = value;
 	});
 
@@ -273,7 +273,7 @@ void Application::ShowAdjustmentsDialog(wxCommandEvent& event)
 		auto name = event.GetString().ToStdString();
 		auto category = event.GetInt();
 
-		rtspManager->ApplyFilter(name);
+		rtspManager->ApplyEffectFilter(name);
 		state.activeFilters[category] = name;
 	});
 

@@ -58,7 +58,7 @@ namespace RTSP
 		server.Send(streamingDevice, bytes, 2);
 	}
 
-	void Manager::ApplyFilter(std::string filterName, int value)
+	void Manager::ApplyCorrectionFilter(std::string filterName, int value)
 	{
 		uint8_t nameLen = static_cast<uint8_t>(filterName.size());
 
@@ -69,10 +69,27 @@ namespace RTSP
 		// byte 1 -> Name string length (UTF8)
 		// byte 2.. -> Name string
 		// byte n -> Value
-		packet.push_back(Command::FILTER);
+		packet.push_back(Command::CORRECTION_FILTER);
 		packet.push_back(nameLen);
 		packet.insert(packet.end(), filterName.begin(), filterName.end());
 		packet.push_back(static_cast<uint8_t>(value));
+
+		server.Send(streamingDevice, packet.data(), packet.size());
+	}
+
+	void Manager::ApplyEffectFilter(std::string filterName)
+	{
+		uint8_t nameLen = static_cast<uint8_t>(filterName.size());
+
+		std::vector<uint8_t> packet;
+		packet.reserve(3 + nameLen);
+
+		// byte 0 -> Command::Filter
+		// byte 1 -> Name string length (UTF8)
+		// byte 2.. -> Name string
+		packet.push_back(Command::EFFECT_FILTER);
+		packet.push_back(nameLen);
+		packet.insert(packet.end(), filterName.begin(), filterName.end());
 
 		server.Send(streamingDevice, packet.data(), packet.size());
 	}

@@ -28,6 +28,9 @@ object FilterRepository {
             it.category
         } ?: Category.NONE
 
+    fun getClass(filterName: String): Class<out BaseFilterRender>? =
+        filters.find { it.name.equals(filterName, ignoreCase = true) }?.filterClass
+
     fun create(filterName: String): BaseFilterRender? =
         filters.find { it.name.equals(filterName, ignoreCase = true) }?.let { create(it) }
 
@@ -42,7 +45,7 @@ object FilterRepository {
 
     val filters: List<FilterInfo> = listOf(
         // --- Default ---
-        FilterInfo("No Filter", NoFilterRender::class.java, Category.NONE),
+        FilterInfo("None", NoFilterRender::class.java, Category.NONE),
 
         // --- Corrections ---
         FilterInfo("Brightness", BrightnessFilterRender::class.java, Category.CORRECTION),
@@ -79,7 +82,7 @@ object FilterRepository {
         FilterInfo("Analog TV", AnalogTVFilterRender::class.java, Category.DISTORTION),
         FilterInfo("Swirl", SwirlFilterRender::class.java, Category.DISTORTION),
         FilterInfo("Ripple", RippleFilterRender::class.java, Category.DISTORTION),
-        FilterInfo("Basic Deformation", BasicDeformationFilterRender::class.java, Category.DISTORTION),
+        // FilterInfo("Basic Deformation", BasicDeformationFilterRender::class.java, Category.DISTORTION),
         FilterInfo("Fire", FireFilterRender::class.java, Category.DISTORTION),
         FilterInfo("Snow", SnowFilterRender::class.java, Category.DISTORTION),
 

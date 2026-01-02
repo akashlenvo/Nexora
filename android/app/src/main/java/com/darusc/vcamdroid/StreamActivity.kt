@@ -67,10 +67,14 @@ class StreamActivity : AppCompatActivity(), SurfaceHolder.Callback, ConnectionMa
                 val degrees = buffer[1].toInt();
                 streamer.rotate(degrees)
             }
-            PacketType.FILTER -> {
+            PacketType.EFFECT_FILTER -> {
+                val filterName = String(buffer, 2, buffer[1].toInt(), Charsets.UTF_8)
+                streamer.applyEffectFilter(filterName)
+            }
+            PacketType.CORRECTION_FILTER -> {
                 val filterName = String(buffer, 2, buffer[1].toInt(), Charsets.UTF_8)
                 val value = buffer[2 + buffer[1].toInt()].toInt()
-                streamer.applyFilter(filterName, value)
+                streamer.applyCorrectionFilter(filterName, value)
             }
         }
     }

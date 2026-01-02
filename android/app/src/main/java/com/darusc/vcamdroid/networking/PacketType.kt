@@ -7,8 +7,8 @@ class PacketType {
         const val ACTIVATION: Byte = 0x02
         const val CAMERA: Byte = 0x03
         const val QUALITY: Byte = 0x04
-        const val WB: Byte = 0x05
-        const val FILTER: Byte = 0x06
+        const val CORRECTION_FILTER: Byte = 0x05
+        const val EFFECT_FILTER: Byte = 0x06
         const val ROTATION: Byte = 0x07
     }
 }

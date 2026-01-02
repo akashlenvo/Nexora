@@ -10,6 +10,7 @@ import com.darusc.vcamdroid.video.filters.FilterAdjuster
 import com.darusc.vcamdroid.video.filters.FilterRepository
 import com.darusc.vcamdroid.video.getSupportedResolutions
 import com.pedro.common.ConnectChecker
+import com.pedro.encoder.input.gl.render.filters.BaseFilterRender
 import com.pedro.encoder.input.video.CameraOpenException
 import com.pedro.library.view.OpenGlView
 import com.pedro.rtspserver.RtspServerCamera2
@@ -32,6 +33,12 @@ class Streamer(
     private val TAG = "VCamdroid"
 
     private val rtspServerCamera2 = RtspServerCamera2(openGlView, this, PORT)
+
+    // The active effect filter. Only one can be active at a time
+    private var activeEffectFilter: BaseFilterRender? = null
+
+    // All the active correction filters. Multiple can be active at a time
+    private var activeCorrectionFilters: MutableSet<BaseFilterRender> = HashSet()
 
     init {
         val connectionManager = ConnectionManager.getInstance()
@@ -98,26 +105,57 @@ class Streamer(
     }
 
     /**
-     * Apply a filter. If is is a CORRECTION filter it will be adjusted
-     * with the given value, otherwise the value is ignored
+     * Apply an effect filter. Only one active at a time
      * @param filterName Filter's name
-     * @param value Filter's adjustment value
      */
-    fun applyFilter(filterName: String, value: Int) {
+    fun applyEffectFilter(filterName: String) {
         val category = FilterRepository.getCategory(filterName)
-        val filter = FilterRepository.create(filterName)
-
-        if (filter == null) {
-            Log.d(TAG, "Unknown filter, $filterName")
+        if (category == FilterRepository.Category.CORRECTION) {
             return
         }
 
-        if (category == FilterRepository.Category.CORRECTION) {
-            FilterAdjuster.adjust(filter, value)
+        CoroutineScope(Dispatchers.Main).launch {
+            // Remove the current filter if there is one
+            activeEffectFilter?.let { rtspServerCamera2.glInterface.removeFilter(it) }
+            // Only apply the new requested effect filter if it is different than the NONE filter
+            // Applying the NONE filter would completely remove all filters, including the correction filters
+            // This behaviour results in deleting the effect filter but keeping the corrections
+            if (category != FilterRepository.Category.NONE) {
+                val filter = FilterRepository.create(filterName)
+                if (filter != null) {
+                    rtspServerCamera2.glInterface.addFilter(filter)
+                    activeEffectFilter = filter
+                }
+            } else {
+                activeEffectFilter = null
+            }
+        }
+    }
+
+    /**
+     * Apply a correction filter. Multiple filters can be active at once.
+     * If the filter was already applied it is adjusted with new value
+     */
+    fun applyCorrectionFilter(filterName: String, value: Int) {
+        val category = FilterRepository.getCategory(filterName)
+        val fclass = FilterRepository.getClass(filterName)
+
+        if (category != FilterRepository.Category.CORRECTION || fclass == null) {
+            return
         }
 
-        CoroutineScope(Dispatchers.Main).launch {
-            rtspServerCamera2.glInterface.setFilter(filter)
+        val existingFilter = activeCorrectionFilters.find { it::class.java == fclass }
+        if(existingFilter != null) {
+            // If the filter already exist just update its adjustment value
+            FilterAdjuster.adjust(existingFilter, value)
+        } else {
+            // Otherwise create a new filter, save it and apply it to the opengl interface
+            val filter = FilterRepository.create(filterName)
+            CoroutineScope(Dispatchers.Main).launch {
+                FilterAdjuster.adjust(filter!!, value)
+                activeCorrectionFilters.add(filter)
+                rtspServerCamera2.glInterface.addFilter(filter)
+            }
         }
     }
 
