@@ -20,7 +20,15 @@ Application::Application()
 	Settings::Load();
 	stateRegistry = Settings::GetDeviceStates();
 
-	dsSource = std::make_unique<DirectShowSource>(1280, 720);
+	int width = 1280, height = 720;
+	switch (Settings::Get("DIRECTSHOW_RESOLUTION") + Window::MenuIDs::DS_SD)
+	{
+		case Window::MenuIDs::DS_SD: dsSource = std::make_unique<DirectShowSource>(640, 480); break;
+		case Window::MenuIDs::DS_HD: dsSource = std::make_unique<DirectShowSource>(1280, 720); break;
+		case Window::MenuIDs::DS_FHD: dsSource = std::make_unique<DirectShowSource>(1920, 1080); break;
+		case Window::MenuIDs::DS_QHD: dsSource = std::make_unique<DirectShowSource>(3840, 2160); break;
+		default: dsSource = std::make_unique<DirectShowSource>(1280, 720);
+	}
 
 	server = std::make_unique<Server>(6969, *this);
 	server->Start();
@@ -128,6 +136,15 @@ void Application::OnMenuEvent(wxCommandEvent& event)
 		case Window::MenuIDs::SAVESTATE:
 		{
 			Settings::Set("SAVE_DEVICE_STATES", event.IsChecked() ? 1 : 0);
+			break;
+		}
+
+		case Window::MenuIDs::DS_SD:
+		case Window::MenuIDs::DS_HD:
+		case Window::MenuIDs::DS_FHD:
+		case Window::MenuIDs::DS_QHD:
+		{
+			Settings::Set("DIRECTSHOW_RESOLUTION", event.GetId() - Window::MenuIDs::DS_SD);
 			break;
 		}
 	}

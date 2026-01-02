@@ -54,6 +54,17 @@ void Window::InitializeMenu(Server::HostInfo hostinfo)
 	auto c3 = file->AppendCheckItem(MenuIDs::SAVESTATE, "Save device presets");
 	c3->Check(Settings::Get("SAVE_DEVICE_STATE") == 1);
 
+	wxMenu* dsresolutions = new wxMenu();
+	dsresolutions->AppendRadioItem(MenuIDs::DS_SD, "640 x 480", "Standard 4:3");
+	dsresolutions->AppendRadioItem(MenuIDs::DS_HD, "1280 x 720", "HD");
+	dsresolutions->AppendRadioItem(MenuIDs::DS_FHD, "1920 x 1080", "FHD");
+	dsresolutions->AppendRadioItem(MenuIDs::DS_QHD, "3840 x 2160", "QHD");
+
+	auto selected = Settings::Get("DIRECTSHOW_RESOLUTION");
+	dsresolutions->Check((selected != -1 ? selected : 0) + 105, true);
+
+	file->AppendSubMenu(dsresolutions, "DirectShow Resolution", "Requires restart");
+
 	file->Append(wxID_ANY, "About");
 	file->AppendSeparator();
 	file->Append(wxID_ANY, "Exit");

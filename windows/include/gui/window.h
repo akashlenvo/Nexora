@@ -17,6 +17,10 @@ public:
 		static const int HIDE2TRAY = 102;
 		static const int SHOWSTATS = 103;
 		static const int SAVESTATE = 104;
+		static const int DS_SD = 105;
+		static const int DS_HD = 106;
+		static const int DS_FHD = 107;
+		static const int DS_QHD = 108;
 	};
 
 	Window(Server::HostInfo hostInfo);
