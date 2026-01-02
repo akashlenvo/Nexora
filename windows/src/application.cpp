@@ -156,20 +156,24 @@ void Application::OnSourceChanged(wxEvent& event)
 	const auto& descriptor = rtspManager->GetDescriptors()[deviceId];
 
 	EnsureStateInitialized(descriptor.name(), descriptor);
-	const auto& state = stateRegistry[descriptor.name()];
+	auto& state = stateRegistry[descriptor.name()];
 	
-	int resIndex = 0; // Default to first available if match fails
+	// Make sure the resolution stored in state is actually avaialble
+	// and if it's not default to the first resolution
+	bool resFound = false;
 	const auto& resList = state.backCameraActive ? descriptor.backResolutions() : descriptor.frontResolutions();
 	for (size_t i = 0; i < resList.size(); i++) 
 	{
 		if (resList[i] == state.resolution) 
 		{
-			resIndex = i;
+			resFound = true;
 			break;
 		}
 	}
+	if (!resFound)
+		state.resolution = resList[0];
 	
-	rtspManager->Connect2Stream(deviceId, resIndex);
+	rtspManager->Connect2Stream(deviceId, state);
 }
 
 void Application::OnWindowCloseEvent(wxCloseEvent& event)
@@ -207,14 +211,14 @@ void Application::EnsureStateInitialized(std::string name, const DeviceDescripto
 	}
 
 	// 2. Initialize Dropdowns (Default "None")
-	for (const auto& [cat, list] : descriptor.filters()) {
+	/*for (const auto& [cat, list] : descriptor.filters()) {
 		if (cat == Video::Filter::Category::CORRECTION || cat == Video::Filter::Category::NONE) 
 			continue;
 
 		int catId = static_cast<int>(cat);
 		if (state.activeFilters.find(catId) == state.activeFilters.end()) 
 			state.activeFilters[catId] = "None";
-	}
+	}*/
 }
 
 void Application::ShowAdjustmentsDialog(wxCommandEvent& event)
@@ -231,7 +235,7 @@ void Application::ShowAdjustmentsDialog(wxCommandEvent& event)
 	EnsureStateInitialized(desc.name(), desc);
 	auto& state = stateRegistry[desc.name()];
 
-	ImgAdjDlg dialog(nullptr, desc, state.filterSliderValues, state.activeFilters);
+	ImgAdjDlg dialog(nullptr, desc, state.filterSliderValues, state.activeEffectFilter);
 
 	dialog.Bind(EVT_FILTER_PARAM_CHANGED, [&](const wxCommandEvent& event) {		
 		auto name = event.GetString().ToStdString();
@@ -246,7 +250,7 @@ void Application::ShowAdjustmentsDialog(wxCommandEvent& event)
 		auto category = event.GetInt();
 
 		rtspManager->ApplyEffectFilter(name);
-		state.activeFilters[category] = name;
+		state.activeEffectFilter = name;
 	});
 
 	dialog.ShowModal();

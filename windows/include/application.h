@@ -6,7 +6,7 @@
 #include "net/server.h"
 #include "rtsp/manager.h"
 #include "directshowsource.h"
-#include "state.h"
+#include "rtsp/streamoptions.h"
 
 class Application : public wxApp, public Server::ConnectionListener
 {
@@ -21,7 +21,7 @@ public:
 private:
 	Window* mainWindow;
 
-	State::Registry stateRegistry;
+	StreamOptions::Registry stateRegistry;
 
 	std::unique_ptr<Server> server;
 	std::unique_ptr<RTSP::Manager> rtspManager;
@@ -38,6 +38,4 @@ private:
 	void OnWindowCloseEvent(wxCloseEvent& event);
 
 	void EnsureStateInitialized(std::string name, const DeviceDescriptor& descriptor);
-
-	// void SetVideoOptions(int width, int height, int aspectRatioW, int aspectRatioH, bool portrait = false);
 };

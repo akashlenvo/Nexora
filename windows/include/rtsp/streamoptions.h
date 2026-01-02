@@ -1,19 +1,17 @@
 #pragma once
 
-#include "rtsp/manager.h"
+#include "constants.h"
 
 /*
 	State store for a connected device
 */
-struct State
+struct StreamOptions
 {
 	// State registry mapping device name to its cached state store
-	using Registry = std::map<std::string, State>;
+	using Registry = std::map<std::string, StreamOptions>;
 
 	// Maps filter names to values
 	using FilterValueCache = std::map<std::string, int>;
-	// Maps filter category to active filter in that category
-	using ActiveFilterCache = std::map<int, std::string>;
 
 	int fps = 30;
 	std::pair<int, int> resolution = { 640, 480 };
@@ -21,13 +19,13 @@ struct State
 
 	// Cached values of adjustment filters
 	FilterValueCache filterSliderValues;
-	// Cached selected filters per every effect category
-	ActiveFilterCache activeFilters;
+	// Only 1 effect filter is permitted
+	std::string activeEffectFilter;
 
 	bool adaptiveBitrate = false;
-	int bitrate = RTSP::Manager::DEFAULT_STATIC_BITRATE; 
-	int minBitrate = RTSP::Manager::DEFAULT_MIN_BITRATE;
-	int maxBitrate = RTSP::Manager::DEFAULT_MAX_BITRATE;
+	int bitrate = RTSP::DEFAULT_STATIC_BITRATE; 
+	int minBitrate = RTSP::DEFAULT_MIN_BITRATE;
+	int maxBitrate = RTSP::DEFAULT_MAX_BITRATE;
 
 	bool stabilizationEnabled = false;
 	bool flashEnabled = false;

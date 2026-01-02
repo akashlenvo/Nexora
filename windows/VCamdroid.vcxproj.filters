@@ -45,9 +45,6 @@
     <ClCompile Include="src\rtsp\receiver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\net\devicedescriptor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\rtsp\manager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -67,6 +64,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\gui\streamconfigdlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\net\serializer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -131,10 +131,16 @@
     <ClInclude Include="include\video\filter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\state.h">
+    <ClInclude Include="include\rtsp\streamoptions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\gui\streamconfigdlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\net\serializer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\rtsp\constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

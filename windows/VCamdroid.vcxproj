@@ -157,7 +157,7 @@ xcopy "$(ProjectDir)3rdparty\softcam\examples\softcam_installer\x64\Release\soft
     <ClCompile Include="src\gui\qrconview.cpp" />
     <ClCompile Include="src\gui\streamconfigdlg.cpp" />
     <ClCompile Include="src\net\connection.cpp" />
-    <ClCompile Include="src\net\devicedescriptor.cpp" />
+    <ClCompile Include="src\net\serializer.cpp" />
     <ClCompile Include="src\rtsp\manager.cpp" />
     <ClCompile Include="src\canvas.cpp" />
     <ClCompile Include="src\main.cpp">
@@ -179,6 +179,8 @@ xcopy "$(ProjectDir)3rdparty\softcam\examples\softcam_installer\x64\Release\soft
     <ClInclude Include="include\gui\qrconview.h" />
     <ClInclude Include="include\net\connection.h" />
     <ClInclude Include="include\net\devicedescriptor.h" />
+    <ClInclude Include="include\net\serializer.h" />
+    <ClInclude Include="include\rtsp\constants.h" />
     <ClInclude Include="include\rtsp\ffmpeg.h" />
     <ClInclude Include="include\rtsp\ffmpeginterrupt.h" />
     <ClInclude Include="include\rtsp\receiver.h" />
@@ -187,7 +189,7 @@ xcopy "$(ProjectDir)3rdparty\softcam\examples\softcam_installer\x64\Release\soft
     <ClInclude Include="include\logger.h" />
     <ClInclude Include="include\net\server.h" />
     <ClInclude Include="include\gui\window.h" />
-    <ClInclude Include="include\state.h" />
+    <ClInclude Include="include\rtsp\streamoptions.h" />
     <ClInclude Include="include\video\directshowscaler.h" />
     <ClInclude Include="include\video\filter.h" />
     <ClInclude Include="include\video\framescaler.h" />

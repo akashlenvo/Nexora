@@ -78,10 +78,10 @@ StreamConfigDlg::StreamConfigDlg(wxWindow* parent,
     staticBitratePanel = new wxPanel(qualityBox->GetStaticBox(), wxID_ANY);
     auto staticSizer = new wxBoxSizer(wxHORIZONTAL);
 
-    int defStatic = currentConfig.bitrate > 0 ? currentConfig.bitrate : RTSP::Manager::DEFAULT_STATIC_BITRATE;
+    int defStatic = currentConfig.bitrate > 0 ? currentConfig.bitrate : RTSP::DEFAULT_STATIC_BITRATE;
 
     staticLabel = new wxStaticText(staticBitratePanel, wxID_ANY, FormatBitrate(defStatic), wxDefaultPosition, wxSize(70, -1), wxALIGN_RIGHT);
-    staticSlider = new wxSlider(staticBitratePanel, wxID_ANY, defStatic, RTSP::Manager::MIN_BITRATE, RTSP::Manager::MAX_BITRATE);
+    staticSlider = new wxSlider(staticBitratePanel, wxID_ANY, defStatic, RTSP::MIN_BITRATE, RTSP::MAX_BITRATE);
     staticSlider->Bind(wxEVT_SLIDER, &StreamConfigDlg::OnBitrateSliderChanged, this);
 
     staticSizer->Add(staticSlider, 1, wxEXPAND | wxRIGHT, 5);
@@ -96,12 +96,12 @@ StreamConfigDlg::StreamConfigDlg(wxWindow* parent,
     adaptiveSizer->AddGrowableCol(1, 1);
 
     // Defaults: Min=1000, Max=5000
-    int defMin = currentConfig.minBitrate > 0 ? currentConfig.minBitrate : RTSP::Manager::DEFAULT_MIN_BITRATE;
-    int defMax = currentConfig.maxBitrate > 0 ? currentConfig.maxBitrate : RTSP::Manager::DEFAULT_MAX_BITRATE;
+    int defMin = currentConfig.minBitrate > 0 ? currentConfig.minBitrate : RTSP::DEFAULT_MIN_BITRATE;
+    int defMax = currentConfig.maxBitrate > 0 ? currentConfig.maxBitrate : RTSP::DEFAULT_MAX_BITRATE;
 
     // Min Row
     adaptiveSizer->Add(new wxStaticText(adaptiveBitratePanel, wxID_ANY, "Min:"), 0, wxALIGN_CENTER_VERTICAL);
-    minSlider = new wxSlider(adaptiveBitratePanel, wxID_ANY, defMin, RTSP::Manager::MIN_BITRATE, RTSP::Manager::MAX_BITRATE);
+    minSlider = new wxSlider(adaptiveBitratePanel, wxID_ANY, defMin, RTSP::MIN_BITRATE, RTSP::MAX_BITRATE);
     minLabel = new wxStaticText(adaptiveBitratePanel, wxID_ANY, FormatBitrate(defMin), wxDefaultPosition, wxSize(70, -1), wxALIGN_RIGHT);
     minSlider->Bind(wxEVT_SLIDER, &StreamConfigDlg::OnBitrateSliderChanged, this);
     adaptiveSizer->Add(minSlider, 1, wxEXPAND);
@@ -109,7 +109,7 @@ StreamConfigDlg::StreamConfigDlg(wxWindow* parent,
 
     // Max Row
     adaptiveSizer->Add(new wxStaticText(adaptiveBitratePanel, wxID_ANY, "Max:"), 0, wxALIGN_CENTER_VERTICAL);
-    maxSlider = new wxSlider(adaptiveBitratePanel, wxID_ANY, defMax, RTSP::Manager::MIN_BITRATE, RTSP::Manager::MAX_BITRATE);
+    maxSlider = new wxSlider(adaptiveBitratePanel, wxID_ANY, defMax, RTSP::MIN_BITRATE, RTSP::MAX_BITRATE);
     maxLabel = new wxStaticText(adaptiveBitratePanel, wxID_ANY, FormatBitrate(defMax), wxDefaultPosition, wxSize(70, -1), wxALIGN_RIGHT);
     maxSlider->Bind(wxEVT_SLIDER, &StreamConfigDlg::OnBitrateSliderChanged, this);
     adaptiveSizer->Add(maxSlider, 1, wxEXPAND);

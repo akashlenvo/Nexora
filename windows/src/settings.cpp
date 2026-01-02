@@ -11,7 +11,7 @@ void Settings::Set(std::string name, int value)
     settings[name] = value;
 }
 
-State::Registry Settings::GetDeviceStates()
+StreamOptions::Registry Settings::GetDeviceStates()
 {
     // Only return loaded states if the feature is enabled
     if (Get("SAVE_DEVICE_STATES") == 1)
@@ -21,7 +21,7 @@ State::Registry Settings::GetDeviceStates()
     return {}; // Return empty if disabled (App will use defaults)
 }
 
-void Settings::UpdateDeviceStates(const std::map<std::string, State>& currentStates)
+void Settings::UpdateDeviceStates(const std::map<std::string, StreamOptions>& currentStates)
 {
     if (Get("SAVE_DEVICE_STATES") == 1)
     {
@@ -41,7 +41,7 @@ void Settings::Load()
 
     std::string line;
     std::string currentSection = "";
-    State* currentDevice = nullptr;
+    StreamOptions* currentDevice = nullptr;
 
     while (std::getline(f, line))
     {
@@ -130,14 +130,11 @@ void Settings::Save()
             // Save Sliders (Prefix "S:")
             for (const auto& [filter, val] : state.filterSliderValues) 
             {
-                f << "S:" << filter << "=" << val << std::endl;
+                f << "C:" << filter << "=" << val << std::endl;
             }
 
-            // Save Dropdowns (Prefix "D:")
-            for (const auto& [cat, filter] : state.activeFilters) 
-            {
-                f << "D:" << cat << "=" << filter << std::endl;
-            }
+            f << "E:=" << state.activeEffectFilter << std::endl;
+            
             f << std::endl;
         }
     }
@@ -153,7 +150,7 @@ void Settings::Save()
     f.close();
 }
 
-void Settings::ParseDeviceLine(State& state, const std::string& key, const std::string& val)
+void Settings::ParseDeviceLine(StreamOptions& state, const std::string& key, const std::string& val)
 {
     if (key == "fps")
     {
@@ -180,15 +177,13 @@ void Settings::ParseDeviceLine(State& state, const std::string& key, const std::
     else if (key == "flash") state.flashEnabled = (val == "1");
     else if (key == "h265") state.h265Enabled = (val == "1");
     else if (key == "focus") state.focusMode = std::atoi(val.c_str());
-    else if (key.rfind("S:", 0) == 0) 
+    else if (key.rfind("C:", 0) == 0) 
     { 
-        // Starts with S: (Slider)
         state.filterSliderValues[key.substr(2)] = std::atoi(val.c_str());
     }
-    else if (key.rfind("D:", 0) == 0) 
+    else if (key.rfind("E:", 0) == 0) 
     { 
-        // Starts with D: (Dropdown)
-        state.activeFilters[std::atoi(key.substr(2).c_str())] = val;
+        state.activeEffectFilter = val;
     }
 }
 

@@ -31,12 +31,12 @@ class StreamActivity : AppCompatActivity(), SurfaceHolder.Callback, ConnectionMa
         setContentView(viewBinding.root)
 
         connectionManager.setOnBytesReceivedCallback(::onBytesReceived)
-        streamer = Streamer(StreamOptions.default(), this, viewBinding.surfaceView)
+        streamer = Streamer(StreamOptions(), this, viewBinding.surfaceView)
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
         if (holder.surface != null && holder.surface.isValid) {
-            streamer.start()
+            streamer.startPreview()
         }
     }
 
@@ -58,6 +58,10 @@ class StreamActivity : AppCompatActivity(), SurfaceHolder.Callback, ConnectionMa
         val type = buffer[0]
 
         when (type) {
+            PacketType.ACTIVATION -> {
+                val options = StreamOptions.deserialize(buffer)
+                streamer.startStream(options)
+            }
             PacketType.CAMERA -> {
                 streamer.switchCamera()
             }

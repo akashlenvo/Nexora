@@ -56,7 +56,7 @@ class TCPConnection(
     }
 
     private fun startReceiveBytesLoop() {
-        val buf = ByteArray(15)
+        val buf = ByteArray(512)
         while (running.get()) {
             try {
                 val bytes = inputStream?.read(buf)

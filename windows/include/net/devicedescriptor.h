@@ -29,7 +29,13 @@ struct DeviceDescriptor
 	*/
 	using Resolution = std::pair<int, int>;
 
-	static DeviceDescriptor Create(const char* bytes, int size);
+	DeviceDescriptor(std::string name, std::string url, std::string protocol, std::vector<Resolution> frontResolutions, std::vector<Resolution> backResolutions, Video::Filter::Registry filters)
+		: deviceName(name),
+		rtspUrl(url),
+		rtspProtocol(protocol),
+		availableFrontResolutions(frontResolutions),
+		availableBackResolutions(backResolutions),
+		availableFilters(filters) {}
 
 	DeviceDescriptor(const DeviceDescriptor&) = default;
 	DeviceDescriptor& operator=(const DeviceDescriptor&) = default;
@@ -72,14 +78,6 @@ struct DeviceDescriptor
 	}
 
 private:
-	DeviceDescriptor(std::string name, std::string url, std::string protocol, std::vector<Resolution> frontResolutions, std::vector<Resolution> backResolutions, Video::Filter::Registry filters) 
-		: deviceName(name), 
-		rtspUrl(url), 
-		rtspProtocol(protocol),
-		availableFrontResolutions(frontResolutions),
-		availableBackResolutions(backResolutions),
-		availableFilters(filters) {}
-	
 	std::string deviceName;
 	std::string rtspUrl;
 	std::string rtspProtocol;

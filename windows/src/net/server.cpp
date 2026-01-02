@@ -3,6 +3,7 @@
 #include "net/devicedescriptor.h"
 #include "logger.h"
 #include "adb.h"
+#include "net/serializer.h"
 
 Server::Server(int port, const ConnectionListener& connectionListener) :
 	port(port),
@@ -81,46 +82,6 @@ void Server::Close()
 	adb::kill(port);
 }
 
-//
-//void Server::SetStreamingQuality(uint8_t quality)
-//{
-//	unsigned char bytes[2] = { PacketType::QUALITY, quality };
-//	for (auto& conn : connections)
-//	{
-//		conn->Send(bytes, 2);
-//	}
-//}
-//
-//void Server::SetStreamingWB(int wb)
-//{
-//	unsigned char bytes[2] = { PacketType::WB, wb };
-//	for (auto& conn : connections)
-//	{
-//		conn->Send(bytes, 2);
-//	}
-//}
-//
-//void Server::SetStreamingEffect(int effect)
-//{
-//	unsigned char bytes[2] = { PacketType::EFFECT, effect };
-//	for (auto& conn : connections)
-//	{
-//		conn->Send(bytes, 2);
-//	}
-//}
-//
-//int Server::GetStreamingDevice()
-//{
-//	for (int i = 0; i < connections.size(); i++)
-//	{
-//		if (connections[i]->active)
-//		{
-//			return i;
-//		}
-//	}
-//	return -1;
-//}
-
 void Server::TCPDoAccept()
 {
 	acceptor.async_accept([&, this](asio::error_code ec, tcp::socket socket) {
@@ -136,7 +97,7 @@ void Server::TCPDoAccept()
 			size_t size = socket.read_some(asio::buffer(buffer, 512));
 			
 			// auto ipaddress = socket.remote_endpoint().address().to_string();
-			auto descriptor = DeviceDescriptor::Create(buffer.data(), size);
+			auto descriptor = Serializer::DeserializeDeviceDescriptor((const uint8_t*)buffer.data(), size);
 
 			auto conn = std::make_shared<Connection>(std::move(socket), descriptor, std::bind(&Server::OnConnectionDisconnected, this, std::placeholders::_1));
 			connections.push_back(std::move(conn));

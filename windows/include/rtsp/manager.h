@@ -3,6 +3,8 @@
 #include "receiver.h"
 #include "net/devicedescriptor.h"
 #include "net/server.h"
+#include "streamoptions.h"
+#include "constants.h"
 
 #include <vector>
 
@@ -11,13 +13,6 @@ namespace RTSP
 	class Manager : private Receiver
 	{
 	public:
-
-		static const int DEFAULT_STATIC_BITRATE = 4000;
-		static const int MAX_BITRATE = 25000;
-		static const int MIN_BITRATE = 500;
-		static const int DEFAULT_MAX_BITRATE = 12000;
-		static const int DEFAULT_MIN_BITRATE = 2000;
-
 		struct Command
 		{
 			static const int FRAME = 0x00;
@@ -42,7 +37,7 @@ namespace RTSP
 		void AddDescriptor(DeviceDescriptor& descriptor);
 		void RemoveDescriptor(DeviceDescriptor& descriptor);
 
-		void Connect2Stream(int descriptorId, int resolutionId);
+		void Connect2Stream(int descriptorId, const StreamOptions& options);
 
 		const std::vector<DeviceDescriptor>& GetDescriptors() const;
 		const int& GetStreamingDevice() const;

@@ -7,7 +7,7 @@ wxDEFINE_EVENT(EVT_FILTER_SWITCH_CHANGED, wxCommandEvent);
 ImgAdjDlg::ImgAdjDlg(wxWindow* parent,
     const DeviceDescriptor& deviceDesc,
     const std::map<std::string, int>& initialSliderValues,
-    const std::map<int, std::string>& initialActiveFilters)
+    std::string initialActiveFilter)
     : wxDialog(parent, wxID_ANY, "Image Adjustments", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
 {
     auto mainSizer = new wxBoxSizer(wxVERTICAL);
@@ -72,22 +72,16 @@ ImgAdjDlg::ImgAdjDlg(wxWindow* parent,
             wxArrayString choices;
             choices.Add("None"); // Index 0 is always "None"
 
-            // STATE CHECK: What was the previously selected filter for this category?
-            std::string activeName = "None";
-            int catId = static_cast<int>(category);
-            if (initialActiveFilters.count(catId)) {
-                activeName = initialActiveFilters.at(catId);
-            }
-
             int selectionIndex = 0; // Default to "None"
 
-            // Populate choices and find the index of the active one
-            for (size_t i = 0; i < filterList.size(); i++) 
+            // Populate choices and find if the GLOBAL active filter belongs to this category
+            for (size_t i = 0; i < filterList.size(); i++)
             {
                 std::string fName = filterList[i];
                 choices.Add(fName);
 
-                if (fName == activeName) 
+                // CHECK: Does this specific filter match the single global active filter?
+                if (fName == initialActiveFilter)
                 {
                     selectionIndex = i + 1; // +1 because we added "None" at the start
                 }

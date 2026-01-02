@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.ViewOverlay
 import com.darusc.vcamdroid.networking.ConnectionManager
 import com.darusc.vcamdroid.networking.DeviceDescriptor
 import com.darusc.vcamdroid.video.filters.FilterAdjuster
@@ -57,11 +58,6 @@ class Streamer(
 
             connectionManager.sendDescriptor(descriptor)
         }
-    }
-
-    fun start() {
-        startPreview()
-        startStream()
     }
 
     fun stop() {
@@ -212,17 +208,46 @@ class Streamer(
     }
 
     fun setH265Codec(enabled: Boolean) {
-        rtspServerCamera2.setVideoCodec(if (enabled) VideoCodec.H265 else VideoCodec.H264)
-        restartStream()
+        val codec = if (enabled) VideoCodec.H265 else VideoCodec.H264
+        rtspServerCamera2.setVideoCodec(codec)
+
+        // Only restart if we are actually streaming
+        if (rtspServerCamera2.isStreaming) {
+            restartStream()
+        }
     }
 
-    private fun startPreview() {
-        rtspServerCamera2.startPreview(options.camera, options.width, options.height)
+    fun startPreview() {
+        if (!rtspServerCamera2.isOnPreview) {
+            rtspServerCamera2.startPreview(options.camera, options.width, options.height)
+        }
     }
 
-    private fun startStream() {
+    fun startStream(newOptions: StreamOptions) {
+        val oldOptions = this.options
+        this.options = newOptions
+
+        Handler(Looper.getMainLooper()).post {
+            val needPreviewRestart = (oldOptions.width != newOptions.width) ||
+                    (oldOptions.height != newOptions.height) ||
+                    (oldOptions.camera != newOptions.camera)
+
+            if (needPreviewRestart && rtspServerCamera2.isOnPreview) {
+                rtspServerCamera2.stopPreview()
+            }
+
+            if (!rtspServerCamera2.isOnPreview) {
+                rtspServerCamera2.startPreview()
+            }
+
+            applyOptionsToStream(newOptions)
+            startStreamInternal()
+        }
+    }
+
+    private fun startStreamInternal() {
         if (!rtspServerCamera2.isStreaming) {
-            val prepared = try {
+            try {
                 rtspServerCamera2.prepareVideo(
                     options.width,
                     options.height,
@@ -230,16 +255,31 @@ class Streamer(
                     options.bitrate,
                     0
                 )
-            } catch (e: Exception) {
-                false
-            }
-
-            if (prepared) {
                 rtspServerCamera2.startStream(URL)
                 Log.d(TAG, "Stream started")
-            } else {
+            } catch (e: Exception) {
                 Log.d(TAG, "Error preparing stream")
             }
+        }
+    }
+
+    /**
+     * Apply initial options
+     */
+    private fun applyOptionsToStream(options: StreamOptions) {
+        if (options.adaptiveBitrateEnabled) {
+            bitrateAdapter.setMaxBitrate(options.adaptiveBitrateMax)
+        } else {
+            rtspServerCamera2.setVideoBitrateOnFly(options.bitrate)
+        }
+
+        setStabilization(options.stabilization)
+        setFocus(options.focusMode)
+        rtspServerCamera2.setVideoCodec(if (options.h265Enabled) VideoCodec.H265 else VideoCodec.H264)
+
+        options.activeEffectFilter?.let { rtspServerCamera2.glInterface.addFilter(it) }
+        options.activeCorrectionFilters.forEach {
+            rtspServerCamera2.glInterface.addFilter(it)
         }
     }
 
@@ -252,7 +292,7 @@ class Streamer(
 
             startPreview()
             if (wasStreaming) {
-                startStream()
+                startStreamInternal()
             }
         }
     }

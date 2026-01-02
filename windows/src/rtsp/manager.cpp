@@ -1,6 +1,7 @@
 #include "rtsp/manager.h"
 
 #include "logger.h"
+#include "net/serializer.h"
 
 namespace RTSP
 {
@@ -18,19 +19,23 @@ namespace RTSP
 		descriptors.erase(std::remove(descriptors.begin(), descriptors.end(), descriptor));
 	}
 
-	void Manager::Connect2Stream(int descriptorId, int resolutionId)
+	void Manager::Connect2Stream(int descriptorId, const StreamOptions& options)
 	{
 		this->streamingDevice = descriptorId;
 
 		auto& descriptor = descriptors[descriptorId];
 		auto& url = descriptor.url();
-		auto& resolution = descriptor.backResolutions()[resolutionId];
 
 		logger << "[RTSP Manager] Connecting to stream " << url << "\n";
 		
 		Stop();
 		
-		Start(url, descriptor.protocol(), resolution.first, resolution.second);
+		auto serializedOptions = Serializer::SerializeStreamOptions(options);
+		serializedOptions[0] = Command::ACTIVATION;
+
+		server.Send(streamingDevice, serializedOptions.data(), serializedOptions.size());
+
+		Start(url, descriptor.protocol(), options.resolution.first, options.resolution.second);
 	}
 
 	void Manager::SetResolution(unsigned short width, unsigned short height)
