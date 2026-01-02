@@ -12,5 +12,5 @@ public:
 
 private:
 	qrcodegen::QrCode GenerateQRCode(std::string data);
-	std::tuple<unsigned char*, int> GenerateImageFromQR(const qrcodegen::QrCode& qrcode);
+	wxImage GenerateImageFromQR(const qrcodegen::QrCode& qrcode);
 };

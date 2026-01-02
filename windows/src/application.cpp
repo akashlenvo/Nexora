@@ -50,12 +50,14 @@ Application::Application()
 	});
 
 	mainWindow->GetSwapButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
-		backCameraActive = !backCameraActive;
-		UpdateAvailableResolutions(rtspManager->GetStreamingDevice(), backCameraActive ? 0 : 1);
+		auto deviceId = rtspManager->GetStreamingDevice();
+		const auto& desc = rtspManager->GetDescriptors()[deviceId];
+		
+		stateRegistry[desc.name()].backCameraActive = !stateRegistry[desc.name()].backCameraActive;
+
+		UpdateAvailableResolutions(rtspManager->GetStreamingDevice(), stateRegistry[desc.name()].backCameraActive ? 0 : 1);
 		rtspManager->SwapCamera();
 	});
-
-	backCameraActive = true;
 }
 
 bool Application::OnInit()
@@ -146,10 +148,21 @@ void Application::OnMenuEvent(wxCommandEvent& event)
 
 void Application::OnSourceChanged(wxEvent& event)
 {
-	int selection = mainWindow->GetSourceChoice()->GetSelection();
-	int resoltution = UpdateAvailableResolutions(selection, 0);
+	int deviceId = mainWindow->GetSourceChoice()->GetSelection();
+	const auto& descriptor = rtspManager->GetDescriptors()[deviceId];
 
-	rtspManager->Connect2Stream(selection, resoltution);
+	auto state = stateRegistry[descriptor.name()];
+	
+	int index = UpdateAvailableResolutions(deviceId, state.backCameraActive ? 0 : 1);
+	auto targetResolutionStr = std::to_string(state.resolution.first) + " x " + std::to_string(state.resolution.second);
+
+	int found = mainWindow->GetResolutionChoice()->FindString(targetResolutionStr);
+	if (found != wxNOT_FOUND)
+		index = found;
+
+	mainWindow->GetResolutionChoice()->SetSelection(index);
+
+	rtspManager->Connect2Stream(deviceId, index);
 }
 
 void Application::OnWindowCloseEvent(wxCloseEvent& event)
@@ -163,6 +176,34 @@ void Application::OnWindowCloseEvent(wxCloseEvent& event)
 
 	Settings::save();
 	event.Skip();
+}
+
+void Application::EnsureStateInitialized(std::string name, const DeviceDescriptor& descriptor)
+{
+	auto& state = stateRegistry[name];
+
+	// 1. Initialize Sliders (Default 50 if empty)
+	if (descriptor.filters().count(Video::Filter::Category::CORRECTION)) 
+	{
+		for (const auto& name : descriptor.filters().at(Video::Filter::Category::CORRECTION)) 
+		{
+			// Only add if missing (preserve user changes)
+			if (state.filterSliderValues.find(name) == state.filterSliderValues.end()) 
+			{
+				state.filterSliderValues[name] = 50;
+			}
+		}
+	}
+
+	// 2. Initialize Dropdowns (Default "None")
+	for (const auto& [cat, list] : descriptor.filters()) {
+		if (cat == Video::Filter::Category::CORRECTION || cat == Video::Filter::Category::NONE) 
+			continue;
+
+		int catId = static_cast<int>(cat);
+		if (state.activeFilters.find(catId) == state.activeFilters.end()) 
+			state.activeFilters[catId] = "None";
+	}
 }
 
 void Application::OnResolutionChanged(wxEvent& event)
@@ -182,33 +223,48 @@ void Application::OnResolutionChanged(wxEvent& event)
 	int width, height;
 	std::sscanf(resolutionStr.c_str(), "%d x %d", &width, &height);
 
-	// mainWindow->GetCanvas()->SetAspectRatio(width, height);
-
-	cameraWidth = width;
-	cameraHeight = height;
-
 	rtspManager->SetStreamResolution(width, height);
+
+	// State update
+	int deviceId = rtspManager->GetStreamingDevice();
+	if (deviceId >= 0 && deviceId < rtspManager->GetDescriptors().size())
+	{
+		std::string name = rtspManager->GetDescriptors()[deviceId].name();
+		stateRegistry[name].resolution = { width, height };
+	}
 }
 
 void Application::ShowAdjustmentsDialog(wxCommandEvent& event)
 {
-	if (rtspManager->GetDescriptors().size() > 0)
-	{
-		ImgAdjDlg dialog(nullptr, rtspManager->GetDescriptors()[rtspManager->GetStreamingDevice()]);
+	if (rtspManager->GetDescriptors().empty())
+		return;
 
-		dialog.Bind(EVT_FILTER_PARAM_CHANGED, [&](const wxCommandEvent& event) {		
-			rtspManager->ApplyFilter(
-				event.GetString().ToStdString(), 
-				event.GetInt()
-			);
-		});
+	int currentDeviceId = rtspManager->GetStreamingDevice();
+	if (currentDeviceId < 0)
+		return;
 
-		dialog.Bind(EVT_FILTER_SWITCH_CHANGED, [&](const wxCommandEvent& event) {
-			rtspManager->ApplyFilter(
-				event.GetString().ToStdString()
-			);
-		});
+	const auto& desc = rtspManager->GetDescriptors()[currentDeviceId];
+	
+	EnsureStateInitialized(desc.name(), desc);
+	auto& state = stateRegistry[desc.name()];
 
-		dialog.ShowModal();
-	}
+	ImgAdjDlg dialog(nullptr, desc, state.filterSliderValues, state.activeFilters);
+
+	dialog.Bind(EVT_FILTER_PARAM_CHANGED, [&](const wxCommandEvent& event) {		
+		auto name = event.GetString().ToStdString();
+		auto value = event.GetInt();
+
+		rtspManager->ApplyFilter(name, value);
+		state.filterSliderValues[name] = value;
+	});
+
+	dialog.Bind(EVT_FILTER_SWITCH_CHANGED, [&](const wxCommandEvent& event) {
+		auto name = event.GetString().ToStdString();
+		auto category = event.GetInt();
+
+		rtspManager->ApplyFilter(name);
+		state.activeFilters[category] = name;
+	});
+
+	dialog.ShowModal();
 }

@@ -13,7 +13,7 @@ wxDECLARE_EVENT(EVT_FILTER_SWITCH_CHANGED, wxCommandEvent); // String name
 class ImgAdjDlg : public wxDialog
 {
 public:
-	ImgAdjDlg(wxWindow* parent, const DeviceDescriptor& deviceDesc);
+	ImgAdjDlg(wxWindow* parent, const DeviceDescriptor& deviceDesc, const std::map<std::string, int>& filterValueCache, const std::map<int, std::string>& selectedFilterCache);
 	~ImgAdjDlg();
 
 private:
