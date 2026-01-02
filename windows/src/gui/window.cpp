@@ -89,13 +89,10 @@ void Window::InitializeControlPanel(wxPanel* parent, wxBoxSizer* topsizer)
 	settingsSizer->Add(new wxStaticText(parent, wxID_ANY, "Source"), 0, wxALL | wxALIGN_CENTER_VERTICAL);
 	settingsSizer->Add(sourceChoice);
 
-	resolutionChoice = new wxChoice(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize);
-	settingsSizer->Add(new wxStaticText(parent, wxID_ANY, "Resolution"), 0, wxALL | wxALIGN_CENTER_VERTICAL);
-	settingsSizer->Add(resolutionChoice);
-
-
-
 	wxStaticBoxSizer* controlsSizer = new wxStaticBoxSizer(wxHORIZONTAL, parent, "Controls");
+
+	streamOptionsButton = new wxBitmapButton(parent, wxID_ANY, wxBitmap("res/setting.png", wxBITMAP_TYPE_PNG));
+	controlsSizer->Add(streamOptionsButton, 0, wxRIGHT, 5);
 
 	rotateLeftButton = new wxBitmapButton(parent, wxID_ANY, wxBitmap("res/rotate-left.png", wxBITMAP_TYPE_PNG));
 	controlsSizer->Add(rotateLeftButton, 0, wxRIGHT, 5);
@@ -150,11 +147,6 @@ wxChoice* Window::GetSourceChoice()
 	return sourceChoice;
 }
 
-wxChoice* Window::GetResolutionChoice()
-{
-	return resolutionChoice;
-}
-
 wxButton* Window::GetRotateLeftButton()
 {
 	return rotateLeftButton;
@@ -178,6 +170,11 @@ wxButton* Window::GetAdjustmentsButton()
 wxButton* Window::GetSwapButton()
 {
 	return swapButton;
+}
+
+wxButton* Window::GetStreamOptionsButton()
+{
+	return streamOptionsButton;
 }
 
 wxStaticText* Window::GetStatsText()

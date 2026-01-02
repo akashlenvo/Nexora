@@ -25,13 +25,13 @@ public:
 	Canvas* GetCanvas();
 
 	wxChoice* GetSourceChoice();
-	wxChoice* GetResolutionChoice();
 
 	wxButton* GetRotateLeftButton();
 	wxButton* GetRotateRightButton();
 	wxButton* GetFlipButton();
 	wxButton* GetAdjustmentsButton();
 	wxButton* GetSwapButton();
+	wxButton* GetStreamOptionsButton();
 	wxStaticText* GetStatsText();
 	wxTaskBarIcon* GetTaskbarIcon();
 private:
@@ -39,11 +39,11 @@ private:
 	Canvas* canvas;
 
 	wxChoice* sourceChoice;
-	wxChoice* resolutionChoice;
 
 	wxButton* rotateLeftButton;
 	wxButton* rotateRightButton;
 	wxButton* flipButton;
+	wxButton* streamOptionsButton;
 	wxButton* adjustmentsButton;
 	wxButton* swapButton;
 	wxStaticText* statsText;

@@ -1,6 +1,7 @@
 #include "application.h"
 
 #include "gui/imgadjdlg.h"
+#include "gui/streamconfigdlg.h"
 #include "gui/devicesview.h"
 #include "gui/qrconview.h"
 #include "settings.h"
@@ -35,8 +36,8 @@ Application::Application()
 	mainWindow->Bind(wxEVT_MENU, &Application::OnMenuEvent, this);
 
 	mainWindow->GetSourceChoice()->Bind(wxEVT_CHOICE, &Application::OnSourceChanged, this);
-	mainWindow->GetResolutionChoice()->Bind(wxEVT_CHOICE, &Application::OnResolutionChanged, this);
 	mainWindow->GetAdjustmentsButton()->Bind(wxEVT_BUTTON, &Application::ShowAdjustmentsDialog, this);
+	mainWindow->GetStreamOptionsButton()->Bind(wxEVT_BUTTON, &Application::ShowStreamConfigDialog, this);
 
 	mainWindow->GetRotateLeftButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
 		rtspManager->Rotate(-90);
@@ -56,7 +57,6 @@ Application::Application()
 		
 		stateRegistry[desc.name()].backCameraActive = !stateRegistry[desc.name()].backCameraActive;
 
-		UpdateAvailableResolutions(rtspManager->GetStreamingDevice(), stateRegistry[desc.name()].backCameraActive ? 0 : 1);
 		rtspManager->SwapCamera();
 	});
 }
@@ -90,26 +90,6 @@ void Application::UpdateAvailableDevices() const
 	}
 
 	mainWindow->GetSourceChoice()->SetSelection(rtspManager->GetStreamingDevice());
-}
-
-int Application::UpdateAvailableResolutions(int id, int camera)
-{
-	mainWindow->GetResolutionChoice()->Clear();
-
-	const auto& resolutions = camera == 0 ? rtspManager->GetDescriptors()[id].backResolutions() : rtspManager->GetDescriptors()[id].frontResolutions();
-	int defaultResolutionPos = 0;
-
-	for (int i = 0; i < resolutions.size(); i++)
-	{
-		const auto& resolution = resolutions[i];
-		mainWindow->GetResolutionChoice()->Append(std::to_string(resolution.first) + " x " + std::to_string(resolution.second));
-
-		if (resolution.first == 640 && resolution.second == 480)
-			defaultResolutionPos = i;
-	}
-
-	mainWindow->GetResolutionChoice()->SetSelection(defaultResolutionPos);
-	return defaultResolutionPos;
 }
 
 void Application::OnMenuEvent(wxCommandEvent& event)
@@ -158,18 +138,21 @@ void Application::OnSourceChanged(wxEvent& event)
 	int deviceId = mainWindow->GetSourceChoice()->GetSelection();
 	const auto& descriptor = rtspManager->GetDescriptors()[deviceId];
 
-	auto state = stateRegistry[descriptor.name()];
+	EnsureStateInitialized(descriptor.name(), descriptor);
+	const auto& state = stateRegistry[descriptor.name()];
 	
-	int index = UpdateAvailableResolutions(deviceId, state.backCameraActive ? 0 : 1);
-	auto targetResolutionStr = std::to_string(state.resolution.first) + " x " + std::to_string(state.resolution.second);
-
-	int found = mainWindow->GetResolutionChoice()->FindString(targetResolutionStr);
-	if (found != wxNOT_FOUND)
-		index = found;
-
-	mainWindow->GetResolutionChoice()->SetSelection(index);
-
-	rtspManager->Connect2Stream(deviceId, index);
+	int resIndex = 0; // Default to first available if match fails
+	const auto& resList = state.backCameraActive ? descriptor.backResolutions() : descriptor.frontResolutions();
+	for (size_t i = 0; i < resList.size(); i++) 
+	{
+		if (resList[i] == state.resolution) 
+		{
+			resIndex = i;
+			break;
+		}
+	}
+	
+	rtspManager->Connect2Stream(deviceId, resIndex);
 }
 
 void Application::OnWindowCloseEvent(wxCloseEvent& event)
@@ -217,34 +200,6 @@ void Application::EnsureStateInitialized(std::string name, const DeviceDescripto
 	}
 }
 
-void Application::OnResolutionChanged(wxEvent& event)
-{
-	// Pause the stream so no more frames
-	// are sent to the Softcam DirectShow filter
-	// Do this in order to avoid deleting the current camera 
-	// while still writing to the video buffer which will result
-	// in a memory violation error
-	//
-	// The other functions before ScCameraInit should add enough
-	// delay so the previous frame is done writing to the video buffer
-	// 
-	// (not ideal -> TODO: add a better synchronization mechanism)
-
-	auto resolutionStr = mainWindow->GetResolutionChoice()->GetStringSelection();
-	int width, height;
-	std::sscanf(resolutionStr.c_str(), "%d x %d", &width, &height);
-
-	rtspManager->SetStreamResolution(width, height);
-
-	// State update
-	int deviceId = rtspManager->GetStreamingDevice();
-	if (deviceId >= 0 && deviceId < rtspManager->GetDescriptors().size())
-	{
-		std::string name = rtspManager->GetDescriptors()[deviceId].name();
-		stateRegistry[name].resolution = { width, height };
-	}
-}
-
 void Application::ShowAdjustmentsDialog(wxCommandEvent& event)
 {
 	if (rtspManager->GetDescriptors().empty())
@@ -278,4 +233,114 @@ void Application::ShowAdjustmentsDialog(wxCommandEvent& event)
 	});
 
 	dialog.ShowModal();
+}
+
+void Application::ShowStreamConfigDialog(wxCommandEvent& event)
+{
+	int deviceId = rtspManager->GetStreamingDevice();
+	if (deviceId < 0 || rtspManager->GetDescriptors().empty())
+		return;
+
+	const auto& desc = rtspManager->GetDescriptors()[deviceId];
+	std::string deviceName = desc.name();
+
+	EnsureStateInitialized(deviceName, desc);
+	auto& state = stateRegistry[deviceName];
+
+	// Prepare Config Object for Dialog
+	StreamConfigDlg::Config config;
+
+	config.resIndex = 0;
+	const auto& resList = state.backCameraActive ? desc.backResolutions() : desc.frontResolutions();
+	for (size_t i = 0; i < resList.size(); i++) 
+	{
+		if (resList[i] == state.resolution) 
+		{
+			config.resIndex = i;
+			break;
+		}
+	}
+
+	config.fps = state.fps;
+
+	config.adaptiveBitrate = state.adaptiveBitrate;
+	config.bitrate = state.bitrate;
+	config.minBitrate = state.minBitrate;
+	config.maxBitrate = state.maxBitrate;
+
+	config.audioEnabled = state.audioEnabled;
+	config.stabilizationEnabled = state.stabilizationEnabled;
+	config.flashEnabled = state.flashEnabled;
+	config.focusMode = state.focusMode;
+	config.h265Enabled = state.h265Enabled;
+
+	StreamConfigDlg dlg(nullptr, desc, state.backCameraActive, config);
+
+	dlg.Bind(EVT_STREAM_RESOLUTION_CHANGED, [this, deviceName](wxCommandEvent& e) {
+		wxString resStr = e.GetString(); // "1920 x 1080"
+
+		long w = 0, h = 0;
+		resStr.BeforeFirst('x').ToLong(&w);
+		resStr.AfterFirst('x').ToLong(&h);
+
+		rtspManager->SetStreamResolution((uint16_t)w, (uint16_t)h);
+		stateRegistry[deviceName].resolution = { (int)w, (int)h };
+	});
+
+	dlg.Bind(EVT_STREAM_FPS_CHANGED, [this, deviceName](wxCommandEvent& e) {
+		int fps = e.GetInt();
+		//rtspManager->SetFPS(fps);
+		stateRegistry[deviceName].fps = fps;
+	});
+
+	// Bitrate Changed (Handles both Static and Adaptive)
+	dlg.Bind(EVT_STREAM_BITRATE_CHANGED, [this, deviceName, &dlg](wxCommandEvent& e) {
+		auto& regState = stateRegistry[deviceName];
+
+		// Read all values from dialog accessors
+		regState.adaptiveBitrate = dlg.IsAdaptiveBitrate();
+		regState.bitrate = dlg.GetStaticBitrate();
+		regState.minBitrate = dlg.GetMinBitrate();
+		regState.maxBitrate = dlg.GetMaxBitrate();
+
+		if (regState.adaptiveBitrate) 
+		{
+			//rtspManager->SetAdaptiveBitrate(regState.minBitrate, regState.maxBitrate);
+		}
+		else 
+		{
+			//rtspManager->SetBitrate(regState.bitrate);
+		}
+	});
+
+	// Hardware Toggles (Audio, Stab, Flash, etc.)
+	dlg.Bind(EVT_STREAM_CONFIG_CHANGED, [this, deviceName, &dlg](wxCommandEvent& e) {
+		auto& regState = stateRegistry[deviceName];
+
+		if (regState.stabilizationEnabled != dlg.IsStabilizationEnabled()) 
+		{
+			regState.stabilizationEnabled = dlg.IsStabilizationEnabled();
+			// rtspManager->SetStabilization(regState.stabilizationEnabled);
+		}
+
+		if (regState.flashEnabled != dlg.IsFlashEnabled()) 
+		{
+			regState.flashEnabled = dlg.IsFlashEnabled();
+			// rtspManager->SetFlash(regState.flashEnabled);
+		}
+
+		if (regState.focusMode != dlg.GetFocusMode()) 
+		{
+			regState.focusMode = dlg.GetFocusMode();
+			// rtspManager->SetFocusMode(regState.focusMode);
+		}
+
+		if (regState.h265Enabled != dlg.IsH265Enabled()) 
+		{
+			regState.h265Enabled = dlg.IsH265Enabled();
+			// rtspManager->SetCodec(regState.h265Enabled);
+		}
+	});
+
+	dlg.ShowModal();
 }

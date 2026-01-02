@@ -1,5 +1,7 @@
 #pragma once
 
+#include "rtsp/manager.h"
+
 /*
 	State store for a connected device
 */
@@ -21,4 +23,14 @@ struct State
 	FilterValueCache filterSliderValues;
 	// Cached selected filters per every effect category
 	ActiveFilterCache activeFilters;
+
+	bool adaptiveBitrate = false;
+	int bitrate = RTSP::Manager::DEFAULT_STATIC_BITRATE; 
+	int minBitrate = RTSP::Manager::DEFAULT_MIN_BITRATE;
+	int maxBitrate = RTSP::Manager::DEFAULT_MAX_BITRATE;
+
+	bool stabilizationEnabled = false;
+	bool flashEnabled = false;
+	bool h265Enabled = false;
+	int focusMode = 0;
 };

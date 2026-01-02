@@ -118,6 +118,16 @@ void Settings::Save()
             f << "res=" << state.resolution.first << "x" << state.resolution.second << std::endl;
             f << "back_cam=" << (state.backCameraActive ? 1 : 0) << std::endl;
 
+            f << "adaptive_br=" << (state.adaptiveBitrate ? 1 : 0) << std::endl;
+            f << "bitrate=" << state.bitrate << std::endl;
+            f << "min_br=" << state.minBitrate << std::endl;
+            f << "max_br=" << state.maxBitrate << std::endl;
+            f << "audio=" << (state.audioEnabled ? 1 : 0) << std::endl;
+            f << "stab=" << (state.stabilizationEnabled ? 1 : 0) << std::endl;
+            f << "flash=" << (state.flashEnabled ? 1 : 0) << std::endl;
+            f << "h265=" << (state.h265Enabled ? 1 : 0) << std::endl;
+            f << "focus=" << state.focusMode << std::endl;
+
             // Save Sliders (Prefix "S:")
             for (const auto& [filter, val] : state.filterSliderValues) 
             {
@@ -163,6 +173,15 @@ void Settings::ParseDeviceLine(State& state, const std::string& key, const std::
             state.resolution.second = std::atoi(val.substr(xPos + 1).c_str());
         }
     }
+    else if (key == "adaptive_br") state.adaptiveBitrate = (val == "1");
+    else if (key == "bitrate") state.bitrate = std::atoi(val.c_str());
+    else if (key == "min_br") state.minBitrate = std::atoi(val.c_str());
+    else if (key == "max_br") state.maxBitrate = std::atoi(val.c_str());
+    else if (key == "audio") state.audioEnabled = (val == "1");
+    else if (key == "stab") state.stabilizationEnabled = (val == "1");
+    else if (key == "flash") state.flashEnabled = (val == "1");
+    else if (key == "h265") state.h265Enabled = (val == "1");
+    else if (key == "focus") state.focusMode = std::atoi(val.c_str());
     else if (key.rfind("S:", 0) == 0) 
     { 
         // Starts with S: (Slider)

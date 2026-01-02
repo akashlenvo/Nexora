@@ -155,6 +155,7 @@ xcopy "$(ProjectDir)3rdparty\softcam\examples\softcam_installer\x64\Release\soft
     <ClCompile Include="src\gui\devicesview.cpp" />
     <ClCompile Include="src\gui\imgadjdlg.cpp" />
     <ClCompile Include="src\gui\qrconview.cpp" />
+    <ClCompile Include="src\gui\streamconfigdlg.cpp" />
     <ClCompile Include="src\net\connection.cpp" />
     <ClCompile Include="src\net\devicedescriptor.cpp" />
     <ClCompile Include="src\rtsp\manager.cpp" />
@@ -191,6 +192,7 @@ xcopy "$(ProjectDir)3rdparty\softcam\examples\softcam_installer\x64\Release\soft
     <ClInclude Include="include\video\filter.h" />
     <ClInclude Include="include\video\framescaler.h" />
     <ClInclude Include="include\video\guipreviewscaler.h" />
+    <ClInclude Include="include\gui\streamconfigdlg.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\resource.rc" />
