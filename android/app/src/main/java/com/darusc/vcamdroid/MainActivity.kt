@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity(), ConnectionManager.ConnectionStateCallb
         super.onResume()
         connectionManager = ConnectionManager.getInstance(this)
         if(camera != null) {
-            camera!!.start(Size(1280, 720), CameraSelector.DEFAULT_BACK_CAMERA, CaptureRequest.CONTROL_AWB_MODE_AUTO, CaptureRequest.CONTROL_EFFECT_MODE_OFF)
+            camera!!.start(Size(1280, 720), CameraSelector.DEFAULT_BACK_CAMERA)
             connectWIFI()
         }
     }
@@ -133,7 +133,7 @@ class MainActivity : AppCompatActivity(), ConnectionManager.ConnectionStateCallb
                 this,
                 this
             )
-            camera!!.start(Size(1280, 720), CameraSelector.DEFAULT_BACK_CAMERA, CaptureRequest.CONTROL_AWB_MODE_AUTO, CaptureRequest.CONTROL_EFFECT_MODE_OFF)
+            camera!!.start(Size(1280, 720), CameraSelector.DEFAULT_BACK_CAMERA)
 
             // Prioritize the usb connection through adb
             if (hasUsbConnection()) {
