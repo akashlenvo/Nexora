@@ -5,11 +5,7 @@
 #include "gui/devicesview.h"
 #include "gui/qrconview.h"
 #include "settings.h"
-#include "logger.h"
 #include "video/guipreviewscaler.h"
-#include "video/directshowscaler.h"
-
-#include <qrcodegen.hpp>
 
 Application::Application()
 {
@@ -20,7 +16,6 @@ Application::Application()
 	Settings::Load();
 	stateRegistry = Settings::GetDeviceStates();
 
-	int width = 1280, height = 720;
 	switch (Settings::Get("DIRECTSHOW_RESOLUTION") + Window::MenuIDs::DS_SD)
 	{
 		case Window::MenuIDs::DS_SD: dsSource = std::make_unique<DirectShowSource>(640, 480); break;
@@ -39,7 +34,25 @@ Application::Application()
 	});
 
 	mainWindow = new Window(server->GetHostInfo());
+	BindEventListeners();
+}
 
+bool Application::OnInit()
+{
+	mainWindow->Show();
+	return true;
+}
+
+StreamOptions& Application::GetCurrentDeviceStreamOptions()
+{
+	auto deviceId = rtspManager->GetStreamingDevice();
+	const auto& desc = rtspManager->GetDescriptors()[deviceId];
+
+	return stateRegistry[desc.name()];
+}
+
+void Application::BindEventListeners()
+{
 	mainWindow->Bind(wxEVT_CLOSE_WINDOW, &Application::OnWindowCloseEvent, this);
 	mainWindow->Bind(wxEVT_MENU, &Application::OnMenuEvent, this);
 
@@ -56,23 +69,42 @@ Application::Application()
 	});
 
 	mainWindow->GetFlipButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
-		//stream->Mirror();
+		rtspManager->FlipHorizontally();
+	});
+
+	mainWindow->GetFlipVerticalButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
+		rtspManager->FlipVertically();
+	});
+
+	mainWindow->GetTorchButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
+		auto& options = GetCurrentDeviceStreamOptions();
+		auto flash = options.flashEnabled = !options.flashEnabled;
+
+		rtspManager->SetFlash(flash);
 	});
 
 	mainWindow->GetSwapButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
-		auto deviceId = rtspManager->GetStreamingDevice();
-		const auto& desc = rtspManager->GetDescriptors()[deviceId];
-		
-		stateRegistry[desc.name()].backCameraActive = !stateRegistry[desc.name()].backCameraActive;
+		auto& options = GetCurrentDeviceStreamOptions();
+		options.backCameraActive = !options.backCameraActive;
 
 		rtspManager->SwapCamera();
 	});
-}
 
-bool Application::OnInit()
-{
-	mainWindow->Show();
-	return true;
+	mainWindow->GetZoomInButton()->Bind(wxEVT_BUTTON, [&](const wxEvent & arg) {
+		auto& options = GetCurrentDeviceStreamOptions();
+		options.zoom = std::min(10.0f, options.zoom - 0.5f); // Don't go higher than 10x
+		mainWindow->GetZoomLevelLabel()->SetLabelText(wxString::Format("%.1fx", options.zoom));
+
+		rtspManager->Zoom(options.zoom);
+	});
+
+	mainWindow->GetZoomOutButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
+		auto& options = GetCurrentDeviceStreamOptions();
+		options.zoom = std::max(1.0f, options.zoom - 0.5f); // Don't go lower than 1x
+		mainWindow->GetZoomLevelLabel()->SetLabelText(wxString::Format("%.1fx", options.zoom));
+		
+		rtspManager->Zoom(options.zoom);
+	});
 }
 
 void Application::OnDeviceConnected(DeviceDescriptor& descriptor) const
@@ -336,7 +368,7 @@ void Application::ShowStreamConfigDialog(wxCommandEvent& event)
 	// Hardware Toggles
 	dlg.Bind(EVT_STREAM_CONFIG_CHANGED, [this, deviceName, &dlg](wxCommandEvent& e) {
 		auto& regState = stateRegistry[deviceName];
-
+		
 		if (regState.stabilizationEnabled != dlg.IsStabilizationEnabled()) 
 		{
 			regState.stabilizationEnabled = dlg.IsStabilizationEnabled();

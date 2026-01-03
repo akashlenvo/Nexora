@@ -27,6 +27,9 @@ private:
 	std::unique_ptr<RTSP::Manager> rtspManager;
 	std::unique_ptr<DirectShowSource> dsSource;
 
+	StreamOptions& GetCurrentDeviceStreamOptions();
+	void BindEventListeners();
+
 	void UpdateAvailableDevices() const;
 
 	void OnSourceChanged(wxEvent& event);

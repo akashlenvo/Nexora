@@ -4,11 +4,14 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.Display
 import android.view.ViewOverlay
 import com.darusc.vcamdroid.networking.ConnectionManager
 import com.darusc.vcamdroid.networking.DeviceDescriptor
 import com.darusc.vcamdroid.video.filters.FilterAdjuster
 import com.darusc.vcamdroid.video.filters.FilterRepository
+import com.darusc.vcamdroid.video.filters.custom.HorizontalFlipFilterRender
+import com.darusc.vcamdroid.video.filters.custom.VerticalFlipFilterRender
 import com.darusc.vcamdroid.video.getSupportedResolutions
 import com.pedro.common.ConnectChecker
 import com.pedro.common.VideoCodec
@@ -167,6 +170,35 @@ class Streamer(
         Log.d(TAG, "Changing fps to ${fps}...")
         options.fps = fps
         restartStream()
+    }
+
+    fun setZoom(zoom: Float) {
+        rtspServerCamera2.zoom = zoom
+    }
+
+    fun flip(axis: StreamOptions.FlipAxis) {
+        CoroutineScope(Dispatchers.Main).launch {
+            when (axis) {
+                StreamOptions.FlipAxis.HORIZONTAL -> options.hFlipFilter = toggleFilter(options.hFlipFilter) { HorizontalFlipFilterRender() } as HorizontalFlipFilterRender?
+                StreamOptions.FlipAxis.VERTICAL -> options.vFlipFilter = toggleFilter(options.vFlipFilter) { VerticalFlipFilterRender() } as VerticalFlipFilterRender?
+            }
+        }
+    }
+
+    private fun toggleFilter(
+        currentFilter: BaseFilterRender?,
+        createFilter: () -> BaseFilterRender
+    ): BaseFilterRender? {
+        return if (currentFilter != null) {
+            // If it exists, remove it and return null (to clear the variable)
+            rtspServerCamera2.glInterface.removeFilter(currentFilter)
+            null
+        } else {
+            // If it's null, create new one, add it, and return it
+            val newFilter = createFilter()
+            rtspServerCamera2.glInterface.addFilter(newFilter)
+            newFilter
+        }
     }
 
     /**

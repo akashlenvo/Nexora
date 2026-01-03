@@ -5,12 +5,12 @@ import android.util.Log
 import android.view.SurfaceHolder
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.processing.Packet
 import com.darusc.vcamdroid.databinding.ActivityStreamBinding
 import com.darusc.vcamdroid.networking.ConnectionManager
 import com.darusc.vcamdroid.networking.PacketType
 import com.darusc.vcamdroid.rtsp.Streamer
 import com.darusc.vcamdroid.rtsp.StreamOptions
+import java.nio.ByteBuffer
 
 class StreamActivity : AppCompatActivity(), SurfaceHolder.Callback, ConnectionManager.ConnectionStateCallback {
 
@@ -106,6 +106,17 @@ class StreamActivity : AppCompatActivity(), SurfaceHolder.Callback, ConnectionMa
             }
             PacketType.FPS -> {
                 streamer.setFps(buffer[1].toInt())
+            }
+            PacketType.ZOOM -> {
+                val factor = (buffer[1].toInt() and 0xFF) or
+                        ((buffer[2].toInt() and 0xFF) shl 8) or
+                        ((buffer[3].toInt() and 0xFF) shl 16) or
+                        ((buffer[4].toInt() and 0xFF) shl 24)
+                streamer.setZoom(Float.fromBits(factor))
+            }
+            PacketType.FLIP -> {
+                val axis = buffer[1].toInt()
+                streamer.flip(if (axis == 0) StreamOptions.FlipAxis.VERTICAL else StreamOptions.FlipAxis.HORIZONTAL)
             }
         }
     }

@@ -30,6 +30,8 @@ namespace RTSP
 			static const int FOCUS = 0xC;
 			static const int CODEC = 0xD;
 			static const int FPS = 0xE;
+			static const int ZOOM = 0xF;
+			static const int FLIP = 0x10;
 		};
 
 		Manager(const Server& server, OnFrameReceivedCallback onFrameReceivedCallback);
@@ -52,7 +54,10 @@ namespace RTSP
 		void SetH265Codec(bool enabled);
 		void SwapCamera();
 		void Rotate(uint8_t degrees);
-		
+		void Zoom(float factor);
+		void FlipHorizontally();
+		void FlipVertically();
+
 		void ApplyCorrectionFilter(std::string filterName, int value = 0);
 		void ApplyEffectFilter(std::string filterName);
 

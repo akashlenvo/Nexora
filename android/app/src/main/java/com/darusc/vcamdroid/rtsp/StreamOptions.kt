@@ -2,6 +2,8 @@ package com.darusc.vcamdroid.rtsp
 
 import com.darusc.vcamdroid.video.filters.FilterAdjuster
 import com.darusc.vcamdroid.video.filters.FilterRepository
+import com.darusc.vcamdroid.video.filters.custom.HorizontalFlipFilterRender
+import com.darusc.vcamdroid.video.filters.custom.VerticalFlipFilterRender
 import com.pedro.encoder.input.gl.render.filters.BaseFilterRender
 import com.pedro.encoder.input.video.CameraHelper
 import java.nio.ByteBuffer
@@ -21,8 +23,12 @@ data class StreamOptions(
     var activeCorrectionFilters: MutableSet<BaseFilterRender> = HashSet(),
     var stabilization: Boolean = false,
     var focusMode: Int = 0,
-    var h265Enabled: Boolean = false
+    var h265Enabled: Boolean = false,
+    var vFlipFilter: VerticalFlipFilterRender? = null,
+    var hFlipFilter: HorizontalFlipFilterRender? = null
 ) {
+    enum class FlipAxis { HORIZONTAL, VERTICAL }
+
     companion object {
         fun deserialize(data: ByteArray): StreamOptions {
             val buffer = ByteBuffer.wrap(data) // Defaults to Big Endian
@@ -86,7 +92,7 @@ data class StreamOptions(
                 filtersMap,
                 stabilization,
                 focusMode,
-                h265
+                h265,
             )
         }
     }

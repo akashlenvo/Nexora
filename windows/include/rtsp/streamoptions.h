@@ -27,6 +27,7 @@ struct StreamOptions
 	int minBitrate = RTSP::DEFAULT_MIN_BITRATE;
 	int maxBitrate = RTSP::DEFAULT_MAX_BITRATE;
 
+	float zoom = 1.0f;
 	bool stabilizationEnabled = false;
 	bool flashEnabled = false;
 	bool h265Enabled = false;

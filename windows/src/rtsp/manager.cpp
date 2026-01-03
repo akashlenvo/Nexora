@@ -115,6 +115,34 @@ namespace RTSP
 		server.Send(streamingDevice, bytes, 2);
 	}
 
+	void Manager::Zoom(float factor)
+	{
+		int bits;
+		std::memcpy(&bits, &factor, sizeof(float));
+
+		const unsigned char bytes[5] = {
+			Command::ZOOM,
+			static_cast<unsigned char>(bits & 0xFF),
+			static_cast<unsigned char>((bits >> 8) & 0xFF),
+			static_cast<unsigned char>((bits >> 16) & 0xFF),
+			static_cast<unsigned char>((bits >> 24) & 0xFF),
+		};
+
+		server.Send(streamingDevice, bytes, 5);
+	}
+
+	void Manager::FlipHorizontally()
+	{
+		const unsigned char bytes[2] = { Command::FLIP, 1 };
+		server.Send(streamingDevice, bytes, 2);
+	}
+
+	void Manager::FlipVertically()
+	{
+		const unsigned char bytes[2] = { Command::FLIP, 0 };
+		server.Send(streamingDevice, bytes, 2);
+	}
+
 	void Manager::ApplyCorrectionFilter(std::string filterName, int value)
 	{
 		uint8_t nameLen = static_cast<uint8_t>(filterName.size());
