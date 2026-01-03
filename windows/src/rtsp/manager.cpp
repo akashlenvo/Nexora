@@ -5,7 +5,9 @@
 
 namespace RTSP
 {
-	Manager::Manager(const Server& server, OnFrameReceivedCallback onFrameReceivedCallback) : server(server), Receiver(onFrameReceivedCallback)
+	Manager::Manager(const Server& server, OnFrameReceivedCallback onFrameReceivedCallback, OnStatsReceivedCallback onStatsReceivedCallback) 
+		: Receiver(onFrameReceivedCallback, onStatsReceivedCallback),
+		server(server)
 	{
 	}
 

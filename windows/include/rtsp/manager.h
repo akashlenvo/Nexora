@@ -34,7 +34,7 @@ namespace RTSP
 			static const int FLIP = 0x10;
 		};
 
-		Manager(const Server& server, OnFrameReceivedCallback onFrameReceivedCallback);
+		Manager(const Server& server, OnFrameReceivedCallback onFrameReceivedCallback, OnStatsReceivedCallback onStatsReceivedCallback);
 
 		void AddDescriptor(DeviceDescriptor& descriptor);
 		void RemoveDescriptor(DeviceDescriptor& descriptor);

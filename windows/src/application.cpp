@@ -6,6 +6,7 @@
 #include "gui/qrconview.h"
 #include "settings.h"
 #include "video/guipreviewscaler.h"
+#include <iomanip>
 
 Application::Application()
 {
@@ -28,10 +29,25 @@ Application::Application()
 	server = std::make_unique<Server>(6969, *this);
 	server->Start();
 
-	rtspManager = std::make_unique<RTSP::Manager>(*server, [&](AVFrame* frame) {
-		mainWindow->GetCanvas()->ProcessRawFrameAsync(frame);
-		dsSource->SendRawFrame(frame);
-	});
+	rtspManager = std::make_unique<RTSP::Manager>(
+		*server,
+		// OnFrameReceivedCallback
+		[&](AVFrame* frame) {
+			mainWindow->GetCanvas()->ProcessRawFrameAsync(frame);
+			dsSource->SendRawFrame(frame);
+		},
+		// OnStatsReceivedCallback
+		[&](const RTSP::Receiver::Stats& stats) {
+			if(Settings::Get("SHOW_STATS") != 0)
+			{
+				std::stringstream ss;
+				ss << stats.width << "p@" << stats.fps << "fps\n" << std::fixed << std::setprecision(1) << stats.bitrate << "Mbps";
+				mainWindow->GetEventHandler()->CallAfter([this, labelText = ss.str()]() {
+					mainWindow->GetStatsText()->SetLabelText(labelText);
+				});
+			}
+		}
+	);
 
 	mainWindow = new Window(server->GetHostInfo());
 	BindEventListeners();

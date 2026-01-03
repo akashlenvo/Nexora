@@ -3,8 +3,9 @@
 
 namespace RTSP
 {
-	Receiver::Receiver(OnFrameReceivedCallback callback)
-		: onFrameReceivedCallback(callback),
+	Receiver::Receiver(OnFrameReceivedCallback frameReceivedListener, OnStatsReceivedCallback statsReceivedCallback)
+		: onFrameReceivedCallback(frameReceivedListener),
+		onStatsReceivedCallback(statsReceivedCallback),
 		isRunning(false)
 	{
 		avformat_network_init();
@@ -165,6 +166,11 @@ namespace RTSP
 		int currentWidth = -1;
 		int currentHeight = -1;
 
+		Stats stats = {0, 0, 0};
+		auto lastStatsTime = std::chrono::steady_clock::now();
+		int64_t byteAccumulator = 0;
+		int frameAccumulator = 0;
+
 		logger << "[RTSP] Decoding started...\n";
 
 		while (isRunning) 
@@ -177,18 +183,51 @@ namespace RTSP
 			this->state.lastActivityTime = FFmpegInterrupt::GetTimeMs();
 
 			if (pPacket->stream_index != videoStreamIdx)
+			{
+				av_packet_unref(pPacket);
 				continue;
+			}
+
+			// Accumulate byte count (for bitrate)
+			byteAccumulator += pPacket->size;
 
 			if (avcodec_send_packet(codecCtx, pPacket) != 0)
+			{
+				av_packet_unref(pPacket);
 				continue;
+			}
 
 			while (avcodec_receive_frame(codecCtx, pFrame) == 0) 
 			{
+				// Accumulate frame count (for fps)
+				frameAccumulator++;
+				stats.width = pFrame->height;
+				stats.height = pFrame->width;
+
 				if (onFrameReceivedCallback) 
 				{
 					onFrameReceivedCallback(pFrame);
 				}
 			}
+
+			auto now = std::chrono::steady_clock::now();
+			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastStatsTime).count();
+
+			if (duration >= 1000)
+			{
+				stats.fps = frameAccumulator / (duration / 1000);
+				stats.bitrate = (byteAccumulator * 8.0) / 1000000 / (duration / 1000);
+
+				if (onStatsReceivedCallback)
+				{
+					onStatsReceivedCallback(stats);
+				}
+
+				byteAccumulator = 0;
+				frameAccumulator = 0;
+				lastStatsTime = now;
+			}
+
 			av_packet_unref(pPacket);
 		}
 

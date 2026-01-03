@@ -7,7 +7,6 @@
 #include <wx/statline.h>
 
 Window::Window(Server::HostInfo hostinfo)
-// Adjusted size slightly to ensure top bar items fit comfortably
 	: wxFrame(nullptr, wxID_ANY, "VCamdroid", wxDefaultPosition, wxSize(500, 480), wxDEFAULT_FRAME_STYLE & ~wxMAXIMIZE_BOX & ~wxRESIZE_BORDER)
 {
 	wxPanel* panel = nullptr;
@@ -104,15 +103,15 @@ void Window::InitializeTopBar(wxPanel* parent, wxBoxSizer* topsizer)
 	srcLabel->SetFont(font);
 	topBarSizer->Add(srcLabel, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 8);
 
-	sourceChoice = new wxChoice(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, 1, new wxString[1]{ "No devices" });
-	topBarSizer->Add(sourceChoice, 1, wxALIGN_CENTER_VERTICAL | wxRIGHT, 8);
+	sourceChoice = new wxChoice(parent, wxID_ANY, wxDefaultPosition, wxSize(150, -1), 1, new wxString[1]{ "No devices" });	
+	topBarSizer->Add(sourceChoice, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 8);
 
 	// Pushes everything after this to the right
 	topBarSizer->AddStretchSpacer(1);
 
-	// --- STATS TEXT (New Location) ---
-	// Initial text with 2 lines as placeholder
-	statsText = new wxStaticText(parent, wxID_ANY, "- @ -fps\n- mbps", wxDefaultPosition, wxDefaultSize, wxALIGN_RIGHT);
+	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+
+	statsText = new wxStaticText(parent, wxID_ANY, "----p@--fps\n00.0mbps", wxDefaultPosition, wxDefaultSize, wxALIGN_RIGHT);
 
 	// Slightly smaller font looks better for data display
 	wxFont statsFont = statsText->GetFont();
@@ -122,12 +121,14 @@ void Window::InitializeTopBar(wxPanel* parent, wxBoxSizer* topsizer)
 	statsText->Show(Settings::Get("SHOW_STATS") == 1);
 
 	// Add with some right padding to separate from the settings button
-	topBarSizer->Add(statsText, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 10);
+	sizer->Add(statsText, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 10);
 
 	// Settings Button
 	streamOptionsButton = new wxBitmapButton(parent, wxID_ANY, wxBitmap("res/setting.png", wxBITMAP_TYPE_PNG));
 	streamOptionsButton->SetToolTip("Stream Settings");
-	topBarSizer->Add(streamOptionsButton, 0, wxALIGN_CENTER_VERTICAL);
+	sizer->Add(streamOptionsButton, 0, wxALIGN_CENTER_VERTICAL);
+
+	topBarSizer->Add(sizer, 0, wxALIGN_CENTER_VERTICAL);
 
 	topsizer->Add(topBarSizer, 0, wxEXPAND | wxALL, 10);
 }
