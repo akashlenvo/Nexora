@@ -100,6 +100,12 @@ class ConnectionManager private constructor() : Connection.Listener {
         }
     }
 
+    fun sendErrorReport(report: ErrorReport) {
+        CoroutineScope(Dispatchers.IO).launch {
+            tcpConn?.send(report.serialize())
+        }
+    }
+
     override fun onBytesReceived(buffer: ByteArray, bytes: Int) {
         onBytesReceivedCallback?.let { it(buffer, bytes) }
     }

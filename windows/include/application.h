@@ -17,6 +17,7 @@ public:
 	
 	virtual void OnDeviceConnected(DeviceDescriptor& descriptor) const override;
 	virtual void OnDeviceDisconnected(DeviceDescriptor& descriptor) const override;
+	virtual void OnDeviceErrorReported(DeviceDescriptor& descriptor, const Connection::ErrorReport& error) const override;
 
 private:
 	Window* mainWindow;

@@ -18,6 +18,7 @@ public:
 	{
 		virtual void OnDeviceConnected(DeviceDescriptor& descriptor) const = 0;
 		virtual void OnDeviceDisconnected(DeviceDescriptor& descriptor) const = 0;
+		virtual void OnDeviceErrorReported(DeviceDescriptor& descriptor, const Connection::ErrorReport& error) const = 0;
 	};
 
 	struct DeviceInfo
@@ -38,10 +39,6 @@ public:
 	void Start();
 	void Close();
 
-	//void SetStreamingQuality(uint8_t quality);
-	//void SetStreamingWB(int wb);
-	//void SetStreamingEffect(int effect);
-
 private:
 	int port;
 
@@ -59,4 +56,5 @@ private:
 
 	void TCPDoAccept();
 	void OnConnectionDisconnected(std::shared_ptr<Connection> connection);
+	void OnConnectionReportingError(std::shared_ptr<Connection> connection, const uint8_t* bytes, size_t size);
 };

@@ -145,4 +145,19 @@ namespace Serializer
 
 		return buffer;
 	}
+
+	Connection::ErrorReport DeserializeErrorReport(const uint8_t* bytes, size_t size)
+	{
+		int offset = 0;
+
+		Connection::ErrorReport report;
+
+		report.severity = bytes[offset++];
+		report.error = std::string((const char*)&bytes[offset + 2], ReadInt16(bytes + offset));
+
+		offset += 2 + report.error.size();
+		report.description = std::string((const char*)&bytes[offset + 2], ReadInt16(bytes + offset));
+		
+		return report;
+	}
 }

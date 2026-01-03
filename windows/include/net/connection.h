@@ -17,11 +17,21 @@ public:
 	using tcp = asio::ip::tcp;
 	using udp = asio::ip::udp;
 	using OnDisconnectedListener = std::function<void(std::shared_ptr<Connection>)>;
+	using OnBytesReceived = std::function<void(std::shared_ptr<Connection>, const uint8_t* bytes, size_t size)>;
 
-	Connection(tcp::socket socket, DeviceDescriptor& descriptor, OnDisconnectedListener onDisconnectedListener);
+	struct ErrorReport
+	{
+		enum { SEVERITY_WARNING, SERVERITY_ERROR };
+		int severity;
+		std::string error;
+		std::string description;
+	};
+
+	Connection(tcp::socket socket, DeviceDescriptor& descriptor, OnDisconnectedListener onDisconnectedListener, OnBytesReceived onBytesReceived);
 private:
 
 	OnDisconnectedListener onDisconnectedListener;
+	OnBytesReceived onBytesReceived;
 
 	tcp::socket socket;
 	unsigned char* byteBuffer;

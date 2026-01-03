@@ -2,10 +2,11 @@
 
 #include "logger.h"
 
-Connection::Connection(tcp::socket socket, DeviceDescriptor& descriptor, OnDisconnectedListener onDisconnectedListener) :
-	socket(std::move(socket)),
+Connection::Connection(tcp::socket socket, DeviceDescriptor& descriptor, OnDisconnectedListener onDisconnectedListener, OnBytesReceived onBytesReceived) 
+	: socket(std::move(socket)),
 	descriptor(descriptor),
-	onDisconnectedListener(onDisconnectedListener)
+	onDisconnectedListener(onDisconnectedListener),
+	onBytesReceived(onBytesReceived)
 {
 	byteBuffer = new unsigned char[255];
 	active = false;
@@ -17,7 +18,7 @@ void Connection::Read()
 	socket.async_read_some(asio::buffer(byteBuffer, 255), [this](asio::error_code ec, size_t bytes) {
 		if (!ec)
 		{
-			/// TO DO...
+			onBytesReceived(byteBuffer, bytes);
 			Read();
 		}
 		else

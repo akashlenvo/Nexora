@@ -1,6 +1,5 @@
 #include "net/server.h"
 
-#include "net/devicedescriptor.h"
 #include "logger.h"
 #include "adb.h"
 #include "net/serializer.h"
@@ -99,7 +98,12 @@ void Server::TCPDoAccept()
 			// auto ipaddress = socket.remote_endpoint().address().to_string();
 			auto descriptor = Serializer::DeserializeDeviceDescriptor((const uint8_t*)buffer.data(), size);
 
-			auto conn = std::make_shared<Connection>(std::move(socket), descriptor, std::bind(&Server::OnConnectionDisconnected, this, std::placeholders::_1));
+			auto conn = std::make_shared<Connection>(
+				std::move(socket), 
+				descriptor, 
+				std::bind(&Server::OnConnectionDisconnected, this, std::placeholders::_1),
+				std::bind(&Server::OnConnectionReportingError, this, std::placeholders::_3)
+			);
 			connections.push_back(std::move(conn));
 
 			connectionListener.OnDeviceConnected(descriptor);
@@ -113,4 +117,10 @@ void Server::OnConnectionDisconnected(std::shared_ptr<Connection> connection)
 {
 	connections.erase(std::remove(connections.begin(), connections.end(), connection), connections.end());
 	connectionListener.OnDeviceDisconnected(connection->descriptor);
+}
+
+void Server::OnConnectionReportingError(std::shared_ptr<Connection> connection, const uint8_t* bytes, size_t size)
+{
+	auto report = Serializer::DeserializeErrorReport(bytes, size);
+	connectionListener.OnDeviceErrorReported(connection->descriptor, report);
 }

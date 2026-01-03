@@ -8,6 +8,7 @@ import android.view.Display
 import android.view.ViewOverlay
 import com.darusc.vcamdroid.networking.ConnectionManager
 import com.darusc.vcamdroid.networking.DeviceDescriptor
+import com.darusc.vcamdroid.networking.ErrorReport
 import com.darusc.vcamdroid.video.filters.FilterAdjuster
 import com.darusc.vcamdroid.video.filters.FilterRepository
 import com.darusc.vcamdroid.video.filters.custom.HorizontalFlipFilterRender
@@ -39,6 +40,7 @@ class Streamer(
     private val TAG = "VCamdroid"
 
     private val rtspServerCamera2 = RtspServerCamera2(openGlView, this, PORT)
+    private val connectionManager = ConnectionManager.getInstance()
 
     private var bitrateAdapter = BitrateAdapter {
         if (options.adaptiveBitrateEnabled) {
@@ -78,10 +80,12 @@ class Streamer(
             rtspServerCamera2.switchCamera()
             options.camera = rtspServerCamera2.cameraFacing
         } catch (e: CameraOpenException) {
-            Log.d(
-                TAG,
-                "Can't switch camera. Current resolution ({${options.width}, ${options.height}) not supported"
-            )
+            Log.d(TAG, "Can't switch camera. Current resolution ({${options.width}, ${options.height}) not supported")
+            connectionManager.sendErrorReport(ErrorReport(
+                ErrorReport.Severity.ERROR,
+                "Can't switch camera",
+                "Resolution ({${options.width}, ${options.height}) not supported"
+            ))
         }
     }
 
@@ -291,6 +295,11 @@ class Streamer(
                 Log.d(TAG, "Stream started")
             } catch (e: Exception) {
                 Log.d(TAG, "Error preparing stream")
+                connectionManager.sendErrorReport(ErrorReport(
+                    ErrorReport.Severity.ERROR,
+                    "Can't start stream",
+                    "({${options.width}, ${options.height}) @${options.fps}fps not supported"
+                ))
             }
         }
     }
