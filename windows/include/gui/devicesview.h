@@ -1,10 +1,11 @@
 #pragma once
 
 #include <wx/wx.h>
-#include "net/server.h"
+#include <vector>
+#include "net/devicedescriptor.h"
 
 class DevicesView : public wxDialog
 {
 public:
-	DevicesView(std::vector<Server::DeviceInfo> devices);	
+    DevicesView(wxWindow* parent, const std::vector<DeviceDescriptor>& devices);
 };

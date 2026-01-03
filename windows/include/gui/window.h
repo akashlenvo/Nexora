@@ -27,35 +27,58 @@ public:
 	~Window();
 
 	Canvas* GetCanvas();
-
 	wxChoice* GetSourceChoice();
+	wxButton* GetStreamOptionsButton();
 
+	// Bottom Bar Controls
 	wxButton* GetRotateLeftButton();
 	wxButton* GetRotateRightButton();
 	wxButton* GetFlipButton();
-	wxButton* GetAdjustmentsButton();
+	wxButton* GetFlipVerticalButton();
+
+	wxButton* GetZoomInButton();
+	wxButton* GetZoomOutButton();
+	wxStaticText* GetZoomLevelLabel();
+
+	wxButton* GetTorchButton();
 	wxButton* GetSwapButton();
-	wxButton* GetStreamOptionsButton();
+
+	wxButton* GetAdjustmentsButton();
+	wxButton* GetSnapshotButton();
+
 	wxStaticText* GetStatsText();
 	wxTaskBarIcon* GetTaskbarIcon();
+
 private:
 	wxTaskBarIcon* taskbarIcon;
 	Canvas* canvas;
 
 	wxChoice* sourceChoice;
+	wxButton* streamOptionsButton;
 
+	// Bottom Bar
 	wxButton* rotateLeftButton;
 	wxButton* rotateRightButton;
 	wxButton* flipButton;
-	wxButton* streamOptionsButton;
-	wxButton* adjustmentsButton;
+	wxButton* flipVerticalButton;
+
+	wxButton* zoomInButton;
+	wxButton* zoomOutButton;
+	wxStaticText* zoomLevelLabel;
+
+	wxButton* torchButton;
 	wxButton* swapButton;
+
+	wxButton* adjustmentsButton;
+	wxButton* snapshotButton;
+
 	wxStaticText* statsText;
 
 	void InitializeMenu(Server::HostInfo hostinfo);
+	void InitializeTopBar(wxPanel* parent, wxBoxSizer* topsizer);
 	void InitializeCanvasPanel(wxPanel* parent, wxBoxSizer* topsizer);
-	void InitializeControlPanel(wxPanel* parent, wxBoxSizer* topsizer);
-	
+	void InitializeBottomBar(wxPanel* parent, wxBoxSizer* topsizer);
+
 	void MinimizeToTaskbar(wxIconizeEvent& evt);
 	void MaximizeFromTaskbar(wxTaskBarIconEvent& evt);
 };

@@ -106,8 +106,8 @@ void Application::OnMenuEvent(wxCommandEvent& event)
 	{
 		case Window::MenuIDs::DEVICES:
 		{
-			//DevicesView devlistview(server->GetConnectedDevicesInfo());
-			//devlistview.ShowModal();
+			DevicesView devlistview(mainWindow, rtspManager->GetDescriptors());
+			devlistview.ShowModal();
 			break;
 		}
 
