@@ -107,7 +107,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)3rdparty\softcam\dist\include;$(ProjectDir)include;$(ProjectDir)res;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3rdparty\softcam\dist\include;$(ProjectDir)include;$(ProjectDir)res;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -195,6 +195,31 @@ xcopy "$(ProjectDir)3rdparty\softcam\examples\softcam_installer\x64\Release\soft
     <ClInclude Include="include\video\framescaler.h" />
     <ClInclude Include="include\video\guipreviewscaler.h" />
     <ClInclude Include="include\gui\streamconfigdlg.h" />
+    <ClInclude Include="src\adb.h" />
+    <ClInclude Include="src\application.h" />
+    <ClInclude Include="src\canvas.h" />
+    <ClInclude Include="src\directshowsource.h" />
+    <ClInclude Include="src\gui\devicesview.h" />
+    <ClInclude Include="src\gui\imgadjdlg.h" />
+    <ClInclude Include="src\gui\qrconview.h" />
+    <ClInclude Include="src\gui\streamconfigdlg.h" />
+    <ClInclude Include="src\gui\window.h" />
+    <ClInclude Include="src\logger.h" />
+    <ClInclude Include="src\net\connection.h" />
+    <ClInclude Include="src\net\devicedescriptor.h" />
+    <ClInclude Include="src\net\serializer.h" />
+    <ClInclude Include="src\net\server.h" />
+    <ClInclude Include="src\rtsp\constants.h" />
+    <ClInclude Include="src\rtsp\ffmpeg.h" />
+    <ClInclude Include="src\rtsp\ffmpeginterrupt.h" />
+    <ClInclude Include="src\rtsp\manager.h" />
+    <ClInclude Include="src\rtsp\receiver.h" />
+    <ClInclude Include="src\rtsp\streamoptions.h" />
+    <ClInclude Include="src\settings.h" />
+    <ClInclude Include="src\video\directshowscaler.h" />
+    <ClInclude Include="src\video\filter.h" />
+    <ClInclude Include="src\video\framescaler.h" />
+    <ClInclude Include="src\video\guipreviewscaler.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\resource.rc" />

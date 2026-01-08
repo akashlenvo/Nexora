@@ -18,7 +18,7 @@ void Connection::Read()
 	socket.async_read_some(asio::buffer(byteBuffer, 255), [this](asio::error_code ec, size_t bytes) {
 		if (!ec)
 		{
-			onBytesReceived(byteBuffer, bytes);
+			onBytesReceived(this->shared_from_this(), (const uint8_t*)byteBuffer, bytes);
 			Read();
 		}
 		else

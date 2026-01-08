@@ -36,6 +36,7 @@ public:
 		if (mode != DISABLED)
 		{
 			stream() << data;
+			stream().flush();
 		}
 		return *this;
 	}

@@ -99,10 +99,10 @@ void Server::TCPDoAccept()
 			auto descriptor = Serializer::DeserializeDeviceDescriptor((const uint8_t*)buffer.data(), size);
 
 			auto conn = std::make_shared<Connection>(
-				std::move(socket), 
-				descriptor, 
+				std::move(socket),
+				descriptor,
 				std::bind(&Server::OnConnectionDisconnected, this, std::placeholders::_1),
-				std::bind(&Server::OnConnectionReportingError, this, std::placeholders::_3)
+				std::bind(&Server::OnConnectionReportingError, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
 			);
 			connections.push_back(std::move(conn));
 

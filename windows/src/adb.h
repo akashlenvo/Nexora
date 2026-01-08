@@ -24,10 +24,31 @@ namespace adb
 	* Reverse the given tcp port.
 	* adb reverse tcp:<port> tcp:<port>
 	*/
-	bool start(int port)
+	bool reverse(int port)
 	{
 		std::string path = dir();
 		std::string command = path + "\\adb\\adb.exe " + "reverse tcp:" + std::to_string(port) + " tcp:" + std::to_string(port);
+
+		if (system(command.c_str()) == 0)
+		{
+			logger << "[ADB:" << port << "] Started " << std::endl;
+			return true;
+		}
+		else
+		{
+			logger << "[ADB:" << port << "] Failed to start " << std::endl;
+			return false;
+		}
+	}
+
+	/*
+	* Forwards a given tcp port
+	* adb forward tcp:<port> tcp:<port>
+	*/
+	bool forward(int port)
+	{
+		std::string path = dir();
+		std::string command = path + "\\adb\\adb.exe " + "forward tcp:" + std::to_string(port) + " tcp:" + std::to_string(port);
 
 		if (system(command.c_str()) == 0)
 		{
