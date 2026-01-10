@@ -1,66 +1,74 @@
 #include "canvas.h"
 
 #include <wx/dcbuffer.h>
+#include <wx/rawbmp.h>
 
 Canvas::Canvas(wxWindow* parent, wxPoint position, wxSize size) 
 	: wxPanel(parent, wxID_ANY, position, size), 
+	scaler(WIDTH, HEIGHT),
 	size(size), 
 	bitmap(size.x, size.y)
 {
-	drawX = 0;
-	drawY = 0;
-	
 	SetBackgroundStyle(wxBG_STYLE_PAINT);
 	SetDoubleBuffered(false);
+
+	drawX = 0;
+	drawY = 0;
 	
 	this->Bind(wxEVT_PAINT, &Canvas::OnPaint, this);
 	this->Bind(wxEVT_ERASE_BACKGROUND, &Canvas::OnEraseBackground, this);
 }
 
-void Canvas::Render(const wxImage& image)
+void Canvas::Render(const uint8_t* bytes, int width, int height)
 {
-	if (!image.IsOk())
+	if (!bytes || width <= 0 || height <= 0)
 		return;
 
-	this->bitmap = wxBitmap(image.Scale(size.x, size.y));
-	if (!bitmap.IsOk())
+	if (!bitmap.IsOk() || bitmap.GetWidth() != width || bitmap.GetHeight() != height) 
+	{
+		drawX = (WIDTH - width) / 2;
+		drawY = (HEIGHT - height) / 2;
+		bitmap.Create(width, height, 24);
+		shouldClear = true;
+	}
+
+	wxNativePixelData data(bitmap);
+	if (!data) 
 		return;
+
+	wxNativePixelData::Iterator p(data);
+	int stride = width * 3;
+
+	for (int y = 0; y < height; y++)
+	{
+		uint8_t* dstrow = (uint8_t*)p.m_ptr;
+		std::memcpy(dstrow, bytes + (y * stride), stride);
+
+		p.OffsetY(data, 1);
+	}
 
 	shouldDraw = true;
 	this->Refresh(false);
 	this->Update();
 }
 
-void Canvas::SetAspectRatio(int w, int h)
+void Canvas::ProcessRawFrameAsync(const AVFrame* frame)
 {
-	if (w == 4 && h == 3) 
-	{
-		size = wxSize(400, 300);
-		bitmap = wxBitmap(400, 300);
-		drawX = 0;
-		drawY = 0;
-	}
-	else if (w == 16 && h == 9) 
-	{
-		size = wxSize(400, 225);
-		bitmap = wxBitmap(400, 225);
-		drawX = 0;
-		drawY = 37;
-	}
-	else if (h == 4 && w == 3)
-	{
-		size = wxSize(225, 300);
-		bitmap = wxBitmap(225, 300);
-		drawX = 87;
-		drawY = 0;
-	}
-	else if (h == 16 && w == 9)
-	{
-		size = wxSize(169, 300);
-		bitmap = wxBitmap(169, 300);
-		drawX = 115;
-		drawY = 0;
-	}
+	if (isRendering)
+		return;
+
+	isRendering = true;
+
+	int width, height;
+	const uint8_t* data = scaler.Process(frame, width, height);
+
+	size_t size = width * height * 3;
+	std::vector<uint8_t> safeFrame(data, data + size);
+
+	this->CallAfter([this, bytes = std::move(safeFrame), width, height]() {
+		this->Render(bytes.data(), width, height);
+		this->isRendering = false;
+	});
 }
 
 void Canvas::ClearBeforeNextRender()
@@ -80,11 +88,14 @@ void Canvas::OnPaint(wxPaintEvent& event)
 
 	if (shouldDraw)
 	{
-		dc.DrawBitmap(bitmap, drawX, drawY, false);
+		if (bitmap.IsOk())
+		{
+			dc.DrawBitmap(bitmap, drawX, drawY, 0);
+		}
 	}
 	else
 	{
-		dc.SetBrush(*wxTRANSPARENT_BRUSH);
+		dc.SetBrush(*wxBLACK_BRUSH);
 		dc.SetPen(*wxBLACK_PEN);
 		dc.DrawRectangle(0, 0, size.x, size.y);
 	}
