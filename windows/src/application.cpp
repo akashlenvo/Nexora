@@ -80,10 +80,25 @@ Application::Application()
 		server->SetStreamingCamera(backCameraActive);
 	});
 
-	// Create a camera handle to access the DirechShow Virtual Camera filter
-	backCameraActive = true;
-	camera = nullptr;
-	SetVideoOptions(640, 480, 4, 3);
+	mainWindow->GetZoomInButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
+		if (rtspManager->GetStreamingDevice() < 0) return;
+		auto& options = GetCurrentDeviceStreamOptions();
+		options.zoom = std::min(10.0f, options.zoom + 0.5f);
+		mainWindow->GetZoomLevelLabel()->SetLabelText(wxString::Format("%.1fx", options.zoom));
+		rtspManager->Zoom(options.zoom);
+	});
+
+	mainWindow->GetZoomOutButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
+		if (rtspManager->GetStreamingDevice() < 0) return;
+		auto& options = GetCurrentDeviceStreamOptions();
+		options.zoom = std::max(1.0f, options.zoom - 0.5f);
+		mainWindow->GetZoomLevelLabel()->SetLabelText(wxString::Format("%.1fx", options.zoom));
+		rtspManager->Zoom(options.zoom);
+	});
+
+	mainWindow->GetSnapshotButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
+		rtspManager->TakeSnapshot();
+	});
 }
 
 bool Application::OnInit()
@@ -188,22 +203,47 @@ void Application::OnResolutionChanged(wxEvent& event)
 	}
 	else
 	{
-		//mainWindow->GetCanvas()->SetAspectRatio(16, 9);
-		if (selection == 1)
+		// Handle error case: Device reported 0 resolutions
+		mainWindow->GetTaskbarIcon()->ShowBalloon("Error", "Device reported no supported resolutions.", 10, wxICON_WARNING);
+	}
+
+	rtspManager->Connect2Stream(deviceId, state);
+
+	// Update UI Zoom Label to match state
+	mainWindow->GetZoomLevelLabel()->SetLabelText(wxString::Format("%.1fx", state.zoom));
+}
+
+void Application::OnWindowCloseEvent(wxCloseEvent& event)
+{
+	// Hide window for responsive UI close feeling
+	mainWindow->Hide();
+
+	rtspManager.reset();
+	server->Close();
+
+	Settings::UpdateDeviceStates(stateRegistry);
+	Settings::Save();
+
+	event.Skip();
+}
+
+void Application::EnsureStateInitialized(std::string name, const DeviceDescriptor& descriptor)
+{
+	// operator[] creates the entry if it doesn't exist
+	auto& state = stateRegistry[name];
+
+	// Ensure defaults if this is a fresh entry
+	if (state.zoom < 1.0f) state.zoom = 1.0f;
+
+	// 1. Initialize Sliders (Default 50 if empty)
+	if (descriptor.filters().count(Video::Filter::Category::CORRECTION))
+	{
+		for (const auto& fname : descriptor.filters().at(Video::Filter::Category::CORRECTION))
 		{
-			SetVideoOptions(1280, 720, 16, 9);
-			logger << "[STREAM] Set stream resolution to 1280x720\n";
-			//server->SetStreamResolution(1280, 720);
-			// Update scCamera resolution
-			//ScCameraInit(1280, 720);
-		}
-		else if (selection == 2)
-		{
-			SetVideoOptions(1920, 1080, 16, 9);
-			logger << "[STREAM] Set stream resolution to 1920x1080\n";
-			//server->SetStreamResolution(1920, 1080);
-			// Update scCamera resolution
-			//ScCameraInit(1920, 1080);
+			if (state.filterSliderValues.find(fname) == state.filterSliderValues.end())
+			{
+				state.filterSliderValues[fname] = 50;
+			}
 		}
 	}
 
