@@ -37,5 +37,4 @@ private:
     
     // Reads the file again just to extract Device sections as raw text
     static void CachePreservedLines(const std::string& path);
-    static std::string Dir();
 };

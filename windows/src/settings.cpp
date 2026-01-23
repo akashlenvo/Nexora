@@ -1,4 +1,33 @@
+// Allow the use of unsafe marked functions 
+// like fopen, strcpy, etc (C standard functions)
+// used by wxWidgets internally (e.g. wxStandardPaths).
+#define _CRT_SECURE_NO_WARNINGS
+
 #include "settings.h"
+
+#include <cstdlib>
+
+#include <wx/stdpaths.h>
+#include <wx/filename.h>
+
+static std::string GetConfigFilePath()
+{
+    // Get Documents Directory
+    wxString docDir = wxStandardPaths::Get().GetDocumentsDir();
+
+    // Build path: Documents/VCamdroid/settings.cfg
+    wxFileName path(docDir, "");
+    path.AppendDir("VCamdroid");
+
+    // Create folder if missing
+    if (!path.DirExists())
+    {
+        path.Mkdir(0755, wxPATH_MKDIR_FULL);
+    }
+
+    path.SetFullName("settings.cfg");
+    return path.GetFullPath().ToStdString();
+}
 
 int Settings::Get(std::string name)
 {
@@ -31,8 +60,7 @@ void Settings::UpdateDeviceStates(const std::map<std::string, StreamOptions>& cu
 
 void Settings::Load()
 {
-    std::string path = Dir() + "\\settings.cfg";
-    std::ifstream f(path);
+    std::ifstream f(GetConfigFilePath());
     if (!f.is_open()) return;
 
     settings.clear();
@@ -91,13 +119,13 @@ void Settings::Load()
     // that belong to devices so we can preserve them blindly during save.
     if (Get("SAVE_DEVICE_STATES") != 1)
     {
-        CachePreservedLines(path);
+        CachePreservedLines(GetConfigFilePath());
     }
 }
 
 void Settings::Save()
 {
-    std::ofstream f(Dir() + "\\settings.cfg");
+    std::ofstream f(GetConfigFilePath());
 
     // 1. Save Global Settings
     for (auto& entry : settings)
@@ -217,12 +245,4 @@ void Settings::CachePreservedLines(const std::string& path)
             preservedDeviceLines.push_back(line);
         }
     }
-}
-
-std::string Settings::Dir()
-{
-    char buffer[MAX_PATH];
-    GetModuleFileNameA(NULL, buffer, MAX_PATH);
-    std::string path(buffer);
-    return path.substr(0, path.find_last_of("\\/"));
 }
