@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.SurfaceHolder
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.darusc.vcamdroid.databinding.ActivityStreamBinding
 import com.darusc.vcamdroid.networking.ConnectionManager
@@ -47,6 +48,7 @@ class StreamActivity : AppCompatActivity(), SurfaceHolder.Callback, ConnectionMa
     }
 
     override fun onDisconnected() {
+        Toast.makeText(this, "Connection closed by server", Toast.LENGTH_LONG).show()
         Log.d(TAG, "TCP server disconnected")
         streamer.stop()
         finish()
