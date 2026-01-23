@@ -41,9 +41,7 @@ data class StreamOptions(
             val width = buffer.getInt()
             val height = buffer.getInt()
 
-            val camera = if (buffer.get()
-                    .toInt() == 1
-            ) CameraHelper.Facing.BACK else CameraHelper.Facing.FRONT
+            val camera = if (buffer.getInt() == 1) CameraHelper.Facing.BACK else CameraHelper.Facing.FRONT
             val adaptiveBitrate = buffer.get().toInt() == 1
 
             val bitrate = buffer.getInt()
