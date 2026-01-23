@@ -1,73 +1,141 @@
-<img align="left" width="80" height="80" src="imgs/icon2.png">
+<h1 align="center">
+  <sub>
+    <img src="imgs/icon2.png" width="150">
+  </sub>
+  <br>
+  VCamdroid
+</h1>
 
-# VCamdroid
-
-VCamdroid is a Windows application that allows you to use your Android phone as a virtual webcam. It leverages a custom DirectShow filter, implemented using the [Softcam library](https://github.com/tshino/softcam), to create a virtual webcam device on your Windows machine. The video stream is fed directly from your Android phone, enabling seamless integration with any application that supports webcams.
+<p align="center">Turn your Android phone into a high-performance Windows webcam.</p>
 
 <p align="center">
-  <img center src="imgs/demo.gif" width=600>
+  <a href="https://github.com/darusc/VCamdroid/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/darusc/VCamdroid?style=for-the-badge" alt="License">
+  </a>
+  <a href="https://github.com/darusc/VCamdroid/releases">
+    <img src="https://img.shields.io/github/v/release/darusc/VCamdroid?style=for-the-badge" alt="Release">
+  </a>
+  <a href="https://github.com/darusc/VCamdroid/releases">
+    <img src="https://img.shields.io/github/downloads/darusc/VCamdroid/total?style=for-the-badge" alt="Downloads">
+  </a>
 </p>
 
-## Features
-
-1. **Multiple Device Support**: Connect and switch between multiple Android devices as video sources.
-2. **Custom Resolution**: Adjust resolution to optimize video quality and performance.
-3. **Camera Switching**: Remotely toggle between the front and rear cameras of the Android device.
-4. **Image Adjustments**: Rotate, flip, and adjust brightness, contrast, and saturation of the video feed.
-5. **Connection Options**: Support for both wired (via ADB) and wireless (WiFi) connections.
-6. **Compatibility**: VCamdroid can be used by any windows application that has access to webcams
-7. **Easy Pairing**: Use QR codes for WiFi pairing and automatically connect if ADB is detected.
-8. **Preview Mode**: Preview the video feed before activating the virtual webcam.
-
-## How to install
-Download the prebuilt binaries from the [releases](https://github.com/darusc/VCamdroid/releases) page or build them yourself. (See [this](https://github.com/darusc/VCamdroid/blob/main/windows/README.md) for instructions on how to build the server)
-
-Run ```install.bat``` This will register the softcam.dll to the system to make the DirectShow virtual camera filter avaialable to other apps.
-
-To install VCamdroid on your phone make sure your phone is connected to your pc and usb debugging is enabled and run ```install_apk.bat```.
-
-That's all. You can now use the app.
-
-### Usb debugging
-
-First **enable developer mode** - go to **Settings > About**. Find the **Build number** and tap on it seven times. 
-  Then go to **Settings > Developer options** and enable USB debugging.
-  Build number and developer options location might vary based on your phone model and android version. See https://developer.android.com/studio/debug/dev-options for more details.
-
-## How to use
-**If you want to connect with a USB cable you must do the following:**
-- Enable usb debugging on your phone. See the last section of **How to install**
-- Plug in your phone to your pc.
-- Start the windows app.
-- Start the android app.
-
-If everything works correctly your phone will automatically connect to the server.
-
-**To connect via WIFI you must do the following:**
-- Start both apps, windows and android
-- In the windows app go to the connect tab to display the QR code.
-- Scan the QR code with the phone app to connect
 
 
-## How it works
+## Description
 
-### Networking
+VCamdroid allows you to seamlessly use your mobile device’s camera as a virtual webcam on your PC. Built using a custom DirectShow filter and the [Softcam library](https://github.com/tshino/softcam), it ensures compatibility with popular applications like Zoom, OBS, Discord, and Teams. Whether wired (via ADB) or wireless (via Wi-Fi), VCamdroid delivers a low-latency, hardware-accelerated video feed directly to your desktop.
 
-The client-server communication is done through a simple custom protocol that is slightly modified based on the connection mode - WIFI or USB via ADB.
+<p align="center">
+  <img src="imgs/demo.gif" width="600" alt="VCamdroid Demo">
+</p>
 
-In both modes a TCP connection is established beetween the two. This is required to acknowledge connections and detect disconnects and is also used by the server to send commands to the client (like set resolution, change camera etc). The client sends only one message when the connection is initiated - its name.
+## Key Features
 
-When the client connects via WIFI an additional UDP connection is established to send the real time video stream. 
+* **Universal Compatibility:** Works with any Windows application that supports standard webcams.
+* **Flexible Connectivity:** Supports high-speed wired connections (via ADB) and convenient wireless connections (via Wi-Fi).
+* **Multi-Device Support:** Connect multiple Android devices simultaneously and switch between them instantly.
+* **Full Camera Control:** Remotely toggle between front and back cameras, adjust resolutions, and enable flash.
+* **Image Adjustments:** Real-time controls for rotation, mirroring (flip), brightness, contrast, and saturation.
+* **Zero-Config Pairing:** Automatically connects over USB via ADB; straightforward QR code pairing for Wi-Fi.
 
-Because of **ADB limitations (does not support UDP port forwarding / reversing)** video stream is sent via the same TCP connection. Performance is not impacted as the connection is on localhost - actually it might have better performance than the UDP connection on WIFI.
+---
 
-<p align="center"><img src="imgs/network.png"/></p>
-<p align="center">Network connection diagram</p>
+## Installation Guide
+
+### Prerequisites
+* **PC:** Windows 10 or 11.
+* **Phone:** Android 7.0 (Nougat) or higher.
+
+### Step 1: Install on Windows
+1.  Download the latest binaries from the [**Releases Page**](https://github.com/darusc/VCamdroid/releases).
+2.  Extract the ZIP archive to a permanent location (e.g., `C:\Program Files\VCamdroid`).
+3.  Right-click `install.bat` and select **Run as Administrator**.
+    * *Note: This script registers `softcam.dll` with the system, making the virtual webcam device visible to other applications.*
+
+### Step 2: Install on Android
+1.  Connect your phone to your PC via USB.
+2.  Ensure **USB Debugging** is enabled (see instructions below).
+3.  Run `install_apk.bat` on your PC to automatically install the app on your phone.
+    * *Alternatively, transfer the APK file to your phone and install it manually.*
+
+### 💡 How to Enable USB Debugging
+1.  Go to **Settings > About Phone**.
+2.  Find **Build Number** and tap it **7 times** until you see "You are now a developer!"
+3.  Go back to **Settings > System > Developer Options**.
+4.  Toggle **USB Debugging** to **ON**.
+    * *For device-specific steps, refer to the [official Android documentation](https://developer.android.com/studio/debug/dev-options).*
 
 
-### Video stream pipeline
+## Usage Instructions
 
-Video frames are captured using [CameraX](https://developer.android.com/media/camera/camerax), encoded as JPEG and then sent to the server. The server feeds the received JPEG bytes to a stream for further processing (image transforms and adjustments). After the image is processed it is sent to the UI for live previewing and to the [Softcam library](https://github.com/tshino/softcam) that sends it further to the DirectShow filter that acts a webcam.
+### Wired Connection (USB / ADB)
+*Recommended for lowest latency and highest stability.*
 
-<p align="center"><img src="imgs/pipeline.png"/></p>
-<p align="center">Video stream pipeline</p>
+1.  Connect your phone to the PC via USB.
+2.  Launch the **VCamdroid Desktop Client**.
+3.  Launch the **VCamdroid App** on your phone.
+4.  The connection is automatic. The app status should change to "Connected."
+
+### Wireless Connection (Wi-Fi)
+1.  Ensure both your PC and phone are on the same Wi-Fi network.
+2.  Launch the **VCamdroid Desktop Client** and select the **Connect** tab to reveal a QR Code.
+3.  Launch the **VCamdroid App** on your phone.
+4.  Tap the **Scan QR Code** button and point your camera at the PC screen.
+
+
+## Technical Architecture
+
+### Networking Protocol
+VCamdroid utilizes the industry-standard **RTSP (Real-Time Streaming Protocol)** to ensure robust, low-latency video transmission between the Android device and the Windows client.
+
+1.  **Transport Layer:**
+    * **Wi-Fi Connection:** The Windows client connects directly to the RTSP server running on the Android device over the local network.
+    * **USB Connection:** To enable wired communication, the application uses **ADB Port Forwarding**. Since ADB only supports TCP forwarding, the RTSP stream is tunneled exclusively over **TCP** (interleaved RTSP). This creates a stable, high-bandwidth tunnel via `localhost` that bypasses network interference.
+
+2.  **Stream Handling Libraries:**
+    * **Server Side (Android):** Powered by the [RootEncoder](https://github.com/pedroSG94/RootEncoder) library. It handles the complex tasks of interfacing with the Android encoder, packetizing the video data into RTP packets, and managing the RTSP server session.
+    * **Client Side (Windows):** Utilizes [FFmpeg](https://ffmpeg.org/), the leading multimedia framework, to robustly demux the RTSP stream and decode the incoming video packets.
+
+<p align="center"><img src="imgs/network.png" width="60%"></p>
+
+### Video Pipeline
+The pipeline is engineered for performance, offloading image processing to the Android GPU before compression to minimize latency and bandwidth.
+
+1.  **Capture, Process & Encode (Android):**
+    * **Capture:** Video frames are captured using the modern **Camera2 API**.
+    * **Pre-Processing:** Raw frames are processed on the GPU using OpenGL. Operations like **Rotation**, **Mirroring (Flip)**, and **Color Correction** are applied here *before* encoding, ensuring the stream is "ready-to-display."
+    * **Hardware Encoding:** The processed frames are passed to the device's hardware **MediaCodec** (supporting **H.264** or **H.265/HEVC**). This offloads compression from the CPU.
+    * **Transmission:** **RootEncoder** encapsulates the encoded stream into RTP packets and transmits them over the active network connection.
+
+2.  **Decode & Render (Windows):**
+    * **Decoding:** The Windows client receives the RTSP stream and uses **FFmpeg** to decode the compressed H.264/H.265 frames into raw image data (YUV/RGB).
+    * **Output:**
+        * **UI Preview:** The decoded frame is rendered immediately to the application window for live monitoring.
+        * **Virtual Device:** The frame is written to a ring buffer managed by the [Softcam](https://github.com/tshino/softcam) library. Softcam acts as the bridge between the user application and the system-registered DirectShow filter, allowing third-party apps (Zoom, Teams, OBS) to treat the stream as a physical webcam device.
+
+<p align="center"><img src="imgs/pipeline.png" width="50%"></p>
+
+
+## Contributing
+
+Contributions are welcome! Whether you want to fix a bug, improve performance, or add a new feature, feel free to fork the repository and submit a Pull Request.
+
+### Development Setup
+
+**📱 Android App:**
+* Open the `android/` folder in **Android Studio**.
+* Sync with Gradle and build.
+* **Key Libraries:** Uses [RootEncoder](https://github.com/pedroSG94/RootEncoder) for RTSP streaming and Camera2 APIs.
+
+**💻 Windows Client:**
+* Open the `windows/` folder in **Visual Studio**.
+* **Dependencies:**
+    * **wxWidgets:** For the GUI (install via vcpkg or source).
+    * **FFmpeg:** For video decoding.
+* **Build:** Open `VCamdroid.sln` and build for **x64 / Release**.
+* **DirectShow Filter:** The virtual camera driver leverages the [Softcam](https://github.com/tshino/softcam) library.
+
+
+
+        
