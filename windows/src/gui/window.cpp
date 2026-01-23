@@ -2,16 +2,27 @@
 #include "settings.h"
 #include "icon.xpm"
 
-#include <iostream>
-#include <thread>
-#include <wx/msw/private.h>
 #include <wx/dc.h>
-#include <wx/artprov.h>
+#include <wx/settings.h>
+#include <wx/statline.h>
 
 Window::Window(Server::HostInfo hostinfo)
-	: wxFrame(nullptr, wxID_ANY, "VCamdroid", wxDefaultPosition, wxSize(500, 450), wxDEFAULT_FRAME_STYLE & ~wxMAXIMIZE_BOX & ~wxRESIZE_BORDER)
+	: wxFrame(nullptr, wxID_ANY, "VCamdroid", wxDefaultPosition, wxSize(500, 480), wxDEFAULT_FRAME_STYLE & ~wxMAXIMIZE_BOX & ~wxRESIZE_BORDER)
 {
-	wxPanel* panel = new wxPanel(this, wxID_ANY);
+	wxPanel* panel = nullptr;
+	try {
+		panel = new wxPanel(this, wxID_ANY);
+	}
+	catch (...) {
+		wxMessageBox("Failed to create UI Panel.", "Error");
+		return;
+	}
+
+	if (wxSystemSettings::GetAppearance().IsDark())
+	{
+		panel->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
+	}
+
 	wxBoxSizer* topsizer = new wxBoxSizer(wxVERTICAL);
 
 	taskbarIcon = new wxTaskBarIcon();
@@ -21,10 +32,15 @@ Window::Window(Server::HostInfo hostinfo)
 
 	SetIcon(icon);
 	InitializeMenu(hostinfo);
-	InitializeCanvasPanel(panel, topsizer);
-	InitializeControlPanel(panel, topsizer);
 
-	panel->SetSizerAndFit(topsizer);
+	InitializeTopBar(panel, topsizer);
+	InitializeCanvasPanel(panel, topsizer);
+	InitializeBottomBar(panel, topsizer);
+
+	panel->SetSizer(topsizer);
+	panel->Layout();
+
+	Center();
 }
 
 Window::~Window()
@@ -37,12 +53,26 @@ void Window::InitializeMenu(Server::HostInfo hostinfo)
 	wxMenuBar* menuBar = new wxMenuBar();
 
 	wxMenu* file = new wxMenu();
-	
+
 	auto c1 = file->AppendCheckItem(MenuIDs::HIDE2TRAY, "Hide to tray");
-	c1->Check(Settings::get("MINIMIZE_TASKBAR") == 1);
+	c1->Check(Settings::Get("MINIMIZE_TASKBAR") == 1);
 
 	auto c2 = file->AppendCheckItem(MenuIDs::SHOWSTATS, "Show frame stats");
-	c2->Check(Settings::get("SHOW_STATS") == 1);
+	c2->Check(Settings::Get("SHOW_STATS") == 1);
+
+	auto c3 = file->AppendCheckItem(MenuIDs::SAVESTATE, "Save device presets");
+	c3->Check(Settings::Get("SAVE_DEVICE_STATE") == 1);
+
+	wxMenu* dsresolutions = new wxMenu();
+	dsresolutions->AppendRadioItem(MenuIDs::DS_SD, "640 x 480", "Standard 4:3");
+	dsresolutions->AppendRadioItem(MenuIDs::DS_HD, "1280 x 720", "HD");
+	dsresolutions->AppendRadioItem(MenuIDs::DS_FHD, "1920 x 1080", "FHD");
+	dsresolutions->AppendRadioItem(MenuIDs::DS_QHD, "3840 x 2160", "QHD");
+
+	auto selected = Settings::Get("DIRECTSHOW_RESOLUTION");
+	dsresolutions->Check((selected != -1 ? selected : 0) + 105, true);
+
+	file->AppendSubMenu(dsresolutions, "DirectShow Resolution", "Requires restart");
 
 	file->Append(wxID_ANY, "About");
 	file->AppendSeparator();
@@ -63,59 +93,138 @@ void Window::InitializeMenu(Server::HostInfo hostinfo)
 	SetMenuBar(menuBar);
 }
 
-void Window::InitializeCanvasPanel(wxPanel* parent, wxBoxSizer* topsizer)
+void Window::InitializeTopBar(wxPanel* parent, wxBoxSizer* topsizer)
 {
-	canvas = new Canvas(parent, wxDefaultPosition, wxSize(400, 300));
-	topsizer->Add(canvas, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 10);
+	wxBoxSizer* topBarSizer = new wxBoxSizer(wxHORIZONTAL);
+
+	wxStaticText* srcLabel = new wxStaticText(parent, wxID_ANY, "Source:");
+	wxFont font = srcLabel->GetFont();
+	font.SetWeight(wxFONTWEIGHT_BOLD);
+	srcLabel->SetFont(font);
+	topBarSizer->Add(srcLabel, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 8);
+
+	sourceChoice = new wxChoice(parent, wxID_ANY, wxDefaultPosition, wxSize(150, -1), 1, new wxString[1]{ "No devices" });	
+	topBarSizer->Add(sourceChoice, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 8);
+
+	// Pushes everything after this to the right
+	topBarSizer->AddStretchSpacer(1);
+
+	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+
+	statsText = new wxStaticText(parent, wxID_ANY, "----p@--fps\n00.0mbps", wxDefaultPosition, wxDefaultSize, wxALIGN_RIGHT);
+
+	// Slightly smaller font looks better for data display
+	wxFont statsFont = statsText->GetFont();
+	statsFont.SetPointSize(statsFont.GetPointSize() - 1);
+	statsText->SetFont(statsFont);
+
+	statsText->Show(Settings::Get("SHOW_STATS") == 1);
+
+	// Add with some right padding to separate from the settings button
+	sizer->Add(statsText, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 10);
+
+	// Settings Button
+	streamOptionsButton = new wxBitmapButton(parent, wxID_ANY, wxBitmap("res/setting.png", wxBITMAP_TYPE_PNG));
+	streamOptionsButton->SetToolTip("Stream Settings");
+	sizer->Add(streamOptionsButton, 0, wxALIGN_CENTER_VERTICAL);
+
+	topBarSizer->Add(sizer, 0, wxALIGN_CENTER_VERTICAL);
+
+	topsizer->Add(topBarSizer, 0, wxEXPAND | wxALL, 10);
 }
 
-void Window::InitializeControlPanel(wxPanel* parent, wxBoxSizer* topsizer)
+void Window::InitializeCanvasPanel(wxPanel* parent, wxBoxSizer* topsizer)
 {
-	wxGridSizer* sizer = new wxGridSizer(2, 2, 20, 5);
-	
-	wxFlexGridSizer* settingsSizer = new wxFlexGridSizer(2, 2, 5, 5);
-	                                                                                                        
-	sourceChoice = new wxChoice(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, 1, new wxString[1]{ "No devices" });
-	settingsSizer->Add(new wxStaticText(parent, wxID_ANY, "Source"), 0, wxALL | wxALIGN_CENTER_VERTICAL);
-	settingsSizer->Add(sourceChoice);
+	// Just the Canvas now
+	canvas = new Canvas(parent, wxDefaultPosition, wxSize(400, 300));
+	topsizer->Add(canvas, 0, wxALIGN_CENTER_HORIZONTAL | wxLEFT | wxRIGHT | wxBOTTOM, 10);
+}
 
-	resolutionChoice = new wxChoice(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, 3, new wxString[3] {"640x480", "(HD) 1280x720", "(FHD) 1920x1080"});
-	settingsSizer->Add(new wxStaticText(parent, wxID_ANY, "Resolution"), 0, wxALL | wxALIGN_CENTER_VERTICAL);
-	settingsSizer->Add(resolutionChoice);
+void Window::InitializeBottomBar(wxPanel* parent, wxBoxSizer* topsizer)
+{
+	wxStaticLine* line = new wxStaticLine(parent, wxID_ANY, wxDefaultPosition, wxSize(1, 1), wxLI_HORIZONTAL);
+	topsizer->Add(line, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 10);
 
+	wxBoxSizer* bottomBarSizer = new wxBoxSizer(wxHORIZONTAL);
 
-
-	wxStaticBoxSizer* controlsSizer = new wxStaticBoxSizer(wxHORIZONTAL, parent, "Controls");
+	// --- GROUP 1: TRANSFORMS ---
+	wxBoxSizer* groupTransform = new wxBoxSizer(wxHORIZONTAL);
 
 	rotateLeftButton = new wxBitmapButton(parent, wxID_ANY, wxBitmap("res/rotate-left.png", wxBITMAP_TYPE_PNG));
-	controlsSizer->Add(rotateLeftButton, 0, wxRIGHT, 5);
+	rotateLeftButton->SetToolTip("Rotate Left");
+	groupTransform->Add(rotateLeftButton, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 2);
 
 	rotateRightButton = new wxBitmapButton(parent, wxID_ANY, wxBitmap("res/rotate-right.png", wxBITMAP_TYPE_PNG));
-	controlsSizer->Add(rotateRightButton, 0, wxRIGHT, 5);
+	rotateRightButton->SetToolTip("Rotate Right");
+	groupTransform->Add(rotateRightButton, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 2);
 
 	flipButton = new wxBitmapButton(parent, wxID_ANY, wxBitmap("res/flip.png", wxBITMAP_TYPE_PNG));
-	controlsSizer->Add(flipButton, 0, wxRIGHT, 5);
+	flipButton->SetToolTip("Flip Horizontally");
+	groupTransform->Add(flipButton, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 2);
 
-	adjustmentsButton = new wxBitmapButton(parent, wxID_ANY, wxBitmap("res/settings.png", wxBITMAP_TYPE_PNG));
-	controlsSizer->Add(adjustmentsButton, 0, wxRIGHT, 10);
+	flipVerticalButton = new wxBitmapButton(parent, wxID_ANY, wxBitmap("res/flip-v.png", wxBITMAP_TYPE_PNG));
+	flipVerticalButton->SetToolTip("Flip Vertically");
+	groupTransform->Add(flipVerticalButton, 0, wxALIGN_CENTER_VERTICAL);
+
+	bottomBarSizer->Add(groupTransform, 0, wxALIGN_CENTER_VERTICAL);
+	bottomBarSizer->AddStretchSpacer(1);
+
+
+	// --- GROUP 2: ZOOM ---
+	wxBoxSizer* groupZoom = new wxBoxSizer(wxHORIZONTAL);
+
+	zoomOutButton = new wxBitmapButton(parent, wxID_ANY, wxBitmap("res/zoom-out.png", wxBITMAP_TYPE_PNG));
+	zoomOutButton->SetToolTip("Zoom Out");
+	groupZoom->Add(zoomOutButton, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 4);
+
+	zoomLevelLabel = new wxStaticText(parent, wxID_ANY, "1.0x", wxDefaultPosition, wxSize(32, -1), wxALIGN_CENTER);
+	wxFont smallFont = zoomLevelLabel->GetFont();
+	smallFont.SetPointSize(smallFont.GetPointSize() - 1);
+	zoomLevelLabel->SetFont(smallFont);
+	groupZoom->Add(zoomLevelLabel, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 4);
+
+	zoomInButton = new wxBitmapButton(parent, wxID_ANY, wxBitmap("res/zoom-in.png", wxBITMAP_TYPE_PNG));
+	zoomInButton->SetToolTip("Zoom In");
+	groupZoom->Add(zoomInButton, 0, wxALIGN_CENTER_VERTICAL);
+
+	bottomBarSizer->Add(groupZoom, 0, wxALIGN_CENTER_VERTICAL);
+	bottomBarSizer->AddStretchSpacer(1);
+
+
+	// --- GROUP 3: DEVICE ---
+	wxBoxSizer* groupDevice = new wxBoxSizer(wxHORIZONTAL);
+
+	torchButton = new wxBitmapButton(parent, wxID_ANY, wxBitmap("res/flash.png", wxBITMAP_TYPE_PNG));
+	torchButton->SetToolTip("Toggle Flash");
+	groupDevice->Add(torchButton, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
 
 	swapButton = new wxBitmapButton(parent, wxID_ANY, wxBitmap("res/swap.png", wxBITMAP_TYPE_PNG));
-	controlsSizer->Add(swapButton);
+	swapButton->SetToolTip("Switch Camera");
+	groupDevice->Add(swapButton, 0, wxALIGN_CENTER_VERTICAL);
 
-	sizer->Add(settingsSizer, 0, wxALIGN_CENTER_VERTICAL);
-	sizer->Add(controlsSizer, 0, wxALIGN_CENTER_VERTICAL);
+	snapshotButton = new wxBitmapButton(parent, wxID_ANY, wxBitmap("res/photo.png", wxBITMAP_TYPE_PNG));
+	snapshotButton->SetToolTip("Take Snapshot");
+	groupDevice->Add(snapshotButton, 0, wxALIGN_CENTER_VERTICAL);
 
-	statsText = new wxStaticText(parent, wxID_ANY, "frame time: -ms | frame size: -kb");
-	statsText->Show(Settings::get("SHOW_STATS") == 1);
-	sizer->AddSpacer(0);
-	sizer->Add(statsText, 0, wxALIGN_RIGHT);
+	bottomBarSizer->Add(groupDevice, 0, wxALIGN_CENTER_VERTICAL);
+	bottomBarSizer->AddStretchSpacer(1);
 
-	topsizer->Add(sizer, 0, wxTOP | wxALIGN_CENTER_HORIZONTAL, 15);
+
+	// --- GROUP 4: TOOLS ---
+	wxBoxSizer* groupTools = new wxBoxSizer(wxHORIZONTAL);
+
+	adjustmentsButton = new wxBitmapButton(parent, wxID_ANY, wxBitmap("res/settings.png", wxBITMAP_TYPE_PNG));
+	adjustmentsButton->SetToolTip("Image Adjustments");
+	groupTools->Add(adjustmentsButton, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 2);
+
+	bottomBarSizer->Add(groupTools, 0, wxALIGN_CENTER_VERTICAL);
+
+	topsizer->Add(bottomBarSizer, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 10);
 }
 
 void Window::MinimizeToTaskbar(wxIconizeEvent& evt)
 {
-	if (Settings::get("MINIMIZE_TASKBAR") == 1)
+	if (Settings::Get("MINIMIZE_TASKBAR") == 1)
 	{
 		this->Hide();
 		evt.Skip();
@@ -130,52 +239,24 @@ void Window::MaximizeFromTaskbar(wxTaskBarIconEvent& evt)
 	this->Show();
 }
 
-Canvas* Window::GetCanvas()
-{
-	return canvas;
-}
+Canvas* Window::GetCanvas() { return canvas; }
+wxChoice* Window::GetSourceChoice() { return sourceChoice; }
+wxButton* Window::GetStreamOptionsButton() { return streamOptionsButton; }
 
-wxChoice* Window::GetSourceChoice()
-{
-	return sourceChoice;
-}
+wxButton* Window::GetRotateLeftButton() { return rotateLeftButton; }
+wxButton* Window::GetRotateRightButton() { return rotateRightButton; }
+wxButton* Window::GetFlipButton() { return flipButton; }
+wxButton* Window::GetFlipVerticalButton() { return flipVerticalButton; }
 
-wxChoice* Window::GetResolutionChoice()
-{
-	return resolutionChoice;
-}
+wxButton* Window::GetZoomInButton() { return zoomInButton; }
+wxButton* Window::GetZoomOutButton() { return zoomOutButton; }
+wxStaticText* Window::GetZoomLevelLabel() { return zoomLevelLabel; }
 
-wxButton* Window::GetRotateLeftButton()
-{
-	return rotateLeftButton;
-}
+wxButton* Window::GetTorchButton() { return torchButton; }
+wxButton* Window::GetSwapButton() { return swapButton; }
 
-wxButton* Window::GetRotateRightButton()
-{
-	return rotateRightButton;
-}
+wxButton* Window::GetAdjustmentsButton() { return adjustmentsButton; }
+wxButton* Window::GetSnapshotButton() { return snapshotButton; }
 
-wxButton* Window::GetFlipButton()
-{
-	return flipButton;
-}
-
-wxButton* Window::GetAdjustmentsButton()
-{
-	return adjustmentsButton;
-}
-
-wxButton* Window::GetSwapButton()
-{
-	return swapButton;
-}
-
-wxStaticText* Window::GetStatsText()
-{
-	return statsText;
-}
-
-wxTaskBarIcon* Window::GetTaskbarIcon()
-{
-	return taskbarIcon;
-}
+wxStaticText* Window::GetStatsText() { return statsText; }
+wxTaskBarIcon* Window::GetTaskbarIcon() { return taskbarIcon; }

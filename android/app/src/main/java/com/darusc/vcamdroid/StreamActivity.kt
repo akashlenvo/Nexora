@@ -1,97 +1,125 @@
 package com.darusc.vcamdroid
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.util.Size
+import android.view.SurfaceHolder
+import android.view.WindowManager
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.AspectRatio
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.ImageProxy
-import androidx.constraintlayout.widget.ConstraintSet
 import com.darusc.vcamdroid.databinding.ActivityStreamBinding
 import com.darusc.vcamdroid.networking.ConnectionManager
-import com.darusc.vcamdroid.video.Camera
-import com.darusc.vcamdroid.video.toJpeg
+import com.darusc.vcamdroid.networking.PacketType
+import com.darusc.vcamdroid.rtsp.Streamer
+import com.darusc.vcamdroid.rtsp.StreamOptions
+import java.nio.ByteBuffer
 
-class StreamActivity : AppCompatActivity(), ConnectionManager.ConnectionStateCallback {
+class StreamActivity : AppCompatActivity(), SurfaceHolder.Callback, ConnectionManager.ConnectionStateCallback {
 
     private val TAG = "VCamdroid"
 
     private lateinit var viewBinding: ActivityStreamBinding
 
-    private lateinit var camera: Camera
-    private var jpegQuality = 80
-    private val connectionManager: ConnectionManager = ConnectionManager.getInstance(this)
+    private val connectionManager = ConnectionManager.getInstance(this)
+    private lateinit var streamer: Streamer
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
         viewBinding = ActivityStreamBinding.inflate(layoutInflater)
+        viewBinding.surfaceView.holder.addCallback(this)
+
         setContentView(viewBinding.root)
 
-        camera = Camera(
-            viewBinding.viewFinder.surfaceProvider,
-            ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888,
-            ::processImage,
-            this,
-            this
-        )
+        connectionManager.setOnBytesReceivedCallback(::onBytesReceived)
+        streamer = Streamer(StreamOptions(), this, viewBinding.surfaceView)
+    }
 
-        camera.start()
-
-        connectionManager.setOnBytesReceivedCallback { buffer, bytes ->
-            val type = buffer[0]
-            when(type) {
-                ConnectionManager.PacketType.RESOLUTION -> {
-                    val width = (buffer[1].toInt() and 0xFF) or (buffer[2].toInt() shl 8)
-                    val height = (buffer[3].toInt() and 0xFF) or (buffer[4].toInt() shl 8)
-                    camera.start(Size(width, height))
-                    setPreviewAspectRatio(camera.aspectRation)
-                }
-                ConnectionManager.PacketType.CAMERA -> {
-                    val back = buffer[1].toInt() == 0x01;
-                    camera.start(
-                        if(back) CameraSelector.DEFAULT_BACK_CAMERA
-                        else CameraSelector.DEFAULT_FRONT_CAMERA
-                    )
-                }
-                ConnectionManager.PacketType.QUALITY -> {
-                    jpegQuality = buffer[1].toInt()
-                }
-                ConnectionManager.PacketType.WB -> {
-                    camera.start(buffer[1].toInt())
-                }
-                ConnectionManager.PacketType.EFFECT -> {
-                    camera.start(buffer[1].toShort())
-                }
-            }
+    override fun surfaceCreated(holder: SurfaceHolder) {
+        if (holder.surface != null && holder.surface.isValid) {
+            streamer.startPreview()
         }
+    }
+
+    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) { }
+
+    override fun surfaceDestroyed(holder: SurfaceHolder) {
+        streamer.stop()
     }
 
     override fun onDisconnected() {
-        Log.e(TAG, "Connection disconnected")
-        Toast.makeText(this, "Connection interrupted!", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, "Connection closed by server", Toast.LENGTH_LONG).show()
+        Log.d(TAG, "TCP server disconnected")
+        streamer.stop()
         finish()
     }
 
-    private fun processImage(image: ImageProxy) {
-        val bytes = image.toJpeg(jpegQuality)
-        bytes?.let {
-            connectionManager.sendVideoStreamFrame(bytes)
-        }
-        image.close()
-    }
+    private fun onBytesReceived(buffer: ByteArray, bytes: Int) {
+        println(buffer)
+        // Packet type is always the first byte
+        val type = buffer[0]
 
-    private fun setPreviewAspectRatio(aspectRatio: String) {
-        runOnUiThread {
-            val constraintSet = ConstraintSet().apply {
-                clone(viewBinding.root)
-                setDimensionRatio(viewBinding.viewFinder.id, aspectRatio)
+        when (type) {
+            PacketType.ACTIVATION -> {
+                val options = StreamOptions.deserialize(buffer)
+                streamer.startStream(options)
             }
-            constraintSet.applyTo(viewBinding.root)
+            PacketType.CAMERA -> {
+                streamer.switchCamera()
+            }
+            PacketType.RESOLUTION -> {
+                val width = (buffer[1].toInt() and 0xFF) or (buffer[2].toInt() shl 8)
+                val height = (buffer[3].toInt() and 0xFF) or (buffer[4].toInt() shl 8)
+                streamer.setResolution(width, height)
+            }
+            PacketType.ROTATION -> {
+                val degrees = buffer[1].toInt();
+                streamer.rotate(degrees)
+            }
+            PacketType.EFFECT_FILTER -> {
+                val filterName = String(buffer, 2, buffer[1].toInt(), Charsets.UTF_8)
+                streamer.applyEffectFilter(filterName)
+            }
+            PacketType.CORRECTION_FILTER -> {
+                val filterName = String(buffer, 2, buffer[1].toInt(), Charsets.UTF_8)
+                val value = buffer[2 + buffer[1].toInt()].toInt()
+                streamer.applyCorrectionFilter(filterName, value)
+            }
+            PacketType.BITRATE -> {
+                val bitrate = (buffer[1].toInt() and 0xFF) or (buffer[2].toInt() shl 8)
+                streamer.setBitrate(bitrate)
+            }
+            PacketType.ADAPTIVE_BITRATE ->  {
+                val min = (buffer[1].toInt() and 0xFF) or (buffer[2].toInt() shl 8)
+                val max = (buffer[3].toInt() and 0xFF) or (buffer[4].toInt() shl 8)
+                streamer.setAdaptiveBitrate(min, max)
+            }
+            PacketType.STABILIZATION -> {
+                streamer.setStabilization(buffer[1].toInt() == 1)
+            }
+            PacketType.FLASH -> {
+                streamer.setFlash(buffer[1].toInt() == 1)
+            }
+            PacketType.FOCUS -> {
+                streamer.setFocus(buffer[1].toInt())
+            }
+            PacketType.CODEC -> {
+                streamer.setH265Codec(buffer[1].toInt() == 1)
+            }
+            PacketType.FPS -> {
+                streamer.setFps(buffer[1].toInt())
+            }
+            PacketType.ZOOM -> {
+                val factor = (buffer[1].toInt() and 0xFF) or
+                        ((buffer[2].toInt() and 0xFF) shl 8) or
+                        ((buffer[3].toInt() and 0xFF) shl 16) or
+                        ((buffer[4].toInt() and 0xFF) shl 24)
+                streamer.setZoom(Float.fromBits(factor))
+            }
+            PacketType.FLIP -> {
+                val axis = buffer[1].toInt()
+                streamer.flip(if (axis == 0) StreamOptions.FlipAxis.VERTICAL else StreamOptions.FlipAxis.HORIZONTAL)
+            }
         }
     }
 }

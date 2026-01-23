@@ -105,9 +105,9 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)3rdparty\softcam\dist\include;$(ProjectDir)include;$(ProjectDir)res;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3rdparty\softcam\dist\include;$(ProjectDir)include;$(ProjectDir)res;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -151,32 +151,81 @@ xcopy "$(ProjectDir)3rdparty\softcam\examples\softcam_installer\x64\Release\soft
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\application.cpp" />
+    <ClCompile Include="src\directshowsource.cpp" />
     <ClCompile Include="src\gui\devicesview.cpp" />
     <ClCompile Include="src\gui\imgadjdlg.cpp" />
     <ClCompile Include="src\gui\qrconview.cpp" />
+    <ClCompile Include="src\gui\streamconfigdlg.cpp" />
     <ClCompile Include="src\net\connection.cpp" />
-    <ClCompile Include="src\net\receiver.cpp" />
-    <ClCompile Include="src\stream.cpp" />
+    <ClCompile Include="src\net\serializer.cpp" />
+    <ClCompile Include="src\rtsp\manager.cpp" />
     <ClCompile Include="src\canvas.cpp" />
     <ClCompile Include="src\main.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="src\net\server.cpp" />
     <ClCompile Include="src\gui\window.cpp" />
+    <ClCompile Include="src\settings.cpp" />
+    <ClCompile Include="src\video\directshowscaler.cpp" />
+    <ClCompile Include="src\video\framescaler.cpp" />
+    <ClCompile Include="src\video\guipreviewscaler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\adb.h" />
     <ClInclude Include="include\application.h" />
+    <ClInclude Include="include\directshowsource.h" />
     <ClInclude Include="include\gui\devicesview.h" />
     <ClInclude Include="include\gui\imgadjdlg.h" />
     <ClInclude Include="include\gui\qrconview.h" />
     <ClInclude Include="include\net\connection.h" />
-    <ClInclude Include="include\net\receiver.h" />
-    <ClInclude Include="include\stream.h" />
+    <ClInclude Include="include\net\devicedescriptor.h" />
+    <ClInclude Include="include\net\serializer.h" />
+    <ClInclude Include="include\rtsp\constants.h" />
+    <ClInclude Include="include\rtsp\ffmpeg.h" />
+    <ClInclude Include="include\rtsp\ffmpeginterrupt.h" />
+    <ClInclude Include="include\rtsp\receiver.h" />
+    <ClInclude Include="include\rtsp\manager.h" />
     <ClInclude Include="include\canvas.h" />
     <ClInclude Include="include\logger.h" />
     <ClInclude Include="include\net\server.h" />
     <ClInclude Include="include\gui\window.h" />
+    <ClInclude Include="include\rtsp\streamoptions.h" />
+    <ClInclude Include="include\video\directshowscaler.h" />
+    <ClInclude Include="include\video\filter.h" />
+    <ClInclude Include="include\video\framescaler.h" />
+    <ClInclude Include="include\video\guipreviewscaler.h" />
+    <ClInclude Include="include\gui\streamconfigdlg.h" />
+    <ClInclude Include="src\adb.h" />
+    <ClInclude Include="src\application.h" />
+    <ClInclude Include="src\canvas.h" />
+    <ClInclude Include="src\directshowsource.h" />
+    <ClInclude Include="src\gui\devicesview.h" />
+    <ClInclude Include="src\gui\imgadjdlg.h" />
+    <ClInclude Include="src\gui\qrconview.h" />
+    <ClInclude Include="src\gui\streamconfigdlg.h" />
+    <ClInclude Include="src\gui\window.h" />
+    <ClInclude Include="src\logger.h" />
+    <ClInclude Include="src\net\connection.h" />
+    <ClInclude Include="src\net\devicedescriptor.h" />
+    <ClInclude Include="src\net\serializer.h" />
+    <ClInclude Include="src\net\server.h" />
+    <ClInclude Include="src\rtsp\constants.h" />
+    <ClInclude Include="src\rtsp\ffmpeg.h" />
+    <ClInclude Include="src\rtsp\ffmpeginterrupt.h" />
+    <ClInclude Include="src\rtsp\manager.h" />
+    <ClInclude Include="src\rtsp\receiver.h" />
+    <ClInclude Include="src\rtsp\streamoptions.h" />
+    <ClInclude Include="src\settings.h" />
+    <ClInclude Include="src\video\directshowscaler.h" />
+    <ClInclude Include="src\video\filter.h" />
+    <ClInclude Include="src\video\framescaler.h" />
+    <ClInclude Include="src\video\guipreviewscaler.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="res\resource.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\rtsp\receiver.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
