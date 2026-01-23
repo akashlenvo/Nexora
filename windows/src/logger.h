@@ -15,7 +15,7 @@ public:
 	static const int FILE = 1;
 	static const int DISABLED = 2;
 
-	Logger(int mode) : mode(mode), filestream("app.log")
+	Logger(int mode) : mode(mode), filestream("vcamdroid.log")
 	{
 	}
 

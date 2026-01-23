@@ -17,6 +17,7 @@ import com.darusc.vcamdroid.video.getSupportedResolutions
 import com.pedro.common.ConnectChecker
 import com.pedro.common.VideoCodec
 import com.pedro.encoder.input.gl.render.filters.BaseFilterRender
+import com.pedro.encoder.input.video.CameraHelper
 import com.pedro.encoder.input.video.CameraOpenException
 import com.pedro.library.util.BitrateAdapter
 import com.pedro.library.view.OpenGlView
@@ -78,7 +79,12 @@ class Streamer(
     fun switchCamera() {
         try {
             rtspServerCamera2.switchCamera()
-            options.camera = rtspServerCamera2.cameraFacing
+            // Make sure local state is synced correctly by manually updating it
+            if (options.camera == CameraHelper.Facing.BACK) {
+                options.camera = CameraHelper.Facing.FRONT
+            } else {
+                options.camera = CameraHelper.Facing.BACK
+            }
         } catch (e: CameraOpenException) {
             Log.d(TAG, "Can't switch camera. Current resolution ({${options.width}, ${options.height}) not supported")
             connectionManager.sendErrorReport(ErrorReport(
@@ -273,7 +279,7 @@ class Streamer(
             }
 
             if (!rtspServerCamera2.isOnPreview) {
-                rtspServerCamera2.startPreview()
+                startPreview()
             }
 
             applyOptionsToStream(newOptions)

@@ -15,7 +15,7 @@ struct StreamOptions
 
 	int fps = 30;
 	std::pair<int, int> resolution = { 640, 480 };
-	bool backCameraActive = false;
+	bool backCameraActive = true;
 
 	// Cached values of adjustment filters
 	FilterValueCache filterSliderValues;

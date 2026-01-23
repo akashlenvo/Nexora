@@ -13,6 +13,7 @@ Application::Application()
 	SetAppearance(Appearance::System);
 	wxInitAllImageHandlers();
 
+	SetAppName("VCamdroid");
 	Settings::Load();
 	stateRegistry = Settings::GetDeviceStates();
 
