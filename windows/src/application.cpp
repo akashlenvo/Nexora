@@ -26,7 +26,6 @@ Application::Application()
 		default: dsSource = std::make_unique<DirectShowSource>(1280, 720);
 	}
 
-
 	server = std::make_unique<Server>(6969, *this);
 	server->Start();
 
@@ -40,6 +39,7 @@ Application::Application()
 			if (dsSource) {
 				dsSource->SendRawFrame(frame);
 			}
+			snapshotManager.ProcessFrame(frame);
 		},
 		// OnStatsReceivedCallback
 		[&](const RTSP::Receiver::Stats& stats) {
@@ -135,6 +135,11 @@ void Application::BindEventListeners()
 		options.zoom = std::max(1.0f, options.zoom - 0.5f);
 		mainWindow->GetZoomLevelLabel()->SetLabelText(wxString::Format("%.1fx", options.zoom));
 		rtspManager->Zoom(options.zoom);
+	});
+
+	mainWindow->GetSnapshotButton()->Bind(wxEVT_BUTTON, [&](const wxEvent& arg) {
+		if (rtspManager->GetStreamingDevice() < 0) return;
+		snapshotManager.RequestSnapshot();
 	});
 }
 

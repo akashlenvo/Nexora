@@ -7,6 +7,7 @@
 #include "rtsp/manager.h"
 #include "directshowsource.h"
 #include "rtsp/streamoptions.h"
+#include "snapshotmanager.h"
 
 class Application : public wxApp, public Server::ConnectionListener
 {
@@ -27,6 +28,7 @@ private:
 	std::unique_ptr<Server> server;
 	std::unique_ptr<RTSP::Manager> rtspManager;
 	std::unique_ptr<DirectShowSource> dsSource;
+	SnapshotManager snapshotManager;
 
 	StreamOptions& GetCurrentDeviceStreamOptions();
 	void BindEventListeners();

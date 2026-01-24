@@ -7,6 +7,7 @@
 #include <sstream>
 #include <iostream>
 #include <windows.h>
+#include <wx/filename.h>
 
 #include "rtsp/streamoptions.h"
 
@@ -26,6 +27,8 @@ public:
 
     static void Load();
     static void Save();
+
+    static wxFileName GetDocumentsDirectoryPath();
 
 private:
     inline static std::map<std::string, int> settings;

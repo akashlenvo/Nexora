@@ -166,9 +166,11 @@ xcopy "$(ProjectDir)3rdparty\softcam\examples\softcam_installer\x64\Release\soft
     <ClCompile Include="src\net\server.cpp" />
     <ClCompile Include="src\gui\window.cpp" />
     <ClCompile Include="src\settings.cpp" />
+    <ClCompile Include="src\snapshotmanager.cpp" />
     <ClCompile Include="src\video\directshowscaler.cpp" />
     <ClCompile Include="src\video\framescaler.cpp" />
     <ClCompile Include="src\video\guipreviewscaler.cpp" />
+    <ClCompile Include="src\video\1_1scaler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\adb.h" />
@@ -216,10 +218,12 @@ xcopy "$(ProjectDir)3rdparty\softcam\examples\softcam_installer\x64\Release\soft
     <ClInclude Include="src\rtsp\receiver.h" />
     <ClInclude Include="src\rtsp\streamoptions.h" />
     <ClInclude Include="src\settings.h" />
+    <ClInclude Include="src\snapshotmanager.h" />
     <ClInclude Include="src\video\directshowscaler.h" />
     <ClInclude Include="src\video\filter.h" />
     <ClInclude Include="src\video\framescaler.h" />
     <ClInclude Include="src\video\guipreviewscaler.h" />
+    <ClInclude Include="src\video\1_1scaler.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\resource.rc" />

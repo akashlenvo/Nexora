@@ -12,10 +12,17 @@
 
 static std::string GetConfigFilePath()
 {
+	auto path = Settings::GetDocumentsDirectoryPath();
+    path.SetFullName("settings.cfg");
+    return path.GetFullPath().ToStdString();
+}
+
+wxFileName Settings::GetDocumentsDirectoryPath()
+{
     // Get Documents Directory
     wxString docDir = wxStandardPaths::Get().GetDocumentsDir();
 
-    // Build path: Documents/VCamdroid/settings.cfg
+    // Build path: Documents/VCamdroid/
     wxFileName path(docDir, "");
     path.AppendDir("VCamdroid");
 
@@ -25,8 +32,7 @@ static std::string GetConfigFilePath()
         path.Mkdir(0755, wxPATH_MKDIR_FULL);
     }
 
-    path.SetFullName("settings.cfg");
-    return path.GetFullPath().ToStdString();
+    return path;
 }
 
 int Settings::Get(std::string name)
