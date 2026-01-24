@@ -49,7 +49,7 @@ VCamdroid allows you to seamlessly use your mobile device’s camera as a virtua
 
 ### Step 1: Install on Windows
 1.  Download the latest binaries from the [**Releases Page**](https://github.com/darusc/VCamdroid/releases).
-2.  Extract the ZIP archive to a permanent location (e.g., `C:\Program Files\VCamdroid`).
+2.  Extract the ZIP archive.
 3.  Right-click `install.bat` and select **Run as Administrator**.
     * *Note: This script registers `softcam.dll` with the system, making the virtual webcam device visible to other applications.*
 
