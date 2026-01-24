@@ -153,6 +153,16 @@ void Application::OnDeviceConnected(DeviceDescriptor& descriptor) const
 void Application::OnDeviceDisconnected(DeviceDescriptor& descriptor) const
 {
 	mainWindow->GetTaskbarIcon()->ShowBalloon("Stream ended", "Streaming device " + descriptor.name() + " disconnected!", 10, wxICON_INFORMATION);
+	
+	// Check if the device that just disconnected was the active streaming device
+	// If it was reset the canvas to blank
+	int streamingDeviceId = rtspManager->GetStreamingDevice();
+	if (streamingDeviceId >= 0)
+	{
+		const auto& streamingDescriptor = rtspManager->GetDescriptors()[streamingDeviceId];
+		if (streamingDescriptor == descriptor)
+			mainWindow->GetCanvas()->Clear();
+	}
 
 	// Remove from manager
 	rtspManager->RemoveDescriptor(descriptor);
@@ -188,6 +198,8 @@ void Application::UpdateAvailableDevices() const
 	}
 	else
 	{
+		choice->Append("Select device");
+
 		// Repopulate
 		for (auto& desc : devices)
 			choice->Append(desc.name());
@@ -195,12 +207,12 @@ void Application::UpdateAvailableDevices() const
 		if (currentSelectionIndex >= 0 && currentSelectionIndex < (int)devices.size())
 		{
 			// Only restore selection if valid
-			choice->SetSelection(currentSelectionIndex);
+			choice->SetSelection(currentSelectionIndex + 1);
 		}
 		else
 		{
 			// If the previously selected device is gone, or we stopped, select nothing
-			choice->SetSelection(wxNOT_FOUND);
+			choice->SetSelection(0);
 		}
 	}
 }
@@ -257,7 +269,7 @@ void Application::OnMenuEvent(wxCommandEvent& event)
 
 void Application::OnSourceChanged(wxEvent& event)
 {
-	int deviceId = mainWindow->GetSourceChoice()->GetSelection();
+	int deviceId = mainWindow->GetSourceChoice()->GetSelection() - 1;
 
 	// Safety: Handle empty list or "No devices" placeholder
 	if (deviceId == wxNOT_FOUND || rtspManager->GetDescriptors().empty())

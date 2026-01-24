@@ -12,9 +12,8 @@ public:
 	Canvas(wxWindow* parent, wxPoint position, wxSize size);
 
 	void ProcessRawFrameAsync(const AVFrame* frame);
-
 	void ClearBeforeNextRender();
-
+	void Clear();
 private:
 	wxSize size;
 	wxBitmap bitmap;

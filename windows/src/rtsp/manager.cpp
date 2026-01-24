@@ -9,6 +9,7 @@ namespace RTSP
 		: Receiver(onFrameReceivedCallback, onStatsReceivedCallback),
 		server(server)
 	{
+		streamingDevice = -1;
 	}
 
 	void Manager::AddDescriptor(DeviceDescriptor& descriptor)

@@ -76,6 +76,14 @@ void Canvas::ClearBeforeNextRender()
 	shouldClear = true;
 }
 
+void Canvas::Clear()
+{
+	shouldDraw = false;
+	isRendering = false;
+	Refresh(false);
+	Update();
+}
+
 void Canvas::OnPaint(wxPaintEvent& event)
 {
 	wxAutoBufferedPaintDC dc(this);
