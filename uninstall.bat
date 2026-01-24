@@ -1,7 +1,7 @@
 @echo off
 
-set INSTALLER=dist\softcam_installer.exe
-set TARGET=dist\softcam.dll
+set INSTALLER=..\softcam_installer.exe
+set TARGET=..\softcam.dll
 
 echo Uninstalling softcam.dll from system system using softcam_installer.exe
 echo.
