@@ -62,8 +62,24 @@ void Canvas::ProcessRawFrameAsync(const AVFrame* frame)
 	int width, height;
 	const uint8_t* data = scaler.Process(frame, width, height);
 
+	// If scaler failed (nullptr) or returned invalid dimensions, abort immediately.
+    // Do NOT try to construct the vector below, or it will segfault.
+	if (!data || width <= 0 || height <= 0)
+	{
+		isRendering = false;
+		return;
+	}
+
 	size_t size = width * height * 3;
-	std::vector<uint8_t> safeFrame(data, data + size);
+	std::vector<uint8_t> safeFrame;
+	try {
+		safeFrame.assign(data, data + size);
+	}
+	catch (const std::exception& e) {
+		// Allocation failed (out of memory?)
+		isRendering = false;
+		return;
+	}
 
 	this->CallAfter([this, bytes = std::move(safeFrame), width, height]() {
 		this->Render(bytes.data(), width, height);

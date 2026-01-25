@@ -14,8 +14,15 @@ Application::Application()
 	wxInitAllImageHandlers();
 
 	SetAppName("VCamdroid");
+	
 	Settings::Load();
 	stateRegistry = Settings::GetDeviceStates();
+}
+
+bool Application::OnInit()
+{
+	if (!wxApp::OnInit())
+		return false;
 
 	switch (Settings::Get("DIRECTSHOW_RESOLUTION") + Window::MenuIDs::DS_SD)
 	{
@@ -26,8 +33,23 @@ Application::Application()
 		default: dsSource = std::make_unique<DirectShowSource>(1280, 720);
 	}
 
-	server = std::make_unique<Server>(6969, *this);
-	server->Start();
+	try {
+		server = std::make_unique<Server>(6969, *this);
+		server->Start();
+	}
+	catch (const std::exception& e) {
+		wxMessageBox(
+			wxString::Format("Critical Error: Could not start network server.\n\nReason: %s\n\nPlease check if port 6969 is in use.", e.what()),
+			"Initialization Failed",
+			wxOK | wxICON_ERROR | wxCENTRE,
+			nullptr
+		);
+
+		// Exit application if the server fails to start
+		return false;
+	}
+
+	mainWindow = new Window(server->GetHostInfo());
 
 	rtspManager = std::make_unique<RTSP::Manager>(
 		*server,
@@ -47,8 +69,7 @@ Application::Application()
 			{
 				std::stringstream ss;
 				// Bitrate with 1 decimal precision
-				ss << stats.width << "p@" << (int)std::round(stats.fps) << "fps\n"
-					<< std::fixed << std::setprecision(1) << stats.bitrate << "Mbps";
+				ss << stats.width << "p@" << (int)std::round(stats.fps) << "fps\n" << std::fixed << std::setprecision(1) << stats.bitrate << "Mbps";
 
 				// Safe UI update
 				mainWindow->GetEventHandler()->CallAfter([this, labelText = ss.str()]() {
@@ -62,13 +83,9 @@ Application::Application()
 		}
 	);
 
-	mainWindow = new Window(server->GetHostInfo());
 	BindEventListeners();
-}
-
-bool Application::OnInit()
-{
 	mainWindow->Show();
+
 	return true;
 }
 

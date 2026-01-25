@@ -21,7 +21,7 @@ public:
 	virtual void OnDeviceErrorReported(DeviceDescriptor& descriptor, const Connection::ErrorReport& error) const override;
 
 private:
-	Window* mainWindow;
+	Window* mainWindow = nullptr;
 
 	StreamOptions::Registry stateRegistry;
 

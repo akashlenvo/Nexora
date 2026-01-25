@@ -7,31 +7,51 @@
 Server::Server(int port, const ConnectionListener& connectionListener) :
 	port(port),
 	connectionListener(connectionListener),
-	acceptor(tcp::acceptor(context, tcp::endpoint(tcp::v4(), port)))
+	acceptor(context)
 {
-	adb::reverse(port);
-	adb::forward(8554);
+	try {
+		tcp::endpoint endpoint(tcp::v4(), port);
+		acceptor.open(endpoint.protocol());
+
+		acceptor.set_option(tcp::acceptor::reuse_address(true));
+
+		acceptor.bind(endpoint);
+		acceptor.listen();
+
+		logger << "[SERVER] Initialized on port " << port << std::endl;
+		
+		adb::reverse(port);
+		adb::forward(8554);
+	}
+	catch(std::exception& e)
+	{
+		logger << "[SERVER] CRITICAL INIT ERROR: " << e.what() << std::endl;
+		throw;
+	}
 }
 
 Server::HostInfo Server::GetHostInfo()
 {
 	std::string name = asio::ip::host_name();
+	std::string ip_str = "127.0.0.1"; // Default fallback
 
-	// Get the active network adapter by 
-	// creating a dummy UDP connection and let the OS 
-	// determine what network adapter will be used
-	udp::resolver resolver(context);
-	udp::socket socket(context);
+	try {
+		// Get the active network adapter by creating a dummy UDP connection 
+		// and let the OS determine what network adapter will be used
+		udp::resolver resolver(context);
+		udp::socket socket(context);
 
-	socket.connect(udp::endpoint(asio::ip::address::from_string("8.8.8.8"), 80));
+		// This might throw if there is NO network adapter enabled
+		socket.connect(udp::endpoint(asio::ip::address::from_string("8.8.8.8"), 80));
+		ip_str = socket.local_endpoint().address().to_string();
+		socket.close();
+	}
+	catch (std::exception& e) 
+	{
+		logger << "[SERVER] Warning: Could not detect local IP (" << e.what() << "). Defaulting to localhost.\n";
+	}
 
-	// The IPv4 address needed is the address of the local endpoint assigned to the socket
-	// (the network adapter actual traffic is routed trough)
-	asio::ip::address local_addr = socket.local_endpoint().address();
-
-	socket.close();
-
-	return { name, local_addr.to_string(), std::to_string(port)};
+	return { name, ip_str, std::to_string(port) };
 }
 
 void Server::Send(int id, const unsigned char* bytes, size_t size) const
@@ -44,17 +64,37 @@ void Server::Send(int id, const unsigned char* bytes, size_t size) const
 
 void Server::Start()
 {
+	if (!acceptor.is_open()) 
+	{
+		logger << "[SERVER] Cannot start: Acceptor is not open.\n";
+		return;
+	}
+
 	try
 	{
 		TCPDoAccept();
+
 		thread = std::thread([this]() {
-			context.run();
+			while (true)
+			{
+				try {
+					context.run();
+					break;
+				}
+				catch (std::exception& e) {
+					logger << "[SERVER] CRITICAL EXCEPTION in IO Thread: " << e.what() << std::endl;
+				}
+				catch (...) {
+					logger << "[SERVER] Unknown exception in IO Thread.\n";
+				}
+			}
 		});
+		
 		logger << "[SERVER] Started" << std::endl;
 	}
 	catch (std::exception e)
 	{
-		logger << "[SERVER] Start failed\n";
+		logger << "[SERVER] Start failed: " << e.what() << "\n";
 	}
 }
 
@@ -62,7 +102,9 @@ void Server::Close()
 {
 	logger << "[SERVER] Closing...\n";
 
-	acceptor.close();
+	asio::error_code ec;
+	acceptor.close(ec);
+	if (ec) logger << "[SERVER] Error closing acceptor: " << ec.message() << "\n";
 	
 	for (std::shared_ptr<Connection> conn : connections)
 	{
@@ -108,13 +150,21 @@ void Server::TCPDoAccept()
 
 			connectionListener.OnDeviceConnected(descriptor);
 		}
+		else if (ec != asio::error::operation_aborted)
+		{
+			logger << "[SERVER] Accept Error: " << ec.message() << std::endl;
+		}
 
-		TCPDoAccept();
+		if (acceptor.is_open()) {
+			TCPDoAccept();
+		}
 	});
 }
 
 void Server::OnConnectionDisconnected(std::shared_ptr<Connection> connection)
 {
+	logger << "[SERVER] Device disconnected: " << connection->descriptor.name() << std::endl;
+
 	connections.erase(std::remove(connections.begin(), connections.end(), connection), connections.end());
 	connectionListener.OnDeviceDisconnected(connection->descriptor);
 }

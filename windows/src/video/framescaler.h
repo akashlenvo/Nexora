@@ -57,5 +57,7 @@ namespace Video
 
 		bool PrepareContext(int srcWidth, int srcHeight, int srcFormat);
 		void Cleanup();
+
+		int GetBytesPerPixel(int fmt);
 	};
 };
