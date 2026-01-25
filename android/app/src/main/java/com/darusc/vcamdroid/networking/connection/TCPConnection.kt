@@ -1,6 +1,7 @@
 package com.darusc.vcamdroid.networking.connection
 
 import android.util.Log
+import com.darusc.vcamdroid.util.Logger
 import java.io.InputStream
 import java.io.OutputStream
 import java.net.Socket
@@ -38,7 +39,7 @@ class TCPConnection(
             outputStream = socket.getOutputStream()
             inputStream = socket.getInputStream()
 
-            Log.d(TAG, "TCP Connected to $ipAddress:$port")
+            Logger.log("TCPConnection", "Connected to $ipAddress:$port")
 
             thread = Thread { startReceiveBytesLoop() }
             thread.start()
@@ -67,7 +68,7 @@ class TCPConnection(
                 }
                 listener.onBytesReceived(buf, bytes ?: 0)
             } catch (e: Exception) {
-                Log.e(TAG, "Error while reading. Closing socket. ${e.message}")
+                Logger.log("TCPConnection", "Error while reading. Closing socket. ${e.message}")
                 listener.onDisconnected()
                 break
             }

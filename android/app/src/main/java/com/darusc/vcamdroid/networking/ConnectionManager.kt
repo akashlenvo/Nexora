@@ -3,6 +3,7 @@ package com.darusc.vcamdroid.networking
 import android.util.Log
 import com.darusc.vcamdroid.networking.connection.Connection
 import com.darusc.vcamdroid.networking.connection.TCPConnection
+import com.darusc.vcamdroid.util.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -73,7 +74,7 @@ class ConnectionManager private constructor() : Connection.Listener {
                 tcpConn = TCPConnection(ipAddress, port, false, this@ConnectionManager)
                 connectionStateCallback?.onConnectionSuccessful(Mode.WIFI)
             } catch (e: Connection.ConnectionFailedException) {
-                Log.e(TAG, "Connection manager: ${e.message}")
+                Logger.log("CONNECTION MANAGER", "" + e.message)
                 connectionStateCallback?.onConnectionFailed(Mode.WIFI)
             }
         }
@@ -88,7 +89,7 @@ class ConnectionManager private constructor() : Connection.Listener {
                 tcpConn = TCPConnection("127.0.0.1", port, true, this@ConnectionManager)
                 connectionStateCallback?.onConnectionSuccessful(Mode.USB)
             } catch (e: Connection.ConnectionFailedException) {
-                Log.e(TAG, "Connection manager: ${e.message}")
+                Logger.log("CONNECTION MANAGER", "" + e.message)
                 connectionStateCallback?.onConnectionFailed(Mode.USB)
             }
         }

@@ -9,6 +9,7 @@ import android.view.ViewOverlay
 import com.darusc.vcamdroid.networking.ConnectionManager
 import com.darusc.vcamdroid.networking.DeviceDescriptor
 import com.darusc.vcamdroid.networking.ErrorReport
+import com.darusc.vcamdroid.util.Logger
 import com.darusc.vcamdroid.video.filters.FilterAdjuster
 import com.darusc.vcamdroid.video.filters.FilterRepository
 import com.darusc.vcamdroid.video.filters.custom.HorizontalFlipFilterRender
@@ -86,7 +87,7 @@ class Streamer(
                 options.camera = CameraHelper.Facing.BACK
             }
         } catch (e: CameraOpenException) {
-            Log.d(TAG, "Can't switch camera. Current resolution ({${options.width}, ${options.height}) not supported")
+            Logger.log("STREAMER", "Can't switch camera. Current resolution ({${options.width}, ${options.height}) not supported")
             connectionManager.sendErrorReport(ErrorReport(
                 ErrorReport.Severity.ERROR,
                 "Can't switch camera",
@@ -102,7 +103,7 @@ class Streamer(
         if (options.width == width && options.height == height)
             return
 
-        Log.d(TAG, "Changing resolution to ${width}x${height}...")
+        Logger.log("STREAMER", "Changing resolution to ${width}x${height}...")
         options.width = width
         options.height = height
         options.bitrate = calculateOptimalBitrate(width, height, options.fps)
@@ -177,7 +178,7 @@ class Streamer(
         if (options.fps == fps)
             return
 
-        Log.d(TAG, "Changing fps to ${fps}...")
+        Logger.log("STREAMER", "Changing fps to ${fps}...")
         options.fps = fps
         restartStream()
     }
@@ -298,9 +299,9 @@ class Streamer(
                     0
                 )
                 rtspServerCamera2.startStream(URL)
-                Log.d(TAG, "Stream started")
+                Logger.log("STREAMER", "Stream started")
             } catch (e: Exception) {
-                Log.d(TAG, "Error preparing stream")
+                Logger.log("STREAMER", "Error preparing stream")
                 connectionManager.sendErrorReport(ErrorReport(
                     ErrorReport.Severity.ERROR,
                     "Can't start stream",

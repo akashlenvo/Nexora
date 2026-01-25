@@ -28,6 +28,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.darusc.vcamdroid.databinding.ActivityMainBinding
 import com.darusc.vcamdroid.networking.ConnectionManager
+import com.darusc.vcamdroid.util.Logger
 import com.darusc.vcamdroid.video.Camera
 import java.security.Permission
 
@@ -47,6 +48,11 @@ class MainActivity : AppCompatActivity(), ConnectionManager.ConnectionStateCallb
         super.onCreate(savedInstanceState)
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
+
+        viewBinding.logReportButton.setOnClickListener {
+            val intent = Intent(this, LogActivity::class.java)
+            startActivity(intent)
+        }
 
         enableEdgeToEdge()
         initialize()
@@ -91,7 +97,7 @@ class MainActivity : AppCompatActivity(), ConnectionManager.ConnectionStateCallb
 
     override fun onConnectionSuccessful(connectionMode: ConnectionManager.Mode) {
         qrscanner.stop()
-        Log.d(TAG, "Connection successful $connectionMode")
+        Logger.log("MAIN", "Connection successful $connectionMode")
 
         val intent = Intent(this, StreamActivity::class.java)
         startActivity(intent)
@@ -104,7 +110,7 @@ class MainActivity : AppCompatActivity(), ConnectionManager.ConnectionStateCallb
         } else {
             isConnecting = false
             qrscanner.stop()
-            Log.e(TAG, "Error: Cannot connect!")
+            Logger.log("MAIN", "Error: Cannot connect!")
         }
     }
 
@@ -152,7 +158,7 @@ class MainActivity : AppCompatActivity(), ConnectionManager.ConnectionStateCallb
             if(result != null) {
                 connectionManager.connect(result.address, result.port)
             } else {
-                Log.d(TAG, "Invalid QR code")
+                Logger.log("MAIN", "Invalid QR code")
             }
         }
     }

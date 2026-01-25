@@ -20,6 +20,7 @@ import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import com.darusc.vcamdroid.util.Logger
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -86,7 +87,7 @@ class Camera(
                 cameraProvider.unbindAll()
                 cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, preview, imageAnalyzer)
             } catch (e: Exception) {
-                Log.e("VCamdroid", "Use case binding failed", e)
+                Logger.log("CAMERA", "Use case binding failed " + e.message)
             }
 
         }, ContextCompat.getMainExecutor(context));

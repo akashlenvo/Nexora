@@ -1,7 +1,7 @@
 package com.darusc.vcamdroid
 
+import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.SurfaceHolder
 import android.view.WindowManager
 import android.widget.Toast
@@ -11,7 +11,7 @@ import com.darusc.vcamdroid.networking.ConnectionManager
 import com.darusc.vcamdroid.networking.PacketType
 import com.darusc.vcamdroid.rtsp.Streamer
 import com.darusc.vcamdroid.rtsp.StreamOptions
-import java.nio.ByteBuffer
+import com.darusc.vcamdroid.util.Logger
 
 class StreamActivity : AppCompatActivity(), SurfaceHolder.Callback, ConnectionManager.ConnectionStateCallback {
 
@@ -31,6 +31,11 @@ class StreamActivity : AppCompatActivity(), SurfaceHolder.Callback, ConnectionMa
 
         setContentView(viewBinding.root)
 
+        viewBinding.logReportButton.setOnClickListener {
+            val intent = Intent(this, LogActivity::class.java)
+            startActivity(intent)
+        }
+
         connectionManager.setOnBytesReceivedCallback(::onBytesReceived)
         streamer = Streamer(StreamOptions(), this, viewBinding.surfaceView)
     }
@@ -49,7 +54,7 @@ class StreamActivity : AppCompatActivity(), SurfaceHolder.Callback, ConnectionMa
 
     override fun onDisconnected() {
         Toast.makeText(this, "Connection closed by server", Toast.LENGTH_LONG).show()
-        Log.d(TAG, "TCP server disconnected")
+        Logger.log("STREAM", "TCP server disconnected")
         streamer.stop()
         finish()
     }
