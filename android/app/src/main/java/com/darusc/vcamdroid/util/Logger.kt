@@ -47,7 +47,7 @@ object Logger {
     }
 
     fun log(tag: String, message: String) {
-        Log.d(tag, message)
+        Log.d("Vcamdroid", "$tag: $message")
 
         val timestamp = formatter.format(Date())
         val formattedLog = "[$timestamp] $tag: $message\n"

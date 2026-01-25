@@ -31,10 +31,11 @@ class StreamActivity : AppCompatActivity(), SurfaceHolder.Callback, ConnectionMa
 
         setContentView(viewBinding.root)
 
-        viewBinding.logReportButton.setOnClickListener {
-            val intent = Intent(this, LogActivity::class.java)
-            startActivity(intent)
-        }
+        // Disable navigating to logs activity for now as it breaks streaming
+//        viewBinding.logReportButton.setOnClickListener {
+//            val intent = Intent(this, LogActivity::class.java)
+//            startActivity(intent)
+//        }
 
         connectionManager.setOnBytesReceivedCallback(::onBytesReceived)
         streamer = Streamer(StreamOptions(), this, viewBinding.surfaceView)

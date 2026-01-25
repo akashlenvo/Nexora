@@ -30,6 +30,7 @@ import com.darusc.vcamdroid.databinding.ActivityMainBinding
 import com.darusc.vcamdroid.networking.ConnectionManager
 import com.darusc.vcamdroid.util.Logger
 import com.darusc.vcamdroid.video.Camera
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.security.Permission
 
 class MainActivity : AppCompatActivity(), ConnectionManager.ConnectionStateCallback {
@@ -80,7 +81,7 @@ class MainActivity : AppCompatActivity(), ConnectionManager.ConnectionStateCallb
                 // If camera permission was not granted show a prompt to the user
                 // to go to settings and enable the required permission
 
-                AlertDialog.Builder(this)
+                MaterialAlertDialogBuilder(this)
                     .setTitle("Camera Permission Required")
                     .setMessage("Please enable camera permission in settings and restart the app.")
                     .setPositiveButton("Go to settings") { _, _ ->
@@ -104,13 +105,17 @@ class MainActivity : AppCompatActivity(), ConnectionManager.ConnectionStateCallb
     }
 
     override fun onConnectionFailed(connectionMode: ConnectionManager.Mode) {
-        if (connectionMode == ConnectionManager.Mode.USB && hasWifiConnection()) {
-            // If usb connection failed try again over wifi
-            connectWIFI()
-        } else {
-            isConnecting = false
-            qrscanner.stop()
-            Logger.log("MAIN", "Error: Cannot connect!")
+        runOnUiThread {
+            if (connectionMode == ConnectionManager.Mode.USB && hasWifiConnection()) {
+                // If usb connection failed try again over wifi
+                connectWIFI()
+                Toast.makeText(this, "Connection failed. Try in WiFi mode or restart app", Toast.LENGTH_LONG).show()
+            } else {
+                isConnecting = false
+                qrscanner.stop()
+                Logger.log("MAIN", "Error: Cannot connect!")
+                Toast.makeText(this, "Connection failed. Restart app to retry connecting again", Toast.LENGTH_LONG).show()
+            }
         }
     }
 
@@ -155,10 +160,21 @@ class MainActivity : AppCompatActivity(), ConnectionManager.ConnectionStateCallb
         // launchScanTask() will scan and call the callback on success
         // only if start() was called before
         qrscanner.launchScanTask(imageProxy, camera?.screenRectToImageRect(viewBinding.overlay.rect, viewBinding.overlay.size) ?: Rect()) { result ->
-            if(result != null) {
-                connectionManager.connect(result.address, result.port)
-            } else {
-                Logger.log("MAIN", "Invalid QR code")
+            runOnUiThread {
+                if(result != null) {
+                    qrscanner.stop()
+                    MaterialAlertDialogBuilder(this)
+                        .setTitle("Connect via WiFi")
+                        .setMessage("Connect to ${result.address}:${result.port}?")
+                        .setPositiveButton("Connect") { _, _ ->
+                            connectionManager.connect(result.address, result.port)
+                        }
+                        .setNegativeButton("Cancel") { _, _ -> qrscanner.start() }
+                        .show()
+                } else {
+                    Logger.log("MAIN", "Invalid QR code")
+                    Toast.makeText(this, "Invalid QR code", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
