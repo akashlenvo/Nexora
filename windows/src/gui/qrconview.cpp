@@ -8,13 +8,14 @@ QrconView::QrconView(std::string name, std::string address, std::string port, wx
 	auto qrcode = GenerateQRCode(address + ":" + port);
 	auto image = GenerateImageFromQR(qrcode);
 
-	wxStaticBitmap* canvas = new wxStaticBitmap(this, wxID_ANY, wxBitmap(image.Scale(displaySize)));
+	wxStaticBitmap* canvas = new wxStaticBitmap(this, wxID_ANY,
+		wxBitmap(image.Scale(displaySize.GetWidth(), displaySize.GetHeight())));
 
 	wrapper->Add(new wxStaticText(this, wxID_ANY, "Scan the QR to connect automatically"), 0, wxALIGN_CENTER | wxTOP, FromDIP(30));
 	wrapper->Add(canvas, 0, wxALIGN_CENTER | wxALL, FromDIP(15));
-	wrapper->Add(new wxStaticText(this, wxID_ANY, wxString::Format("%s", name)), 0, wxALIGN_CENTER | wxBOTTOM, FromDIP(2));
-	wrapper->Add(new wxStaticText(this, wxID_ANY, wxString::Format("Address: %s", address)), 0, wxALIGN_CENTER);
-	wrapper->Add(new wxStaticText(this, wxID_ANY, wxString::Format("Port: %s", port)), 0, wxALIGN_CENTER | wxBOTTOM, FromDIP(30));
+	wrapper->Add(new wxStaticText(this, wxID_ANY, wxString::FromUTF8(name)), 0, wxALIGN_CENTER | wxBOTTOM, FromDIP(2));
+	wrapper->Add(new wxStaticText(this, wxID_ANY, "Address: " + wxString::FromUTF8(address)), 0, wxALIGN_CENTER);
+	wrapper->Add(new wxStaticText(this, wxID_ANY, "Port: " + wxString::FromUTF8(port)), 0, wxALIGN_CENTER | wxBOTTOM, FromDIP(30));
 
 	sizer->Add(wrapper, 1, wxALIGN_CENTER | wxLEFT | wxRIGHT, FromDIP(50));
 
