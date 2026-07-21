@@ -19,7 +19,9 @@ fi
 
 echo "Installing Nexora dependencies..."
 $SUDO apt-get update
-$SUDO apt-get install -y v4l2loopback-dkms v4l2loopback-utils adb
+$SUDO apt-get install -y \
+    v4l2loopback-dkms v4l2loopback-utils adb \
+    libwxgtk3.2-1t64 ffmpeg
 
 echo 'v4l2loopback' | $SUDO tee /etc/modules-load.d/nexora.conf >/dev/null
 echo 'options v4l2loopback video_nr=10 card_label="Nexora Virtual Camera" exclusive_caps=1' \
