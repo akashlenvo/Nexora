@@ -1,6 +1,6 @@
 # Nexora for Linux Mint
 
-This beta package targets Linux Mint 22.x and Ubuntu 24.04 on x86-64.
+This package targets Linux Mint 22.x and Ubuntu 24.04 on x86-64.
 
 ## Install
 
@@ -24,6 +24,12 @@ with USB debugging enabled and run `./install_apk.sh`, or copy the APK from the
 
 For USB mode, enable Android developer options and USB debugging. Wi-Fi mode
 uses the same QR code flow as Windows.
+
+Confirm USB access with `adb devices`. On a physical Linux installation,
+Nexora creates the required ADB tunnels automatically when it starts. When
+testing inside VirtualBox, attach the phone to the Mint guest from the VM's
+**Devices > USB** menu first; the Windows host and guest cannot control the
+same USB device at the same time.
 
 ## Secure Boot
 
