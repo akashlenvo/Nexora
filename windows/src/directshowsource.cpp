@@ -9,6 +9,12 @@ DirectShowSource::DirectShowSource(int width, int height)
 	streamingEnabled = true;
 }
 
+DirectShowSource::~DirectShowSource()
+{
+	if (camera)
+		scDeleteCamera(camera);
+}
+
 void DirectShowSource::SendRawFrame(const AVFrame* frame)
 {
 	if (streamingEnabled)
@@ -38,4 +44,14 @@ void DirectShowSource::Pause()
 void DirectShowSource::Resume()
 {
 	streamingEnabled = true;
+}
+
+bool DirectShowSource::IsReady() const
+{
+	return camera != nullptr;
+}
+
+std::string DirectShowSource::StatusMessage() const
+{
+	return camera ? "DirectShow virtual camera is ready" : "Could not create the DirectShow virtual camera";
 }

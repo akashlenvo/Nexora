@@ -1,0 +1,56 @@
+name: Build Linux Mint
+
+on:
+  push:
+    paths:
+      - "windows/**"
+      - "linux/**"
+      - ".github/workflows/linux.yml"
+  pull_request:
+    paths:
+      - "windows/**"
+      - "linux/**"
+      - ".github/workflows/linux.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential cmake ninja-build pkg-config libasio-dev \
+            libwxgtk3.2-dev libavformat-dev libavcodec-dev libavutil-dev \
+            libswscale-dev libswresample-dev
+
+      - name: Configure
+        run: cmake -S windows -B build/linux -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build/linux --parallel
+
+      - name: Create Linux Mint package
+        shell: bash
+        run: |
+          PACKAGE="$GITHUB_WORKSPACE/dist/Nexora-Linux-Mint-x86_64"
+          cmake --install build/linux --prefix "$PACKAGE"
+          cp linux/install.sh linux/uninstall.sh linux/nexora linux/nexora.desktop linux/README.md "$PACKAGE/"
+          cp assets/brand/nexora-mark.svg "$PACKAGE/"
+          cp LICENSE ATTRIBUTION.md "$PACKAGE/"
+          chmod +x "$PACKAGE/install.sh" "$PACKAGE/uninstall.sh" "$PACKAGE/nexora" "$PACKAGE/Nexora"
+          tar -C dist -czf dist/Nexora-Linux-Mint-x86_64.tar.gz Nexora-Linux-Mint-x86_64
+
+      - name: Upload Linux Mint package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nexora-Linux-Mint-x86_64
+          path: dist/Nexora-Linux-Mint-x86_64.tar.gz
+          if-no-files-found: error

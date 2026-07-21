@@ -7,7 +7,7 @@ namespace Video
 	class DirectShowScaler : public FrameScaler
 	{
 	public:
-		DirectShowScaler(int width, int height);
+		DirectShowScaler(int width, int height, int format = AV_PIX_FMT_BGR24);
 
 	protected:
 		TargetDimensions CalculateTargetDimensions(int width, int height) override;

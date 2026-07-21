@@ -2,8 +2,8 @@
 
 namespace Video
 {
-    DirectShowScaler::DirectShowScaler(int width, int height) 
-        : FrameScaler(AV_PIX_FMT_BGR24),
+    DirectShowScaler::DirectShowScaler(int width, int height, int format)
+        : FrameScaler(format),
         width(width),
         height(height)
     {

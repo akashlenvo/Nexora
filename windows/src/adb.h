@@ -1,7 +1,11 @@
 #pragma once
 
-#include <windows.h>
 #include <string>
+#include <cstdlib>
+
+#if defined(_WIN32)
+#include <windows.h>
+#endif
 
 #include "logger.h"
 
@@ -12,11 +16,29 @@ namespace adb
 	*/
 	std::string dir()
 	{
+#if defined(_WIN32)
 		char buffer[MAX_PATH];
 		GetModuleFileNameA(NULL, buffer, MAX_PATH);
 
 		std::string path(buffer);
 		return path.substr(0, path.find_last_of("\\/"));
+#else
+		return {};
+#endif
+	}
+
+	std::string executable()
+	{
+#if defined(_WIN32)
+		return "\"" + dir() + "\\adb\\adb.exe\"";
+#else
+		return "adb";
+#endif
+	}
+
+	bool run(const std::string& arguments)
+	{
+		return std::system((executable() + " " + arguments).c_str()) == 0;
 	}
 
 	
@@ -26,10 +48,7 @@ namespace adb
 	*/
 	bool reverse(int port)
 	{
-		std::string path = dir();
-		std::string command = path + "\\adb\\adb.exe " + "reverse tcp:" + std::to_string(port) + " tcp:" + std::to_string(port);
-
-		if (system(command.c_str()) == 0)
+		if (run("reverse tcp:" + std::to_string(port) + " tcp:" + std::to_string(port)))
 		{
 			logger << "[ADB:" << port << "] Started " << std::endl;
 			return true;
@@ -47,10 +66,7 @@ namespace adb
 	*/
 	bool forward(int port)
 	{
-		std::string path = dir();
-		std::string command = path + "\\adb\\adb.exe " + "forward tcp:" + std::to_string(port) + " tcp:" + std::to_string(port);
-
-		if (system(command.c_str()) == 0)
+		if (run("forward tcp:" + std::to_string(port) + " tcp:" + std::to_string(port)))
 		{
 			logger << "[ADB:" << port << "] Started " << std::endl;
 			return true;
@@ -68,16 +84,12 @@ namespace adb
 	*/
 	bool kill(int port)
 	{
-		std::string path = dir();
+		const bool removed = run("reverse --remove tcp:" + std::to_string(port));
+		// Stop the ADB server after removing the tunnel so the port is not
+		// retained across application restarts.
+		run("kill-server");
 
-		// Sometimes without kill-server adb port remains used and the app
-		// won't start next time
-		// Sometimes with kill-server it takes too long for the app to stop
-		// becoming not responding
-		// std::string command = path + "\\adb\\adb.exe " + "reverse --remove tcp:" + std::to_string(port);
-		std::string command = path + "\\adb\\adb.exe " + "reverse --remove tcp:" + std::to_string(port) + " & " + path + "\\adb\\adb.exe kill-server";
-
-		if (system(command.c_str()) == 0)
+		if (removed)
 		{
 			logger << "[ADB:" << port << "] Stopped " << std::endl;
 			return true;

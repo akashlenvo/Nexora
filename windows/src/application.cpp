@@ -26,11 +26,11 @@ bool Application::OnInit()
 
 	switch (Settings::Get("DIRECTSHOW_RESOLUTION") + Window::MenuIDs::DS_SD)
 	{
-		case Window::MenuIDs::DS_SD: dsSource = std::make_unique<DirectShowSource>(640, 480); break;
-		case Window::MenuIDs::DS_HD: dsSource = std::make_unique<DirectShowSource>(1280, 720); break;
-		case Window::MenuIDs::DS_FHD: dsSource = std::make_unique<DirectShowSource>(1920, 1080); break;
-		case Window::MenuIDs::DS_QHD: dsSource = std::make_unique<DirectShowSource>(3840, 2160); break;
-		default: dsSource = std::make_unique<DirectShowSource>(1280, 720);
+		case Window::MenuIDs::DS_SD: virtualCamera = CreateVirtualCameraSink(640, 480); break;
+		case Window::MenuIDs::DS_HD: virtualCamera = CreateVirtualCameraSink(1280, 720); break;
+		case Window::MenuIDs::DS_FHD: virtualCamera = CreateVirtualCameraSink(1920, 1080); break;
+		case Window::MenuIDs::DS_QHD: virtualCamera = CreateVirtualCameraSink(3840, 2160); break;
+		default: virtualCamera = CreateVirtualCameraSink(1280, 720);
 	}
 
 	try {
@@ -50,6 +50,14 @@ bool Application::OnInit()
 	}
 
 	mainWindow = new Window(server->GetHostInfo());
+	if (virtualCamera && !virtualCamera->IsReady())
+	{
+		wxMessageBox(
+			wxString::FromUTF8(virtualCamera->StatusMessage().c_str()),
+			"Virtual camera unavailable",
+			wxOK | wxICON_WARNING,
+			mainWindow);
+	}
 
 	rtspManager = std::make_unique<RTSP::Manager>(
 		*server,
@@ -58,8 +66,8 @@ bool Application::OnInit()
 			if (mainWindow && mainWindow->GetCanvas()) {
 				mainWindow->GetCanvas()->ProcessRawFrameAsync(frame);
 			}
-			if (dsSource) {
-				dsSource->SendRawFrame(frame);
+			if (virtualCamera) {
+				virtualCamera->SendRawFrame(frame);
 			}
 			snapshotManager.ProcessFrame(frame);
 		},

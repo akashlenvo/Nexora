@@ -63,6 +63,9 @@
     <ClCompile Include="src\directshowsource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\virtualcamera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="src\settings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -156,6 +159,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\directshowsource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\virtualcamera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\logger.h">

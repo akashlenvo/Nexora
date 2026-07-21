@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Nexora
+Comment=Use an Android phone as a virtual camera
+Exec=/opt/nexora/nexora
+Icon=/opt/nexora/nexora-mark.svg
+Terminal=false
+Categories=AudioVideo;Video;
+StartupNotify=true
