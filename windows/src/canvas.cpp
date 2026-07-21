@@ -1,4 +1,5 @@
 #include "canvas.h"
+#include <cstring>
 
 #include <wx/dcbuffer.h>
 #include <wx/rawbmp.h>

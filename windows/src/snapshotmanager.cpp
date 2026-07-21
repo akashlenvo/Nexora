@@ -4,6 +4,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include "snapshotmanager.h"
+#include <cstring>
 #include "settings.h"
 #include "logger.h"
 
