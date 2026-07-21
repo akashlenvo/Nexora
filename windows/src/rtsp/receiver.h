@@ -7,6 +7,7 @@
 #include <thread>
 #include <atomic>
 #include <functional>
+#include <string>
 
 namespace RTSP
 {
