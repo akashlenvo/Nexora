@@ -1,0 +1,50 @@
+name: Build Windows
+
+on:
+  push:
+    paths: ["windows/**", "vcpkg.json", ".github/workflows/windows.yml"]
+  pull_request:
+    paths: ["windows/**", "vcpkg.json", ".github/workflows/windows.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Check out source and submodules
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Install C++ dependencies
+        shell: pwsh
+        run: |
+          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install --triplet x64-windows
+          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" integrate install
+
+      - name: Build virtual camera
+        shell: cmd
+        run: |
+          msbuild windows\3rdparty\softcam\src\softcam\softcam.vcxproj /m /p:Configuration=Release /p:Platform=x64
+          msbuild windows\3rdparty\softcam\examples\softcam_installer\softcam_installer.vcxproj /m /p:Configuration=Release /p:Platform=x64
+
+      - name: Build Nexora Studio
+        shell: cmd
+        run: msbuild windows\Nexora.sln /m /p:Configuration=Release /p:Platform=x64
+
+      - name: Add installer scripts and notices
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist\scripts | Out-Null
+          Copy-Item install.bat, install_apk.bat, uninstall.bat dist\scripts\
+          Copy-Item LICENSE, ATTRIBUTION.md, README.md dist\
+
+      - name: Upload Windows package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nexora-Windows-x64
+          path: dist/**
+          if-no-files-found: error

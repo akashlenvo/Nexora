@@ -14,6 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Vcamdroid"
+rootProject.name = "Nexora"
 include(":app")
- 

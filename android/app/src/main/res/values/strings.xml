@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Nexora</string>
+    <string name="brand_tagline">Your phone. Your camera. Connected.</string>
+    <string name="scan_title">Connect to Nexora Studio</string>
+    <string name="scan_help">Open the QR code on your computer and place it inside the frame.</string>
+    <string name="connection_hint">USB is detected automatically · Wi-Fi uses QR</string>
+</resources>

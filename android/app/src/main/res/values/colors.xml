@@ -2,4 +2,9 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="nexora_ink">#FF080D18</color>
+    <color name="nexora_surface">#E6121A2B</color>
+    <color name="nexora_primary">#FF6C63FF</color>
+    <color name="nexora_accent">#FF21D4B4</color>
+    <color name="nexora_text_muted">#FFB2BCD0</color>
 </resources>
