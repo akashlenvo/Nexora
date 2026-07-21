@@ -17,6 +17,10 @@ The installer adds the application under `/opt/nexora`, installs ADB and
 Start Nexora from the application menu or run `nexora`. In OBS, Discord,
 Chrome or another video application, select **Nexora Virtual Camera**.
 
+The release package also includes the matching Android app. Connect the phone
+with USB debugging enabled and run `./install_apk.sh`, or copy the APK from the
+`apk` folder to the phone and open it there.
+
 For USB mode, enable Android developer options and USB debugging. Wi-Fi mode
 uses the same QR code flow as Windows.
 

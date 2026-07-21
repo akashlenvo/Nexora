@@ -42,10 +42,10 @@ jobs:
         run: |
           PACKAGE="$GITHUB_WORKSPACE/dist/Nexora-Linux-Mint-x86_64"
           cmake --install build/linux --prefix "$PACKAGE"
-          cp linux/install.sh linux/uninstall.sh linux/nexora linux/nexora.desktop linux/README.md "$PACKAGE/"
+          cp linux/install.sh linux/install_apk.sh linux/uninstall.sh linux/nexora linux/nexora.desktop linux/README.md "$PACKAGE/"
           cp assets/brand/nexora-mark.svg "$PACKAGE/"
           cp LICENSE ATTRIBUTION.md "$PACKAGE/"
-          chmod +x "$PACKAGE/install.sh" "$PACKAGE/uninstall.sh" "$PACKAGE/nexora" "$PACKAGE/Nexora"
+          chmod +x "$PACKAGE/install.sh" "$PACKAGE/install_apk.sh" "$PACKAGE/uninstall.sh" "$PACKAGE/nexora" "$PACKAGE/Nexora"
           tar -C dist -czf dist/Nexora-Linux-Mint-x86_64.tar.gz Nexora-Linux-Mint-x86_64
 
       - name: Upload Linux Mint package

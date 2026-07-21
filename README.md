@@ -1,6 +1,6 @@
 # Nexora
 
-Use your Android phone as a low-latency virtual camera on Windows — over USB or Wi-Fi.
+Use your Android phone as a low-latency virtual camera on Windows or Linux Mint — over USB or Wi-Fi.
 
 > Your phone. Your camera. Connected.
 
@@ -10,14 +10,15 @@ Nexora is maintained by **Yves Godoy** and is distributed under the MIT License.
 
 - USB connection through ADB or wireless connection through QR code
 - Hardware-accelerated Android camera streaming over RTSP
-- Windows preview and DirectShow virtual camera output
+- Windows preview with DirectShow virtual camera output
+- Linux Mint preview with V4L2 virtual camera output (beta)
 - Front/back camera switching, flash, zoom, rotation, mirroring and snapshots
 - Resolution, frame rate, bitrate, stabilization and image-filter controls
 - Defensive protocol parsing that rejects old or malformed clients instead of crashing
 
 ## Download and install
 
-Download the single `Nexora-v1.0.1.zip` package from the repository's **Releases** page. It already contains the Windows application, Android APK, ADB and installer scripts.
+Open the repository's **Releases** page and download the package for your computer. Each package contains everything needed for that platform.
 
 ### 1. Windows
 
@@ -28,6 +29,12 @@ Download the single `Nexora-v1.0.1.zip` package from the repository's **Releases
 ### 2. Android
 
 You can copy the APK from the `apk` folder to the phone and open it, or connect the phone with USB debugging enabled and run `install_apk.bat`.
+
+### Linux Mint beta
+
+Download `Nexora-Linux-Mint-x86_64-*.tar.gz`, extract it and run `./install.sh` in a terminal. The installer adds Nexora to the application menu and configures `/dev/video10` as **Nexora Virtual Camera** using `v4l2loopback`.
+
+The beta targets Linux Mint 22.x and Ubuntu 24.04 on x86-64. Secure Boot may require approval of the DKMS module during installation; see [linux/README.md](linux/README.md).
 
 ### 3. Connect
 
@@ -43,10 +50,11 @@ Use the Windows client and Android APK from the **same Nexora release**. An olde
 
 ## Build
 
-You do not need Android Studio or Visual Studio to create official release artifacts locally: GitHub Actions builds both platforms after the source is uploaded. See [docs/BUILDING.md](docs/BUILDING.md).
+You do not need Android Studio or Visual Studio to create official release artifacts locally: GitHub Actions builds Android, Windows and Linux after the source is uploaded. See [docs/BUILDING.md](docs/BUILDING.md).
 
 - Android project: `android/`
 - Windows project: `windows/Nexora.sln`
+- Linux project: `windows/CMakeLists.txt` and `linux/`
 - Brand source and asset generator: `assets/brand/`
 - Release workflows: `.github/workflows/`
 
