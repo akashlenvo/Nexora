@@ -25,8 +25,7 @@
     <RootNamespace>Nexora</RootNamespace>
     <ProjectName>Nexora</ProjectName>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <VcpkgEnableManifest>true</VcpkgEnableManifest>
-    <VcpkgManifestRoot>$(ProjectDir)..\</VcpkgManifestRoot>
+    <VcpkgEnableManifest>false</VcpkgEnableManifest>
     <VcpkgInstalledDir>$(ProjectDir)..\vcpkg_installed\</VcpkgInstalledDir>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
