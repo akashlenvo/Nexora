@@ -17,17 +17,17 @@ Nexora is maintained by **Yves Godoy** and is distributed under the MIT License.
 
 ## Download and install
 
-Download `Nexora-Windows-x64.zip` and `Nexora-Android-v1.0.0.apk` from the repository's **Releases** page.
+Download the single `Nexora-v1.0.1.zip` package from the repository's **Releases** page. It already contains the Windows application, Android APK, ADB and installer scripts.
 
 ### 1. Windows
 
 1. Extract the Windows ZIP to a permanent folder.
-2. Open `scripts/install.bat` as administrator. This registers the virtual camera.
+2. Open `install.bat` as administrator. This registers the virtual camera.
 3. Start `Nexora.exe` and allow it through Windows Firewall when asked.
 
 ### 2. Android
 
-You can copy the APK to the phone and open it, or connect the phone with USB debugging enabled and run `scripts/install_apk.bat`.
+You can copy the APK from the `apk` folder to the phone and open it, or connect the phone with USB debugging enabled and run `install_apk.bat`.
 
 ### 3. Connect
 
@@ -39,7 +39,7 @@ Choose the phone under **Video source**. In OBS, Discord, Zoom or another camera
 
 ## Important compatibility note
 
-Use the Windows client and Android APK from the **same Nexora release**. An older upstream bundle mixed two incompatible protocol versions and could crash in `VCRUNTIME140.dll` while reading the phone model. Nexora v1.0.0 includes the matching Android descriptor and bounds-checked Windows parser.
+Use the Windows client and Android APK from the **same Nexora release**. An older upstream bundle mixed two incompatible protocol versions and could crash in `VCRUNTIME140.dll` while reading the phone model. Nexora includes the matching Android descriptor and bounds-checked Windows parser.
 
 ## Build
 

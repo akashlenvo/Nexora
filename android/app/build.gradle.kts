@@ -11,8 +11,8 @@ android {
         applicationId = "com.yvesgodoy.nexora"
         minSdk = 28
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -44,7 +44,7 @@ tasks.register<Copy>("copyApk") {
     dependsOn("assembleRelease")
     from(layout.buildDirectory.file("outputs/apk/release/app-release.apk"))
     into("../../dist/apk")
-    rename { "Nexora-Android-v1.0.0.apk" }
+    rename { "Nexora-Android-v1.0.1.apk" }
 }
 
 dependencies {

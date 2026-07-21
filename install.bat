@@ -1,12 +1,20 @@
 @echo off
+setlocal
 
-set INSTALLER=..\softcam_installer.exe
-set TARGET=..\softcam.dll
+set "INSTALLER=%~dp0softcam_installer.exe"
+set "TARGET=%~dp0softcam.dll"
 
-echo Registering softcam.dll to the system using softcam_installer.exe
+if not exist "%INSTALLER%" (
+  echo ERROR: softcam_installer.exe was not found.
+  echo Extract the complete Nexora ZIP before running this file.
+  pause
+  exit /b 1
+)
+
+echo Installing the Nexora virtual camera...
 echo.
 
-%INSTALLER% register %TARGET%
+"%INSTALLER%" register "%TARGET%"
 
 if %ERRORLEVEL% == 0 (
   echo.
@@ -17,4 +25,6 @@ if %ERRORLEVEL% == 0 (
   echo The process has been canceled or failed.
   echo.
 )
+
+pause
 
