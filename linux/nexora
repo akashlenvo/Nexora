@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+
+NEXORA_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+cd "$NEXORA_DIR"
+exec "$NEXORA_DIR/Nexora" "$@"

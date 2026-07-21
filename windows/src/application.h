@@ -5,7 +5,7 @@
 #include "gui/window.h"
 #include "net/server.h"
 #include "rtsp/manager.h"
-#include "directshowsource.h"
+#include "virtualcamera.h"
 #include "rtsp/streamoptions.h"
 #include "snapshotmanager.h"
 
@@ -27,7 +27,7 @@ private:
 
 	std::unique_ptr<Server> server;
 	std::unique_ptr<RTSP::Manager> rtspManager;
-	std::unique_ptr<DirectShowSource> dsSource;
+	std::unique_ptr<VirtualCameraSink> virtualCamera;
 	SnapshotManager snapshotManager;
 
 	StreamOptions& GetCurrentDeviceStreamOptions();

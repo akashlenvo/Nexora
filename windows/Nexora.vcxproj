@@ -159,6 +159,7 @@ xcopy "$(ProjectDir)3rdparty\softcam\examples\softcam_installer\x64\Release\soft
     <ClCompile Include="3rdparty\qrcodegen\qrcodegen.cpp" />
     <ClCompile Include="src\application.cpp" />
     <ClCompile Include="src\directshowsource.cpp" />
+    <ClCompile Include="src\virtualcamera.cpp" />
     <ClCompile Include="src\gui\devicesview.cpp" />
     <ClCompile Include="src\gui\imgadjdlg.cpp" />
     <ClCompile Include="src\gui\qrconview.cpp" />
@@ -208,6 +209,7 @@ xcopy "$(ProjectDir)3rdparty\softcam\examples\softcam_installer\x64\Release\soft
     <ClInclude Include="src\application.h" />
     <ClInclude Include="src\canvas.h" />
     <ClInclude Include="src\directshowsource.h" />
+    <ClInclude Include="src\virtualcamera.h" />
     <ClInclude Include="src\gui\devicesview.h" />
     <ClInclude Include="src\gui\imgadjdlg.h" />
     <ClInclude Include="src\gui\qrconview.h" />

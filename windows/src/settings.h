@@ -6,7 +6,6 @@
 #include <vector>
 #include <sstream>
 #include <iostream>
-#include <windows.h>
 #include <wx/filename.h>
 
 #include "rtsp/streamoptions.h"
