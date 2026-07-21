@@ -1,6 +1,7 @@
 #pragma once
 
 #include "video/framescaler.h"
+#include <cstring>
 
 namespace Video
 {

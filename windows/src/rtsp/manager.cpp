@@ -2,6 +2,7 @@
 
 #include "logger.h"
 #include "net/serializer.h"
+#include <cstring>
 
 namespace RTSP
 {
