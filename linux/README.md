@@ -11,8 +11,9 @@ chmod +x install.sh
 ./install.sh
 ```
 
-The installer adds the application under `/opt/nexora`, installs ADB and
-`v4l2loopback`, and configures **Nexora Virtual Camera** as `/dev/video10`.
+The installer adds the application under `/opt/nexora`, installs the wxWidgets
+and FFmpeg runtimes, ADB and `v4l2loopback`, and configures
+**Nexora Virtual Camera** as `/dev/video10`.
 
 Start Nexora from the application menu or run `nexora`. In OBS, Discord,
 Chrome or another video application, select **Nexora Virtual Camera**.
