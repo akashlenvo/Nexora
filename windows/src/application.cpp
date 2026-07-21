@@ -190,7 +190,7 @@ void Application::OnDeviceDisconnected(DeviceDescriptor& descriptor) const
 	// Update UI list
 	UpdateAvailableDevices();
 	mainWindow->SetConnectionStatus(!rtspManager->GetDescriptors().empty(),
-		rtspManager->GetDescriptors().empty() ? wxEmptyString : wxString::FromUTF8(rtspManager->GetDescriptors().front().name().c_str()));
+		rtspManager->GetDescriptors().empty() ? wxString{} : wxString::FromUTF8(rtspManager->GetDescriptors().front().name().c_str()));
 }
 
 void Application::OnDeviceErrorReported(DeviceDescriptor& descriptor, const Connection::ErrorReport& error) const
