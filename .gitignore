@@ -1,2 +1,6 @@
 dist
-VCamdroid
+/Nexora/
+.gradle/
+.idea/
+**/build/
+android/local.properties

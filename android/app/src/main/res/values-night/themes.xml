@@ -1,8 +1,10 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.Vcamdroid" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
-        <item name="android:statusBarColor">@color/black</item>
+<resources>
+    <style name="Base.Theme.Nexora" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/nexora_primary</item>
+        <item name="colorSecondary">@color/nexora_accent</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:statusBarColor">@color/nexora_ink</item>
+        <item name="android:navigationBarColor">@color/nexora_ink</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 </resources>

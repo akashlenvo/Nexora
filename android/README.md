@@ -1,4 +1,4 @@
-# VCamdroid - Android client
+# Nexora - Android client
 
 ### Dependencies
 

@@ -13,7 +13,7 @@ Application::Application()
 	SetAppearance(Appearance::System);
 	wxInitAllImageHandlers();
 
-	SetAppName("VCamdroid");
+	SetAppName("Nexora");
 	
 	Settings::Load();
 	stateRegistry = Settings::GetDeviceStates();
@@ -69,7 +69,7 @@ bool Application::OnInit()
 			{
 				std::stringstream ss;
 				// Bitrate with 1 decimal precision
-				ss << stats.width << "p@" << (int)std::round(stats.fps) << "fps\n" << std::fixed << std::setprecision(1) << stats.bitrate << "Mbps";
+				ss << stats.width << "p  |  " << (int)std::round(stats.fps) << " fps  |  " << std::fixed << std::setprecision(1) << stats.bitrate << " Mbps";
 
 				// Safe UI update
 				mainWindow->GetEventHandler()->CallAfter([this, labelText = ss.str()]() {
@@ -102,6 +102,8 @@ void Application::BindEventListeners()
 {
 	mainWindow->Bind(wxEVT_CLOSE_WINDOW, &Application::OnWindowCloseEvent, this);
 	mainWindow->Bind(wxEVT_MENU, &Application::OnMenuEvent, this);
+	mainWindow->Bind(wxEVT_BUTTON, &Application::OnMenuEvent, this, Window::MenuIDs::QR);
+	mainWindow->Bind(wxEVT_BUTTON, &Application::OnMenuEvent, this, Window::MenuIDs::DEVICES);
 
 	mainWindow->GetSourceChoice()->Bind(wxEVT_CHOICE, &Application::OnSourceChanged, this);
 	mainWindow->GetAdjustmentsButton()->Bind(wxEVT_BUTTON, &Application::ShowAdjustmentsDialog, this);
@@ -165,6 +167,7 @@ void Application::OnDeviceConnected(DeviceDescriptor& descriptor) const
 	mainWindow->GetTaskbarIcon()->ShowBalloon("New stream available", "Streaming device " + descriptor.name() + " available!", 10, wxICON_INFORMATION);
 	rtspManager->AddDescriptor(descriptor);
 	UpdateAvailableDevices();
+	mainWindow->SetConnectionStatus(true, wxString::FromUTF8(descriptor.name().c_str()));
 }
 
 void Application::OnDeviceDisconnected(DeviceDescriptor& descriptor) const
@@ -186,6 +189,8 @@ void Application::OnDeviceDisconnected(DeviceDescriptor& descriptor) const
 
 	// Update UI list
 	UpdateAvailableDevices();
+	mainWindow->SetConnectionStatus(!rtspManager->GetDescriptors().empty(),
+		rtspManager->GetDescriptors().empty() ? wxEmptyString : wxString::FromUTF8(rtspManager->GetDescriptors().front().name().c_str()));
 }
 
 void Application::OnDeviceErrorReported(DeviceDescriptor& descriptor, const Connection::ErrorReport& error) const
@@ -211,7 +216,7 @@ void Application::UpdateAvailableDevices() const
 
 		// Optional: Clear stats since nothing is playing
 		if (mainWindow->GetStatsText())
-			mainWindow->GetStatsText()->SetLabelText("----p@--fps\n00.0Mbps");
+			mainWindow->GetStatsText()->SetLabelText("-- x --  |  -- fps  |  -- Mbps");
 	}
 	else
 	{
@@ -238,6 +243,9 @@ void Application::OnMenuEvent(wxCommandEvent& event)
 {
 	switch (event.GetId())
 	{
+		case wxID_EXIT:
+			mainWindow->Close();
+			break;
 		case Window::MenuIDs::DEVICES:
 		{
 			DevicesView devlistview(mainWindow, rtspManager->GetDescriptors());

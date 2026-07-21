@@ -4,6 +4,8 @@
 #include "adb.h"
 #include "net/serializer.h"
 
+#include <optional>
+
 Server::Server(int port, const ConnectionListener& connectionListener) :
 	port(port),
 	connectionListener(connectionListener),
@@ -134,21 +136,46 @@ void Server::TCPDoAccept()
 			// We need to read this here because the connection listener
 			// needs all the data sent by the client (trough GetConnectedDevicesInfo)
 			// otherwise the connection would need to be passed to the connection
-			std::array<char, 512> buffer;
-			size_t size = socket.read_some(asio::buffer(buffer, 512));
-			
-			// auto ipaddress = socket.remote_endpoint().address().to_string();
-			auto descriptor = Serializer::DeserializeDeviceDescriptor((const uint8_t*)buffer.data(), size);
+			std::array<uint8_t, 64 * 1024> buffer{};
+			size_t size = 0;
+			std::optional<DeviceDescriptor> descriptor;
+			while (!descriptor && size < buffer.size())
+			{
+				try
+				{
+					size += socket.read_some(asio::buffer(buffer.data() + size, buffer.size() - size));
+					descriptor.emplace(Serializer::DeserializeDeviceDescriptor(buffer.data(), size));
+				}
+				catch (const Serializer::IncompletePacket&)
+				{
+					continue;
+				}
+				catch (const std::exception& e)
+				{
+					logger << "[SERVER] Rejected incompatible or malformed device descriptor: "
+						<< e.what() << " (" << size << " bytes received)" << std::endl;
+					break;
+				}
+			}
 
-			auto conn = std::make_shared<Connection>(
-				std::move(socket),
-				descriptor,
-				std::bind(&Server::OnConnectionDisconnected, this, std::placeholders::_1),
-				std::bind(&Server::OnConnectionReportingError, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
-			);
-			connections.push_back(std::move(conn));
+			if (!descriptor)
+			{
+				asio::error_code closeError;
+				socket.close(closeError);
+			}
 
-			connectionListener.OnDeviceConnected(descriptor);
+			if (descriptor)
+			{
+				auto conn = std::make_shared<Connection>(
+					std::move(socket),
+					*descriptor,
+					std::bind(&Server::OnConnectionDisconnected, this, std::placeholders::_1),
+					std::bind(&Server::OnConnectionReportingError, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
+				);
+				connections.push_back(std::move(conn));
+
+				connectionListener.OnDeviceConnected(*descriptor);
+			}
 		}
 		else if (ec != asio::error::operation_aborted)
 		{
@@ -171,6 +198,13 @@ void Server::OnConnectionDisconnected(std::shared_ptr<Connection> connection)
 
 void Server::OnConnectionReportingError(std::shared_ptr<Connection> connection, const uint8_t* bytes, size_t size)
 {
-	auto report = Serializer::DeserializeErrorReport(bytes, size);
-	connectionListener.OnDeviceErrorReported(connection->descriptor, report);
+	try
+	{
+		auto report = Serializer::DeserializeErrorReport(bytes, size);
+		connectionListener.OnDeviceErrorReported(connection->descriptor, report);
+	}
+	catch (const std::exception& e)
+	{
+		logger << "[SERVER] Ignored malformed error report: " << e.what() << std::endl;
+	}
 }

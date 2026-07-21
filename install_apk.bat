@@ -1,4 +1,11 @@
 @echo off
-echo Installing VCamdroid apk to android device
+echo Installing Nexora on the connected Android device
 
-..\adb\adb.exe install -r ..\apk\app-release.apk
+set "APK="
+for %%F in ("..\apk\Nexora-Android-*.apk") do set "APK=%%~fF"
+if not defined APK (
+  echo Nexora APK not found in the apk folder.
+  exit /b 1
+)
+
+..\adb\adb.exe install -r "%APK%"

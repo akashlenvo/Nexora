@@ -2,37 +2,52 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/black"
-    android:backgroundTint="@color/black"
-    tools:context=".MainActivity">
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@color/nexora_ink" tools:context=".MainActivity">
 
-    <androidx.camera.view.PreviewView
-        android:id="@+id/viewFinder"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:ignore="MissingConstraints" />
+    <androidx.camera.view.PreviewView android:id="@+id/viewFinder"
+        android:layout_width="0dp" android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
 
-    <com.darusc.vcamdroid.video.overlays.ScannerOverlay
-        android:id="@+id/overlay"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:text="Scan the QR code on the windows app to connect"/>
+    <View android:layout_width="0dp" android:layout_height="150dp" android:background="@drawable/top_scrim"
+        app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageButton
-        android:id="@+id/logReportButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:src="@drawable/log"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.958"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.022" />
+    <TextView android:id="@+id/brandTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_marginStart="24dp" android:layout_marginTop="48dp" android:letterSpacing="0.12"
+        android:text="NEXORA" android:textColor="@color/white" android:textSize="24sp" android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
 
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp"
+        android:text="@string/brand_tagline" android:textColor="@color/nexora_text_muted" android:textSize="12sp"
+        app:layout_constraintStart_toStartOf="@id/brandTitle" app:layout_constraintTop_toBottomOf="@id/brandTitle" />
+
+    <ImageButton android:id="@+id/logReportButton" android:layout_width="48dp" android:layout_height="48dp"
+        android:layout_marginTop="46dp" android:layout_marginEnd="18dp"
+        android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="Logs"
+        android:padding="12dp" android:src="@drawable/log_white"
+        app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="parent" />
+
+    <com.yvesgodoy.nexora.video.overlays.ScannerOverlay android:id="@+id/overlay"
+        android:layout_width="0dp" android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"
+        app:text="@string/scan_title" />
+
+    <com.google.android.material.card.MaterialCardView android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_marginStart="20dp" android:layout_marginEnd="20dp" android:layout_marginBottom="28dp"
+        app:cardBackgroundColor="@color/nexora_surface" app:cardCornerRadius="20dp"
+        app:strokeColor="#336C63FF" app:strokeWidth="1dp"
+        app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:padding="18dp">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="@string/scan_help" android:textColor="@color/white" android:textSize="14sp" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="8dp" android:text="@string/connection_hint"
+                android:textColor="@color/nexora_accent" android:textSize="12sp" android:textStyle="bold" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 </androidx.constraintlayout.widget.ConstraintLayout>

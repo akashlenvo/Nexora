@@ -1,2 +1,2 @@
-id ICON "vcamdroid.ico"
+id ICON "nexora.ico"
 #include "wx/msw/wx.rc"

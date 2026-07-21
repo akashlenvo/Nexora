@@ -22,9 +22,9 @@ wxFileName Settings::GetDocumentsDirectoryPath()
     // Get Documents Directory
     wxString docDir = wxStandardPaths::Get().GetDocumentsDir();
 
-    // Build path: Documents/VCamdroid/
+    // Build path: Documents/Nexora/
     wxFileName path(docDir, "");
-    path.AppendDir("VCamdroid");
+    path.AppendDir("Nexora");
 
     // Create folder if missing
     if (!path.DirExists())

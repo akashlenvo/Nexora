@@ -48,6 +48,7 @@ public:
 
 	wxStaticText* GetStatsText();
 	wxTaskBarIcon* GetTaskbarIcon();
+	void SetConnectionStatus(bool connected, const wxString& deviceName = wxEmptyString);
 
 private:
 	wxTaskBarIcon* taskbarIcon;
@@ -73,8 +74,10 @@ private:
 	wxButton* snapshotButton;
 
 	wxStaticText* statsText;
+	wxStaticText* statusText;
 
 	void InitializeMenu(Server::HostInfo hostinfo);
+	void InitializeHeader(wxPanel* parent, wxBoxSizer* topsizer);
 	void InitializeTopBar(wxPanel* parent, wxBoxSizer* topsizer);
 	void InitializeCanvasPanel(wxPanel* parent, wxBoxSizer* topsizer);
 	void InitializeBottomBar(wxPanel* parent, wxBoxSizer* topsizer);

@@ -1,15 +1,54 @@
 #include "net/serializer.h"
 
+#include <stdexcept>
 #include <string>
 
 namespace Serializer
 {
-	static uint16_t ReadInt16(const uint8_t* bytes)
+	namespace
 	{
-		uint8_t b0 = static_cast<uint8_t>(bytes[0]);
-		uint8_t b1 = static_cast<uint8_t>(bytes[1]);
+		class Reader
+		{
+		public:
+			Reader(const uint8_t* bytes, size_t size) : bytes(bytes), size(size) {}
 
-		return (b0 << 8) | b1;
+			uint8_t ReadUInt8()
+			{
+				Require(1);
+				return bytes[offset++];
+			}
+
+			uint16_t ReadUInt16()
+			{
+				Require(2);
+				uint16_t value = (static_cast<uint16_t>(bytes[offset]) << 8)
+					| static_cast<uint16_t>(bytes[offset + 1]);
+				offset += 2;
+				return value;
+			}
+
+			std::string ReadString(size_t maximumLength)
+			{
+				size_t length = ReadUInt16();
+				if (length > maximumLength)
+					throw std::invalid_argument("Network string exceeds the allowed length");
+				Require(length);
+				std::string value(reinterpret_cast<const char*>(bytes + offset), length);
+				offset += length;
+				return value;
+			}
+
+		private:
+			const uint8_t* bytes;
+			size_t size;
+			size_t offset = 0;
+
+			void Require(size_t count) const
+			{
+				if (!bytes || count > size - offset)
+					throw IncompletePacket("Incomplete network packet");
+			}
+		};
 	}
 
 	static void WriteInt16(std::vector<uint8_t>& buffer, uint16_t value)
@@ -39,15 +78,11 @@ namespace Serializer
 
 	DeviceDescriptor DeserializeDeviceDescriptor(const uint8_t* bytes, size_t size)
 	{
-		int offset = 0;
+		Reader reader(bytes, size);
 
-		// Name is the first thing
-		// Each string is preceded by 2 bytes representing its size
-		auto name = std::string((const char*)& bytes[offset + 2], ReadInt16(bytes));
-
-		// The RTSP url follows after the name
-		offset += 2 + name.size();
-		auto url = std::string((const char*)& bytes[offset + 2], ReadInt16(bytes + offset));
+		// Each string is preceded by a two-byte big-endian length.
+		auto name = reader.ReadString(256);
+		auto url = reader.ReadString(2048);
 
 		// Default protocol is udp. If it is a usb connection (via adb) switch to tcp
 		std::string protocol = "udp";
@@ -56,56 +91,45 @@ namespace Serializer
 			protocol = "tcp";
 		}
 
-		offset += 2 + url.size();
-		// Represents how many resolutions are provided
-		uint16_t frontResolutionCount = ReadInt16(bytes + offset);
-		offset += 2;
+		uint16_t frontResolutionCount = reader.ReadUInt16();
+		if (frontResolutionCount > 64)
+			throw std::invalid_argument("Invalid front-camera resolution count");
 
 		std::vector<DeviceDescriptor::Resolution> frontResolutions;
+		frontResolutions.reserve(frontResolutionCount);
 		for (int i = 0; i < frontResolutionCount; i++)
 		{
-			// Each resolutions is given in pairs, first 2 bytes represents 
-			// the width, the next 2 bytes represents the height
-			auto w = ReadInt16(bytes + offset);
-			auto h = ReadInt16(bytes + offset + 2);
-
+			auto w = reader.ReadUInt16();
+			auto h = reader.ReadUInt16();
 			frontResolutions.push_back(DeviceDescriptor::Resolution(w, h));
-
-			offset += 4;
 		}
 
-		uint16_t backResolutionCount = ReadInt16(bytes + offset);
-		offset += 2;
+		uint16_t backResolutionCount = reader.ReadUInt16();
+		if (backResolutionCount > 64)
+			throw std::invalid_argument("Invalid back-camera resolution count");
 
 		std::vector<DeviceDescriptor::Resolution> backResolutions;
+		backResolutions.reserve(backResolutionCount);
 		for (int i = 0; i < backResolutionCount; i++)
 		{
-			// Each resolutions is given in pairs, first 2 bytes represents 
-			// the width, the next 2 bytes represents the height
-			auto w = ReadInt16(bytes + offset);
-			auto h = ReadInt16(bytes + offset + 2);
-
+			auto w = reader.ReadUInt16();
+			auto h = reader.ReadUInt16();
 			backResolutions.push_back(DeviceDescriptor::Resolution(w, h));
-
-			offset += 4;
 		}
 
-		// How many filters
-		uint16_t filterCount = ReadInt16(bytes + offset);
-		offset += 2;
+		uint16_t filterCount = reader.ReadUInt16();
+		if (filterCount > 128)
+			throw std::invalid_argument("Invalid filter count");
 
 		Video::Filter::Registry filters;
 		for (int i = 0; i < filterCount; i++)
 		{
-			// First 2 bytes represent the length of the filter name,
-			// followed by the actual string
-			auto name = std::string((const char*)&bytes[offset + 2], ReadInt16(bytes + offset));
-			offset += 2 + name.size();
-			// And 1 more byte for the category
-			auto cat = static_cast<Video::Filter::Category>(bytes[offset]);
-			offset++;
+			auto filterName = reader.ReadString(256);
+			auto categoryValue = reader.ReadUInt8();
+			if (categoryValue > static_cast<uint8_t>(Video::Filter::Category::ARTISTIC))
+				throw std::invalid_argument("Invalid filter category");
 
-			filters[cat].push_back(name);
+			filters[static_cast<Video::Filter::Category>(categoryValue)].push_back(filterName);
 		}
 
 		return DeviceDescriptor(name, url, protocol, frontResolutions, backResolutions, filters);
@@ -148,15 +172,11 @@ namespace Serializer
 
 	Connection::ErrorReport DeserializeErrorReport(const uint8_t* bytes, size_t size)
 	{
-		int offset = 0;
-
+		Reader reader(bytes, size);
 		Connection::ErrorReport report;
-
-		report.severity = bytes[offset++];
-		report.error = std::string((const char*)&bytes[offset + 2], ReadInt16(bytes + offset));
-
-		offset += 2 + report.error.size();
-		report.description = std::string((const char*)&bytes[offset + 2], ReadInt16(bytes + offset));
+		report.severity = reader.ReadUInt8();
+		report.error = reader.ReadString(1024);
+		report.description = reader.ReadString(8192);
 		
 		return report;
 	}

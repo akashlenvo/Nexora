@@ -1,4 +1,4 @@
-# VCamdroid - Windows server
+# Nexora - Windows server
 
 ## Requirments & Dependencies
 
@@ -9,7 +9,7 @@
 
 ## Build
 
-Before building VCamdroid [softcam](https://github.com/tshino/softcam) needs to be built.
+Before building Nexora [softcam](https://github.com/tshino/softcam) needs to be built.
 
 ### Softcam library
 
@@ -19,9 +19,9 @@ Next open ```3rdpart/softcam/examples/softcam_installer.sln``` and build the sol
 
 For more information about the building process of softcam see [this](https://github.com/tshino/softcam?tab=readme-ov-file#how-to-build-the-library).
 
-### VCamdroid
+### Nexora
 
-Open the ```VCamdroid.sln``` and build the solution in ```Release x64``` configuration. All required files will be placed in the ```dist``` directory. 
+Open the ```Nexora.sln``` and build the solution in ```Release x64``` configuration. All required files will be placed in the ```dist``` directory.
 
 Now from the root directory you can run ```install.bat``` to install the DirectShow filter (softcam.dll)
 

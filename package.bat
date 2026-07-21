@@ -4,7 +4,7 @@ setlocal enabledelayedexpansion
 :: --- Configuration ---
 set "SOURCE_DIST=dist"
 set "SOURCE_ADB=windows\adb"
-set "OUTPUT_DIR=VCamdroid"
+set "OUTPUT_DIR=Nexora"
 
 :: List of scripts to copy (located in the current root dir)
 set "SCRIPTS_TO_COPY=install.bat install_apk.bat uninstall.bat"
@@ -23,7 +23,7 @@ mkdir "%OUTPUT_DIR%"
 mkdir "%OUTPUT_DIR%\scripts"
 mkdir "%OUTPUT_DIR%\adb"
 
-:: 3. Copy App Executables (contents of /dist -> /vcamdroid)
+:: 3. Copy application files
 if exist "%SOURCE_DIST%" (
     echo [INFO] Copying application executables...
     xcopy /s /e /y /q "%SOURCE_DIST%\*" "%OUTPUT_DIR%\"
@@ -32,7 +32,7 @@ if exist "%SOURCE_DIST%" (
     goto :Error
 )
 
-:: 4. Copy ADB folder (/windows/adb -> /vcamdroid/adb)
+:: 4. Copy ADB tools
 if exist "%SOURCE_ADB%" (
     echo [INFO] Copying ADB binaries...
     xcopy /s /e /y /q "%SOURCE_ADB%\*" "%OUTPUT_DIR%\adb\"
@@ -41,7 +41,7 @@ if exist "%SOURCE_ADB%" (
     goto :Error
 )
 
-:: 5. Copy Batch Scripts (root -> /vcamdroid/scripts/)
+:: 5. Copy helper scripts
 echo [INFO] Copying batch scripts...
 for %%f in (%SCRIPTS_TO_COPY%) do (
     if exist "%%f" (
