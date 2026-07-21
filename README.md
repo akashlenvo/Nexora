@@ -11,7 +11,7 @@ Nexora is maintained by **Yves Godoy** and is distributed under the MIT License.
 - USB connection through ADB or wireless connection through QR code
 - Hardware-accelerated Android camera streaming over RTSP
 - Windows preview with DirectShow virtual camera output
-- Linux Mint preview with V4L2 virtual camera output (beta)
+- Linux Mint preview with V4L2 virtual camera output
 - Front/back camera switching, flash, zoom, rotation, mirroring and snapshots
 - Resolution, frame rate, bitrate, stabilization and image-filter controls
 - Defensive protocol parsing that rejects old or malformed clients instead of crashing
@@ -30,11 +30,11 @@ Open the repository's **Releases** page and download the package for your comput
 
 You can copy the APK from the `apk` folder to the phone and open it, or connect the phone with USB debugging enabled and run `install_apk.bat`.
 
-### Linux Mint beta
+### Linux Mint
 
 Download `Nexora-Linux-Mint-x86_64-*.tar.gz`, extract it and run `./install.sh` in a terminal. The installer adds Nexora to the application menu and configures `/dev/video10` as **Nexora Virtual Camera** using `v4l2loopback`.
 
-The beta targets Linux Mint 22.x and Ubuntu 24.04 on x86-64. Secure Boot may require approval of the DKMS module during installation; see [linux/README.md](linux/README.md).
+The Linux package targets Linux Mint 22.x and Ubuntu 24.04 on x86-64. Secure Boot may require approval of the DKMS module during installation; see [linux/README.md](linux/README.md).
 
 ### 3. Connect
 
