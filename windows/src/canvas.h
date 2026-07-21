@@ -15,12 +15,10 @@ public:
 	void ClearBeforeNextRender();
 	void Clear();
 private:
-	wxSize size;
 	wxBitmap bitmap;
 
 	bool shouldDraw = false;
 	bool shouldClear = false;
-	int drawX, drawY;
 
 	std::atomic<bool> isRendering{ false };
 
@@ -30,4 +28,5 @@ private:
 
 	void OnPaint(wxPaintEvent& event);
 	void OnEraseBackground(wxEraseEvent& event);
+	void OnSize(wxSizeEvent& event);
 };

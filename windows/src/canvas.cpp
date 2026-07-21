@@ -2,21 +2,19 @@
 
 #include <wx/dcbuffer.h>
 #include <wx/rawbmp.h>
+#include <algorithm>
 
 Canvas::Canvas(wxWindow* parent, wxPoint position, wxSize size) 
 	: wxPanel(parent, wxID_ANY, position, size), 
 	scaler(WIDTH, HEIGHT),
-	size(size), 
-	bitmap(size.x, size.y)
+	bitmap(WIDTH, HEIGHT)
 {
 	SetBackgroundStyle(wxBG_STYLE_PAINT);
 	SetDoubleBuffered(false);
-
-	drawX = 0;
-	drawY = 0;
 	
 	this->Bind(wxEVT_PAINT, &Canvas::OnPaint, this);
 	this->Bind(wxEVT_ERASE_BACKGROUND, &Canvas::OnEraseBackground, this);
+	this->Bind(wxEVT_SIZE, &Canvas::OnSize, this);
 }
 
 void Canvas::Render(const uint8_t* bytes, int width, int height)
@@ -26,8 +24,6 @@ void Canvas::Render(const uint8_t* bytes, int width, int height)
 
 	if (!bitmap.IsOk() || bitmap.GetWidth() != width || bitmap.GetHeight() != height) 
 	{
-		drawX = (WIDTH - width) / 2;
-		drawY = (HEIGHT - height) / 2;
 		bitmap.Create(width, height, 24);
 		shouldClear = true;
 	}
@@ -103,25 +99,29 @@ void Canvas::Clear()
 void Canvas::OnPaint(wxPaintEvent& event)
 {
 	wxAutoBufferedPaintDC dc(this);
-	
-	if (shouldClear)
-	{
-		dc.Clear();
-		shouldClear = false;
-	}
+	dc.SetBackground(wxBrush(wxColour(3, 6, 12)));
+	dc.Clear();
+	shouldClear = false;
 
-	if (shouldDraw)
+	if (shouldDraw && bitmap.IsOk())
 	{
-		if (bitmap.IsOk())
-		{
-			dc.DrawBitmap(bitmap, drawX, drawY, 0);
-		}
-	}
-	else
-	{
-		dc.SetBrush(*wxBLACK_BRUSH);
-		dc.SetPen(*wxBLACK_PEN);
-		dc.DrawRectangle(0, 0, size.x, size.y);
+		const auto client = GetClientSize();
+		if (client.x <= 0 || client.y <= 0)
+			return;
+
+		const double scale = std::min(
+			static_cast<double>(client.x) / bitmap.GetWidth(),
+			static_cast<double>(client.y) / bitmap.GetHeight());
+		const int targetWidth = std::max(1, static_cast<int>(bitmap.GetWidth() * scale));
+		const int targetHeight = std::max(1, static_cast<int>(bitmap.GetHeight() * scale));
+		const int targetX = (client.x - targetWidth) / 2;
+		const int targetY = (client.y - targetHeight) / 2;
+
+		wxMemoryDC source;
+		source.SelectObject(bitmap);
+		dc.StretchBlit(targetX, targetY, targetWidth, targetHeight,
+			&source, 0, 0, bitmap.GetWidth(), bitmap.GetHeight(), wxCOPY, true);
+		source.SelectObject(wxNullBitmap);
 	}
 }
 
@@ -129,4 +129,10 @@ void Canvas::OnEraseBackground(wxEraseEvent& event)
 {
 	// Empty to remove flickering created by repainting the background
 	// before actually rendering the video frame
+}
+
+void Canvas::OnSize(wxSizeEvent& event)
+{
+	Refresh(false);
+	event.Skip();
 }
