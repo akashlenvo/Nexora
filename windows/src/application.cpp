@@ -6,11 +6,33 @@
 #include "gui/qrconview.h"
 #include "settings.h"
 #include "video/guipreviewscaler.h"
+#include <cmath>
 #include <iomanip>
+
+namespace
+{
+	void ShowTaskbarNotification(Window* window, const wxString& title, const wxString& message,
+		int timeout, int icon)
+	{
+#ifdef __WXMSW__
+		window->GetTaskbarIcon()->ShowBalloon(title, message, timeout, icon);
+#else
+		// wxTaskBarIcon::ShowBalloon is only available on Windows. The main window
+		// already exposes connection and error state on Linux, so keep this optional.
+		wxUnusedVar(window);
+		wxUnusedVar(title);
+		wxUnusedVar(message);
+		wxUnusedVar(timeout);
+		wxUnusedVar(icon);
+#endif
+	}
+}
 
 Application::Application()
 {
+	#if wxCHECK_VERSION(3, 3, 0)
 	SetAppearance(Appearance::System);
+	#endif
 	wxInitAllImageHandlers();
 
 	SetAppName("Nexora");
@@ -172,7 +194,7 @@ void Application::BindEventListeners()
 
 void Application::OnDeviceConnected(DeviceDescriptor& descriptor) const
 {
-	mainWindow->GetTaskbarIcon()->ShowBalloon("New stream available", "Streaming device " + descriptor.name() + " available!", 10, wxICON_INFORMATION);
+	ShowTaskbarNotification(mainWindow, "New stream available", "Streaming device " + descriptor.name() + " available!", 10, wxICON_INFORMATION);
 	rtspManager->AddDescriptor(descriptor);
 	UpdateAvailableDevices();
 	mainWindow->SetConnectionStatus(true, wxString::FromUTF8(descriptor.name().c_str()));
@@ -180,7 +202,7 @@ void Application::OnDeviceConnected(DeviceDescriptor& descriptor) const
 
 void Application::OnDeviceDisconnected(DeviceDescriptor& descriptor) const
 {
-	mainWindow->GetTaskbarIcon()->ShowBalloon("Stream ended", "Streaming device " + descriptor.name() + " disconnected!", 10, wxICON_INFORMATION);
+	ShowTaskbarNotification(mainWindow, "Stream ended", "Streaming device " + descriptor.name() + " disconnected!", 10, wxICON_INFORMATION);
 	
 	// Check if the device that just disconnected was the active streaming device
 	// If it was reset the canvas to blank
@@ -204,7 +226,7 @@ void Application::OnDeviceDisconnected(DeviceDescriptor& descriptor) const
 void Application::OnDeviceErrorReported(DeviceDescriptor& descriptor, const Connection::ErrorReport& error) const
 {
 	auto icon = error.severity == Connection::ErrorReport::SEVERITY_WARNING ? wxICON_WARNING : wxICON_ERROR;
-	mainWindow->GetTaskbarIcon()->ShowBalloon(descriptor.name() + " " + error.error, error.description, 1000, icon);
+	ShowTaskbarNotification(mainWindow, descriptor.name() + " " + error.error, error.description, 1000, icon);
 }
 
 void Application::UpdateAvailableDevices() const
@@ -333,7 +355,7 @@ void Application::OnSourceChanged(wxEvent& event)
 	else
 	{
 		// Handle error case: Device reported 0 resolutions
-		mainWindow->GetTaskbarIcon()->ShowBalloon("Error", "Device reported no supported resolutions.", 10, wxICON_WARNING);
+		ShowTaskbarNotification(mainWindow, "Error", "Device reported no supported resolutions.", 10, wxICON_WARNING);
 	}
 
 	rtspManager->Connect2Stream(deviceId, state);
