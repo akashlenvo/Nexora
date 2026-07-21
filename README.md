@@ -50,10 +50,6 @@ You do not need Android Studio or Visual Studio to create official release artif
 - Brand source and asset generator: `assets/brand/`
 - Release workflows: `.github/workflows/`
 
-## Publishing your fork
-
-The repository is ready to upload. Follow the Portuguese guide in [docs/PUBLICAR_NO_GITHUB.md](docs/PUBLICAR_NO_GITHUB.md).
-
 ## License and credits
 
 Nexora modifications: Copyright © 2026 Yves Godoy.
