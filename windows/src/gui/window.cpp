@@ -14,10 +14,24 @@ const wxColour kAccent(33, 212, 180);
 const wxColour kText(242, 245, 251);
 const wxColour kMuted(178, 188, 208);
 
+wxBitmap LoadWhiteIcon(const wxString& icon)
+{
+	wxImage image(wxString("res/") + icon, wxBITMAP_TYPE_PNG);
+	if (!image.IsOk())
+		return wxNullBitmap;
+
+	auto* pixels = image.GetData();
+	const auto componentCount = static_cast<size_t>(image.GetWidth()) * image.GetHeight() * 3;
+	for (size_t i = 0; i < componentCount; ++i)
+		pixels[i] = 255;
+
+	return wxBitmap(image);
+}
+
 wxButton* MakeIconButton(wxWindow* parent, const wxString& icon, const wxString& tooltip)
 {
 	auto* button = new wxBitmapButton(parent, wxID_ANY,
-		wxBitmap(wxString("res/") + icon, wxBITMAP_TYPE_PNG), wxDefaultPosition, wxDefaultSize, wxBORDER_NONE);
+		LoadWhiteIcon(icon), wxDefaultPosition, wxDefaultSize, wxBORDER_NONE);
 	button->SetBackgroundColour(kSurfaceRaised);
 	button->SetMinSize(parent->FromDIP(wxSize(40, 40)));
 	button->SetToolTip(tooltip);
@@ -28,8 +42,6 @@ wxButton* MakeIconButton(wxWindow* parent, const wxString& icon, const wxString&
 Window::Window(Server::HostInfo hostinfo)
 	: wxFrame(nullptr, wxID_ANY, "Nexora Studio", wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE)
 {
-	SetClientSize(FromDIP(wxSize(900, 640)));
-	SetMinClientSize(FromDIP(wxSize(620, 480)));
 	auto* panel = new wxPanel(this, wxID_ANY);
 	panel->SetBackgroundColour(kInk);
 	panel->SetForegroundColour(kText);
@@ -49,6 +61,18 @@ Window::Window(Server::HostInfo hostinfo)
 	InitializeBottomBar(panel, topsizer);
 
 	panel->SetSizer(topsizer);
+	auto* frameSizer = new wxBoxSizer(wxVERTICAL);
+	frameSizer->Add(panel, 1, wxEXPAND);
+	SetSizer(frameSizer);
+	SetMinClientSize(FromDIP(wxSize(620, 480)));
+	SetClientSize(FromDIP(wxSize(900, 640)));
+	Layout();
+	panel->Layout();
+	CallAfter([this, panel]() {
+		Layout();
+		panel->Layout();
+		panel->Refresh();
+	});
 	Center();
 }
 
