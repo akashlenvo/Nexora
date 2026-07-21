@@ -4,12 +4,11 @@
 
 Push the complete repository, including `.github`, then open the **Actions** tab. The Android and Windows workflows build their respective artifacts without requiring Android Studio or Visual Studio on your computer.
 
-For a public release, create and push a tag such as `v1.0.0`. The release workflow produces:
+For a public release, create and push a tag such as `v1.0.1`. The release workflow produces one user-facing download:
 
-- `Nexora-Android-v1.0.0.apk`
-- `Nexora-Windows-x64.zip`
-- `Nexora-v1.0.0-source.zip`
-- `SHA256SUMS.txt`
+- `Nexora-v1.0.1.zip`
+
+The package contains the Windows application, Android APK, ADB, installer scripts, licenses and per-file SHA-256 checksums. GitHub adds its standard source archives automatically.
 
 ## Android locally
 
