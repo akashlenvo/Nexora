@@ -1,6 +1,7 @@
 #pragma once
 
 #include <wx/wx.h>
+#include <atomic>
 #include "video/guipreviewscaler.h"
 
 class Canvas : public wxPanel
