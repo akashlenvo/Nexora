@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(Nexora VERSION 1.1.0 LANGUAGES CXX)
+project(Nexora VERSION 1.1.1 LANGUAGES CXX)
 
 if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
     message(FATAL_ERROR "This CMake configuration currently targets Linux. Use Nexora.sln on Windows.")

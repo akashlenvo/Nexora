@@ -1,5 +1,14 @@
 # Changelog
 
+## Nexora 1.1.1 — 2026-07-21
+
+- Refreshed the Nexora brand mark and removed the green accent circle
+- Updated the Windows executable icon and every Android launcher icon
+- Updated the Linux package logo and application menu artwork
+- Added an animated Nexora Studio preview to the project README
+- Redesigned the README with clearer features, supported systems and installation instructions
+- No protocol or compatibility changes; desktop clients and Android APK remain fully compatible within this release
+
 ## Nexora 1.1.0 — 2026-07-21
 
 - Added stable Linux Mint 22.x and Ubuntu 24.04 support for x86-64
