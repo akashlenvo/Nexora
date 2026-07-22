@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/brand/nexora-mark.svg" width="150" alt="Nexora logo">
+  <img src="assets/brand/nexora-mark-v2.png" width="150" alt="Nexora logo">
 </p>
 
 <h1 align="center">Nexora</h1>
