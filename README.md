@@ -18,6 +18,10 @@
   <a href="LICENSE">MIT License</a>
 </p>
 
+<p align="center">
+  <img src="assets/readme/nexora-preview.gif" width="900" alt="Nexora Studio preview">
+</p>
+
 Nexora is maintained by **Yves Godoy** and distributed under the MIT License. It is a renamed and redesigned continuation of the MIT licensed VCamdroid project. The original authorship and third party notices are preserved in [ATTRIBUTION.md](ATTRIBUTION.md).
 
 ## Features

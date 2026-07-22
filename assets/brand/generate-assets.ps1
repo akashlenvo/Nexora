@@ -24,10 +24,7 @@ function New-NexoraBitmap([int]$Size, [bool]$Round = $false) {
     $graphics.DrawLines($violet, [Drawing.PointF[]]@(
         [Drawing.PointF]::new($Size*.27,$Size*.73), [Drawing.PointF]::new($Size*.27,$Size*.27),
         [Drawing.PointF]::new($Size*.72,$Size*.73), [Drawing.PointF]::new($Size*.72,$Size*.27)))
-    $accent = New-Object Drawing.SolidBrush ([Drawing.Color]::FromArgb(33,212,180))
-    $dot = [single]($Size * .14)
-    $graphics.FillEllipse($accent, $Size*.65, $Size*.62, $dot, $dot)
-    $violet.Dispose(); $accent.Dispose(); $path.Dispose(); $graphics.Dispose()
+    $violet.Dispose(); $path.Dispose(); $graphics.Dispose()
     return $bitmap
 }
 
