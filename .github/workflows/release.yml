@@ -120,10 +120,10 @@ jobs:
         with:
           name: release-android
           path: artifacts/android
-      - name: Build and package on FreeBSD 15.1
+      - name: Build and package for FreeBSD 15.x
         uses: vmactions/freebsd-vm@v1.4.6
         with:
-          release: "15.1"
+          release: "15.0"
           usesh: true
           run: |
             set -eu

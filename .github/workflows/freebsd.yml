@@ -23,10 +23,10 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v5
 
-      - name: Build and package on FreeBSD 15.1
+      - name: Build and package for FreeBSD 15.x
         uses: vmactions/freebsd-vm@v1.4.6
         with:
-          release: "15.1"
+          release: "15.0"
           usesh: true
           run: |
             set -eu
@@ -50,4 +50,3 @@ jobs:
           name: Nexora-FreeBSD-amd64
           path: dist/Nexora-FreeBSD-amd64.tar.gz
           if-no-files-found: error
-
