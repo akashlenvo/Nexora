@@ -44,7 +44,7 @@ Server::HostInfo Server::GetHostInfo()
 		udp::socket socket(context);
 
 		// This might throw if there is NO network adapter enabled
-		socket.connect(udp::endpoint(asio::ip::address::from_string("8.8.8.8"), 80));
+		socket.connect(udp::endpoint(asio::ip::make_address("8.8.8.8"), 80));
 		ip_str = socket.local_endpoint().address().to_string();
 		socket.close();
 	}
