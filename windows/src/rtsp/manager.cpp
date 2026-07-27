@@ -85,13 +85,19 @@ namespace RTSP
 
 	void Manager::SetStabilization(bool enabled)
 	{
-		const unsigned char bytes[2] = { Command::STABILIZATION, enabled ? 1 : 0 };
+		const unsigned char bytes[2] = {
+			Command::STABILIZATION,
+			static_cast<unsigned char>(enabled ? 1 : 0)
+		};
 		server.Send(streamingDevice, bytes, 2);
 	}
 
 	void Manager::SetFlash(bool enabled)
 	{
-		const unsigned char bytes[2] = { Command::FLASH, enabled ? 1 : 0 };
+		const unsigned char bytes[2] = {
+			Command::FLASH,
+			static_cast<unsigned char>(enabled ? 1 : 0)
+		};
 		server.Send(streamingDevice, bytes, 2);
 	}
 
@@ -103,7 +109,10 @@ namespace RTSP
 
 	void Manager::SetH265Codec(bool enabled)
 	{
-		const unsigned char bytes[2] = { Command::CODEC, enabled ? 1 : 0 };
+		const unsigned char bytes[2] = {
+			Command::CODEC,
+			static_cast<unsigned char>(enabled ? 1 : 0)
+		};
 		server.Send(streamingDevice, bytes, 2);
 	}
 
