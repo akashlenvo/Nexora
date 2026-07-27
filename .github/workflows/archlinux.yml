@@ -1,0 +1,56 @@
+name: Build Arch Linux Beta
+
+on:
+  push:
+    paths:
+      - "windows/**"
+      - "archlinux/**"
+      - ".github/workflows/archlinux.yml"
+  pull_request:
+    paths:
+      - "windows/**"
+      - "archlinux/**"
+      - ".github/workflows/archlinux.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - name: Install build dependencies
+        run: |
+          pacman -Syu --needed --noconfirm \
+            git base-devel cmake ninja pkgconf asio wxwidgets-gtk3 ffmpeg
+
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Configure
+        run: cmake -S windows -B build/archlinux -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build/archlinux --parallel
+
+      - name: Create Arch Linux beta package
+        run: |
+          PACKAGE="$GITHUB_WORKSPACE/dist/Nexora-Arch-Linux-x86_64"
+          cmake --install build/archlinux --prefix "$PACKAGE"
+          cp archlinux/install.sh archlinux/install_apk.sh archlinux/uninstall.sh \
+            archlinux/nexora archlinux/nexora.desktop archlinux/README.md "$PACKAGE/"
+          cp assets/brand/nexora-mark.svg "$PACKAGE/"
+          cp LICENSE ATTRIBUTION.md "$PACKAGE/"
+          chmod +x "$PACKAGE/install.sh" "$PACKAGE/install_apk.sh" \
+            "$PACKAGE/uninstall.sh" "$PACKAGE/nexora" "$PACKAGE/Nexora"
+          tar -C dist -czf dist/Nexora-Arch-Linux-x86_64-beta.tar.gz Nexora-Arch-Linux-x86_64
+
+      - name: Upload Arch Linux beta package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nexora-Arch-Linux-x86_64-beta
+          path: dist/Nexora-Arch-Linux-x86_64-beta.tar.gz
+          if-no-files-found: error
+

@@ -1,5 +1,16 @@
 # Changelog
 
+## Nexora 1.3.0 Beta 1 - 2026-07-27
+
+- Added beta Arch Linux support for x86-64
+- Added a `pacman` installer with automatic default, LTS, Zen and Hardened kernel-header detection
+- Added automatic `v4l2loopback-dkms` setup and `/dev/video10` configuration
+- Added Arch Linux launcher, application-menu integration, APK installer and uninstaller
+- Added native Arch Linux builds using current wxWidgets, FFmpeg and Asio packages
+- Added an Arch Linux CI workflow and beta release packaging with the matching Android APK and SHA-256 checksums
+- Arch Linux source compilation is validated automatically, but runtime, Wi-Fi, USB/ADB and virtual-camera operation remain untested
+- Preserved stable Windows 10/11, Linux Mint 22.x, Ubuntu 24.04 and FreeBSD 15.1 support
+
 ## Nexora 1.2.0 - 2026-07-27
 
 - Added stable FreeBSD 15.1 support for amd64
