@@ -1,6 +1,6 @@
 #include "v4l2source.h"
 
-#if defined(__linux__)
+#if defined(__linux__) || defined(__FreeBSD__)
 
 #include "logger.h"
 
@@ -53,7 +53,11 @@ V4L2Source::V4L2Source(int width, int height)
 	if (descriptor == -1)
 	{
 		status = "Could not open " + devicePath + ": " + std::strerror(errno)
+#if defined(__FreeBSD__)
+			+ ". Install webcamd, load cuse and start a v4l2loopback device, or set NEXORA_VIDEO_DEVICE.";
+#else
 			+ ". Install and load v4l2loopback, or set NEXORA_VIDEO_DEVICE.";
+#endif
 		logger << "[V4L2] " << status << std::endl;
 		return;
 	}

@@ -5,7 +5,7 @@
 <h1 align="center">Nexora</h1>
 
 <p align="center">
-  Turn your Android phone into a low latency virtual camera for Windows and Linux.
+  Turn your Android phone into a low latency virtual camera for Windows, Linux and FreeBSD.
 </p>
 
 <p align="center">
@@ -73,6 +73,12 @@ Nexora is maintained by **Yves Godoy** and distributed under the MIT License. It
     <td>USB and WiFi</td>
   </tr>
   <tr>
+    <td>FreeBSD 15.1 (experimental)</td>
+    <td>amd64</td>
+    <td>webcamd V4L2 Loopback</td>
+    <td>USB and WiFi</td>
+  </tr>
+  <tr>
     <td>Android</td>
     <td>Phone camera source</td>
     <td>Camera2 and MediaCodec</td>
@@ -80,7 +86,7 @@ Nexora is maintained by **Yves Godoy** and distributed under the MIT License. It
   </tr>
 </table>
 
-Windows 11 and Linux Mint 22 have been tested manually. Ubuntu 24.04 is validated by the automated build workflow.
+Windows 11 and Linux Mint 22 have been tested manually. Ubuntu 24.04 is validated by the automated build workflow. FreeBSD 15.1 support remains experimental until its camera output and transports complete manual validation.
 
 ## Download and install
 
@@ -102,6 +108,15 @@ Open the [Releases](https://github.com/akashlenvo/Nexora/releases/latest) page a
 
 The installer configures **Nexora Virtual Camera** as `/dev/video10`. Secure Boot may require approval of the DKMS module during installation. More information is available in [linux/README.md](linux/README.md).
 
+### FreeBSD
+
+1. Extract `Nexora-FreeBSD-amd64-*.tar.gz`.
+2. Open a terminal inside the extracted directory and become root with `su -`.
+3. Return to the extracted directory and run `./install.sh <desktop-user>`.
+4. Log out and back in once, then install the Android app with `./install_apk.sh` or copy the bundled APK to the phone.
+
+The installer uses CUSE and `webcamd` to expose the virtual camera as `/dev/video10`. See [freebsd/README.md](freebsd/README.md) for VirtualBox, WiFi, USB and diagnostic instructions.
+
 ## Connect your phone
 
 ### WiFi
@@ -120,12 +135,13 @@ Always use the desktop client and Android APK from the same Nexora release. An o
 
 ## Building from source
 
-GitHub Actions builds Android, Windows and Linux automatically. Local build instructions are available in [docs/BUILDING.md](docs/BUILDING.md).
+GitHub Actions builds Android, Windows, Linux and FreeBSD automatically. Local build instructions are available in [docs/BUILDING.md](docs/BUILDING.md).
 
 <p>
   <strong>Android:</strong> <code>android/</code><br>
   <strong>Windows:</strong> <code>windows/Nexora.sln</code><br>
   <strong>Linux:</strong> <code>windows/CMakeLists.txt</code> and <code>linux/</code><br>
+  <strong>FreeBSD:</strong> <code>windows/CMakeLists.txt</code> and <code>freebsd/</code><br>
   <strong>Brand assets:</strong> <code>assets/brand/</code><br>
   <strong>Release workflows:</strong> <code>.github/workflows/</code>
 </p>

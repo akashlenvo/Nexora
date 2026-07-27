@@ -1,0 +1,53 @@
+name: Build FreeBSD
+
+on:
+  push:
+    paths:
+      - "windows/**"
+      - "freebsd/**"
+      - ".github/workflows/freebsd.yml"
+  pull_request:
+    paths:
+      - "windows/**"
+      - "freebsd/**"
+      - ".github/workflows/freebsd.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Build and package on FreeBSD 15.1
+        uses: vmactions/freebsd-vm@v1.4.6
+        with:
+          release: "15.1"
+          usesh: true
+          run: |
+            set -eu
+            pkg install -y cmake ninja pkgconf asio wx32-gtk3 ffmpeg v4l_compat
+            cmake -S windows -B build/freebsd -G Ninja -DCMAKE_BUILD_TYPE=Release
+            cmake --build build/freebsd --parallel
+
+            PACKAGE="$GITHUB_WORKSPACE/dist/Nexora-FreeBSD-amd64"
+            cmake --install build/freebsd --prefix "$PACKAGE"
+            cp freebsd/install.sh freebsd/install_apk.sh freebsd/uninstall.sh \
+              freebsd/nexora freebsd/nexora.desktop freebsd/README.md "$PACKAGE/"
+            cp assets/brand/nexora-mark.svg "$PACKAGE/"
+            cp LICENSE ATTRIBUTION.md "$PACKAGE/"
+            chmod +x "$PACKAGE/install.sh" "$PACKAGE/install_apk.sh" \
+              "$PACKAGE/uninstall.sh" "$PACKAGE/nexora" "$PACKAGE/Nexora"
+            tar -C dist -czf dist/Nexora-FreeBSD-amd64.tar.gz Nexora-FreeBSD-amd64
+
+      - name: Upload FreeBSD package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nexora-FreeBSD-amd64
+          path: dist/Nexora-FreeBSD-amd64.tar.gz
+          if-no-files-found: error
+
