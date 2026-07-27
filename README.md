@@ -73,7 +73,7 @@ Nexora is maintained by **Yves Godoy** and distributed under the MIT License. It
     <td>USB and WiFi</td>
   </tr>
   <tr>
-    <td>FreeBSD 15.1 (experimental)</td>
+    <td>FreeBSD 15.1</td>
     <td>amd64</td>
     <td>webcamd V4L2 Loopback</td>
     <td>USB and WiFi</td>
@@ -86,7 +86,7 @@ Nexora is maintained by **Yves Godoy** and distributed under the MIT License. It
   </tr>
 </table>
 
-Windows 11 and Linux Mint 22 have been tested manually. Ubuntu 24.04 is validated by the automated build workflow. FreeBSD 15.1 support remains experimental until its camera output and transports complete manual validation.
+Windows 11, Linux Mint 22 and FreeBSD 15.1 have been tested manually, including WiFi and USB connections. Ubuntu 24.04 is validated by the automated build workflow.
 
 ## Download and install
 

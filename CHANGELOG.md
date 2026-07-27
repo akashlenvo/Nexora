@@ -1,5 +1,19 @@
 # Changelog
 
+## Nexora 1.2.0 - 2026-07-27
+
+- Added stable FreeBSD 15.1 support for amd64
+- Added native V4L2 virtual-camera output on FreeBSD using CUSE and `webcamd`
+- Added Wi-Fi and USB/ADB transport support to the FreeBSD desktop client
+- Added a FreeBSD installer, launcher, uninstaller and application-menu integration
+- Added automatic setup of `/dev/video10`, the `webcamd` service and user permissions
+- Added native FreeBSD CMake support with wxWidgets, FFmpeg, Asio and `v4l_compat`
+- Added a FreeBSD CI workflow and included the FreeBSD package in automated releases
+- Added a bundled Android APK and SHA-256 checksums to tagged FreeBSD packages
+- Replaced deprecated Asio address parsing and fixed strict C++ byte conversions
+- Manually verified the virtual camera, Wi-Fi and USB/ADB on FreeBSD 15.1 amd64
+- Preserved verified Windows 10/11, Linux Mint 22.x and Ubuntu 24.04 compatibility
+
 ## Nexora 1.1.1 — 2026-07-21
 
 - Refreshed the Nexora brand mark and removed the green accent circle
