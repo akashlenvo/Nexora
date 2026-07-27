@@ -111,8 +111,52 @@ jobs:
           name: release-linux
           path: dist/Nexora-Linux-Mint-x86_64-v*.tar.gz
 
+  freebsd:
+    needs: android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-android
+          path: artifacts/android
+      - name: Build and package on FreeBSD 15.1
+        uses: vmactions/freebsd-vm@v1.4.6
+        with:
+          release: "15.1"
+          usesh: true
+          run: |
+            set -eu
+            pkg install -y cmake ninja pkgconf asio wx32-gtk3 ffmpeg v4l_compat
+            cmake -S windows -B build/freebsd -G Ninja -DCMAKE_BUILD_TYPE=Release
+            cmake --build build/freebsd --parallel
+
+            VERSION="${GITHUB_REF_NAME#v}"
+            PACKAGE="$GITHUB_WORKSPACE/dist/Nexora-FreeBSD-amd64"
+            cmake --install build/freebsd --prefix "$PACKAGE"
+            cp freebsd/install.sh freebsd/install_apk.sh freebsd/uninstall.sh \
+              freebsd/nexora freebsd/nexora.desktop freebsd/README.md "$PACKAGE/"
+            cp assets/brand/nexora-mark.svg "$PACKAGE/"
+            cp LICENSE ATTRIBUTION.md "$PACKAGE/"
+            mkdir -p "$PACKAGE/apk"
+            cp artifacts/android/app-release.apk "$PACKAGE/apk/Nexora-Android-v${VERSION}.apk"
+            chmod +x "$PACKAGE/install.sh" "$PACKAGE/install_apk.sh" \
+              "$PACKAGE/uninstall.sh" "$PACKAGE/nexora" "$PACKAGE/Nexora"
+            (
+              cd "$PACKAGE"
+              find . -type f ! -name SHA256SUMS.txt -print | sort |
+                while IFS= read -r file; do
+                  printf '%s  %s\n' "$(sha256 -q "$file")" "${file#./}"
+                done
+            ) > "$PACKAGE/SHA256SUMS.txt"
+            tar -C dist -czf "dist/Nexora-FreeBSD-amd64-v${VERSION}.tar.gz" Nexora-FreeBSD-amd64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-freebsd
+          path: dist/Nexora-FreeBSD-amd64-v*.tar.gz
+
   publish:
-    needs: [android, windows, linux]
+    needs: [android, windows, linux, freebsd]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -130,6 +174,10 @@ jobs:
         with:
           name: release-linux
           path: artifacts/linux
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-freebsd
+          path: artifacts/freebsd
       - name: Package release
         shell: bash
         run: |
@@ -139,6 +187,7 @@ jobs:
           (cd artifacts/windows && find . -type f ! -name 'SHA256SUMS.txt' -print0 | sort -z | xargs -0 sha256sum) > artifacts/windows/SHA256SUMS.txt
           (cd artifacts/windows && zip -r "../../Nexora-v${VERSION}.zip" .)
           mv artifacts/linux/Nexora-Linux-Mint-x86_64-v*.tar.gz .
+          mv artifacts/freebsd/Nexora-FreeBSD-amd64-v*.tar.gz .
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
@@ -147,3 +196,4 @@ jobs:
           files: |
             Nexora-v*.zip
             Nexora-Linux-Mint-x86_64-v*.tar.gz
+            Nexora-FreeBSD-amd64-v*.tar.gz

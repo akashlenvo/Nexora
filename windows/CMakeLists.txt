@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
 project(Nexora VERSION 1.1.1 LANGUAGES CXX)
 
-if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    message(FATAL_ERROR "This CMake configuration currently targets Linux. Use Nexora.sln on Windows.")
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux" AND
+   NOT CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+    message(FATAL_ERROR "This CMake configuration targets Linux and FreeBSD. Use Nexora.sln on Windows.")
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
@@ -52,6 +53,10 @@ target_include_directories(Nexora PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/qrcodegen
 )
+if(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+    # FreeBSD ports install the Video4Linux compatibility headers here.
+    target_include_directories(Nexora PRIVATE /usr/local/include)
+endif()
 target_compile_definitions(Nexora PRIVATE ASIO_STANDALONE)
 target_compile_options(Nexora PRIVATE -Wall -Wextra -Wpedantic)
 target_link_libraries(Nexora PRIVATE

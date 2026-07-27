@@ -2,12 +2,13 @@
 
 ## Recommended: GitHub Actions
 
-Push the complete repository, including `.github`, then open the **Actions** tab. The Android, Windows and Linux Mint workflows build their respective artifacts without requiring Android Studio or Visual Studio on your computer.
+Push the complete repository, including `.github`, then open the **Actions** tab. The Android, Windows, Linux Mint and FreeBSD workflows build their respective artifacts without requiring Android Studio or Visual Studio on your computer.
 
-For a public release, create and push a tag such as `v1.1.0`. The release workflow produces two platform downloads:
+For a public release, create and push a tag such as `v1.1.0`. The release workflow produces three platform downloads:
 
 - `Nexora-v1.1.0.zip` for Windows and Android
 - `Nexora-Linux-Mint-x86_64-v1.1.0.tar.gz` for Linux Mint
+- `Nexora-FreeBSD-amd64-v1.1.0.tar.gz` for FreeBSD 15.1
 
 The package contains the Windows application, Android APK, ADB, installer scripts, licenses and per-file SHA-256 checksums. GitHub adds its standard source archives automatically.
 
@@ -42,3 +43,21 @@ cmake --build build/linux --parallel
 ```
 
 The application binary is written to `build/linux/Nexora`. The distributable installer scripts are under `linux/`.
+
+## FreeBSD locally
+
+Requirements on FreeBSD 15.1 amd64:
+
+```sh
+pkg install cmake ninja pkgconf asio wx32-gtk3 ffmpeg v4l_compat
+```
+
+Configure and build with:
+
+```sh
+cmake -S windows -B build/freebsd -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build/freebsd --parallel
+```
+
+The application binary is written to `build/freebsd/Nexora`. The FreeBSD
+installer, launcher and virtual-camera setup are under `freebsd/`.

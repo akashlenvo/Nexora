@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+
+NEXORA_DIR=/usr/local/libexec/nexora
+cd "$NEXORA_DIR"
+export NEXORA_VIDEO_DEVICE=${NEXORA_VIDEO_DEVICE:-/dev/video10}
+exec "$NEXORA_DIR/Nexora" "$@"
+
