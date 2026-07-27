@@ -1,6 +1,6 @@
 # Nexora for FreeBSD
 
-This experimental package targets FreeBSD 15.1 on amd64.
+This package targets FreeBSD 15.1 on amd64.
 
 ## Install
 
@@ -57,4 +57,3 @@ the application.
 ## Uninstall
 
 Run `./uninstall.sh` as root. Runtime packages are intentionally preserved.
-
