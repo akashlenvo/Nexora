@@ -2,13 +2,14 @@
 
 ## Recommended: GitHub Actions
 
-Push the complete repository, including `.github`, then open the **Actions** tab. The Android, Windows, Linux Mint and FreeBSD workflows build their respective artifacts without requiring Android Studio or Visual Studio on your computer.
+Push the complete repository, including `.github`, then open the **Actions** tab. The Android, Windows, Linux Mint, FreeBSD and Arch Linux beta workflows build their respective artifacts without requiring Android Studio or Visual Studio on your computer.
 
-For a public release, create and push a tag such as `v1.2.0`. The release workflow produces three platform downloads:
+For a public release, create and push a tag such as `v1.3.0-beta.1`. The release workflow produces four platform downloads:
 
-- `Nexora-v1.2.0.zip` for Windows and Android
-- `Nexora-Linux-Mint-x86_64-v1.2.0.tar.gz` for Linux Mint
-- `Nexora-FreeBSD-amd64-v1.2.0.tar.gz` for FreeBSD 15.1
+- `Nexora-v1.3.0-beta.1.zip` for Windows and Android
+- `Nexora-Linux-Mint-x86_64-v1.3.0-beta.1.tar.gz` for Linux Mint
+- `Nexora-FreeBSD-amd64-v1.3.0-beta.1.tar.gz` for FreeBSD 15.1
+- `Nexora-Arch-Linux-x86_64-v1.3.0-beta.1.tar.gz` for Arch Linux
 
 The package contains the Windows application, Android APK, ADB, installer scripts, licenses and per-file SHA-256 checksums. GitHub adds its standard source archives automatically.
 
@@ -61,3 +62,22 @@ cmake --build build/freebsd --parallel
 
 The application binary is written to `build/freebsd/Nexora`. The FreeBSD
 installer, launcher and virtual-camera setup are under `freebsd/`.
+
+## Arch Linux locally
+
+Requirements on a current Arch Linux x86-64 installation:
+
+```sh
+pacman -Syu --needed base-devel cmake ninja pkgconf asio wxwidgets-gtk3 ffmpeg
+```
+
+Configure and build with:
+
+```sh
+cmake -S windows -B build/archlinux -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build/archlinux --parallel
+```
+
+The application binary is written to `build/archlinux/Nexora`. Installer and
+packaging files are under `archlinux/`. The beta is build-validated but not
+runtime-tested.

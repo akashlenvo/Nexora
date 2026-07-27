@@ -11,8 +11,8 @@ android {
         applicationId = "com.yvesgodoy.nexora"
         minSdk = 28
         targetSdk = 35
-        versionCode = 4
-        versionName = "1.2.0"
+        versionCode = 5
+        versionName = "1.3.0-beta.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

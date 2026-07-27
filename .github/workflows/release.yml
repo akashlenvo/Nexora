@@ -155,8 +155,46 @@ jobs:
           name: release-freebsd
           path: dist/Nexora-FreeBSD-amd64-v*.tar.gz
 
+  archlinux:
+    needs: android
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - name: Install build dependencies
+        run: |
+          pacman -Syu --needed --noconfirm \
+            git base-devel cmake ninja pkgconf asio wxwidgets-gtk3 ffmpeg
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-android
+          path: artifacts/android
+      - name: Build Arch Linux client
+        run: |
+          cmake -S windows -B build/archlinux -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build/archlinux --parallel
+      - name: Create Arch Linux beta package
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          PACKAGE="$GITHUB_WORKSPACE/dist/Nexora-Arch-Linux-x86_64"
+          cmake --install build/archlinux --prefix "$PACKAGE"
+          cp archlinux/install.sh archlinux/install_apk.sh archlinux/uninstall.sh \
+            archlinux/nexora archlinux/nexora.desktop archlinux/README.md "$PACKAGE/"
+          cp assets/brand/nexora-mark.svg "$PACKAGE/"
+          cp LICENSE ATTRIBUTION.md "$PACKAGE/"
+          mkdir -p "$PACKAGE/apk"
+          cp artifacts/android/app-release.apk "$PACKAGE/apk/Nexora-Android-v${VERSION}.apk"
+          chmod +x "$PACKAGE/install.sh" "$PACKAGE/install_apk.sh" \
+            "$PACKAGE/uninstall.sh" "$PACKAGE/nexora" "$PACKAGE/Nexora"
+          (cd "$PACKAGE" && find . -type f ! -name 'SHA256SUMS.txt' -print0 | sort -z | xargs -0 sha256sum) > "$PACKAGE/SHA256SUMS.txt"
+          tar -C dist -czf "dist/Nexora-Arch-Linux-x86_64-v${VERSION}.tar.gz" Nexora-Arch-Linux-x86_64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-archlinux
+          path: dist/Nexora-Arch-Linux-x86_64-v*.tar.gz
+
   publish:
-    needs: [android, windows, linux, freebsd]
+    needs: [android, windows, linux, freebsd, archlinux]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -178,6 +216,10 @@ jobs:
         with:
           name: release-freebsd
           path: artifacts/freebsd
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-archlinux
+          path: artifacts/archlinux
       - name: Package release
         shell: bash
         run: |
@@ -188,6 +230,7 @@ jobs:
           (cd artifacts/windows && zip -r "../../Nexora-v${VERSION}.zip" .)
           mv artifacts/linux/Nexora-Linux-Mint-x86_64-v*.tar.gz .
           mv artifacts/freebsd/Nexora-FreeBSD-amd64-v*.tar.gz .
+          mv artifacts/archlinux/Nexora-Arch-Linux-x86_64-v*.tar.gz .
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
@@ -197,3 +240,4 @@ jobs:
             Nexora-v*.zip
             Nexora-Linux-Mint-x86_64-v*.tar.gz
             Nexora-FreeBSD-amd64-v*.tar.gz
+            Nexora-Arch-Linux-x86_64-v*.tar.gz
