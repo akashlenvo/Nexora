@@ -2,7 +2,6 @@
 #include <cstring>
 
 #include <wx/dcbuffer.h>
-#include <wx/rawbmp.h>
 #include <algorithm>
 
 Canvas::Canvas(wxWindow* parent, wxPoint position, wxSize size) 
@@ -29,20 +28,16 @@ void Canvas::Render(const uint8_t* bytes, int width, int height)
 		shouldClear = true;
 	}
 
-	wxNativePixelData data(bitmap);
-	if (!data) 
+	wxImage image(width, height);
+	if (!image.IsOk() || !image.GetData())
 		return;
 
-	wxNativePixelData::Iterator p(data);
-	int stride = width * 3;
-
-	for (int y = 0; y < height; y++)
-	{
-		uint8_t* dstrow = (uint8_t*)p.m_ptr;
-		std::memcpy(dstrow, bytes + (y * stride), stride);
-
-		p.OffsetY(data, 1);
-	}
+	// wxImage always uses RGB byte order. Converting through wxImage keeps the
+	// preview colours consistent across Windows (native BGR) and GTK (RGB).
+	std::memcpy(image.GetData(), bytes, static_cast<size_t>(width) * height * 3);
+	bitmap = wxBitmap(image);
+	if (!bitmap.IsOk())
+		return;
 
 	shouldDraw = true;
 	this->Refresh(false);

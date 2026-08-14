@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.graphics.Rect
 import android.hardware.camera2.CaptureRequest
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -159,7 +158,7 @@ class MainActivity : AppCompatActivity(), ConnectionManager.ConnectionStateCallb
         // Process each incoming image from the camera
         // launchScanTask() will scan and call the callback on success
         // only if start() was called before
-        qrscanner.launchScanTask(imageProxy, camera?.screenRectToImageRect(viewBinding.overlay.rect, viewBinding.overlay.size) ?: Rect()) { result ->
+        qrscanner.launchScanTask(imageProxy) { result ->
             runOnUiThread {
                 if(result != null) {
                     qrscanner.stop()

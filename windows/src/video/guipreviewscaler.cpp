@@ -3,7 +3,7 @@
 namespace Video
 {
 	GuiPreviewScaler::GuiPreviewScaler(int containerWidth, int containerHeight)
-		: FrameScaler(AV_PIX_FMT_BGR24),
+		: FrameScaler(AV_PIX_FMT_RGB24),
         containerWidth(containerWidth),
 		containerHeight(containerHeight)
 	{

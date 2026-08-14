@@ -1,7 +1,6 @@
 package com.godoy.nexora.video
 
 import android.content.Context
-import android.graphics.Rect
 import android.hardware.camera2.CaptureRequest
 import android.util.Log
 import android.util.Range
@@ -93,41 +92,4 @@ class Camera(
         }, ContextCompat.getMainExecutor(context));
     }
 
-    /**
-     * Transforms a rectangle from screen coordinates to image coordinates
-     *
-     * https://github.com/googlesamples/mlkit/issues/388
-     *
-     * https://medium.com/@saiful103a/scan-barcode-only-when-they-are-inside-a-specific-area-of-the-preview-android-fcf8e02404d7
-     */
-    fun screenRectToImageRect(
-        screenRect: Rect,
-        screenSize: Size,
-    ): Rect {
-        val imageAspectRatio = resolution.height.toFloat() / resolution.width
-        val screenAspectRatio = screenSize.width.toFloat() / screenSize.height
-
-        var scaleX = 1f
-        var scaleY = 1f
-        var dx = 0f
-        var dy = 0f
-
-        if (imageAspectRatio > screenAspectRatio) {
-            scaleY = screenSize.height.toFloat() / resolution.width
-            scaleX = scaleY
-            dx = (screenSize.width - resolution.height * scaleX) / 2
-        } else {
-            scaleX = screenSize.width.toFloat() / resolution.height
-            scaleY = scaleX
-            dy = (screenSize.height - resolution.width * scaleY) / 2
-        }
-
-        // Transform the screen space coordinates rectangle to image space coordinates
-        val left = ((screenRect.left - dx) / scaleX).toInt()
-        val top = ((screenRect.top - dy) / scaleY).toInt()
-        val right = ((screenRect.right - dx) / scaleX).toInt()
-        val bottom = ((screenRect.bottom - dy) / scaleY).toInt()
-
-        return Rect(left, top, right, bottom)
-    }
 }
