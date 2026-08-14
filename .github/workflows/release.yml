@@ -173,7 +173,7 @@ jobs:
         run: |
           cmake -S windows -B build/archlinux -G Ninja -DCMAKE_BUILD_TYPE=Release
           cmake --build build/archlinux --parallel
-      - name: Create Arch Linux beta package
+      - name: Create Arch Linux package
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           PACKAGE="$GITHUB_WORKSPACE/dist/Nexora-Arch-Linux-x86_64"

@@ -1,8 +1,8 @@
-# Nexora for Arch Linux (Beta)
+# Nexora for Arch Linux and CachyOS
 
-This untested beta package targets current Arch Linux on x86-64. The source
-build is validated automatically, but the installer, virtual camera and
-Wi-Fi/USB transports have not yet been tested manually on Arch hardware.
+This package targets current Arch Linux and compatible distributions on x86-64.
+The source build is validated automatically, and runtime and virtual-camera
+operation have been confirmed through community testing on CachyOS.
 
 ## Install
 
@@ -39,4 +39,3 @@ another configuration, reboot once before testing.
 ## Uninstall
 
 Run `./uninstall.sh`. System packages are intentionally preserved.
-

@@ -1,4 +1,4 @@
-name: Build Arch Linux Beta
+name: Build Arch Linux
 
 on:
   push:
@@ -35,7 +35,7 @@ jobs:
       - name: Build
         run: cmake --build build/archlinux --parallel
 
-      - name: Create Arch Linux beta package
+      - name: Create Arch Linux package
         run: |
           PACKAGE="$GITHUB_WORKSPACE/dist/Nexora-Arch-Linux-x86_64"
           cmake --install build/archlinux --prefix "$PACKAGE"
@@ -45,12 +45,11 @@ jobs:
           cp LICENSE ATTRIBUTION.md "$PACKAGE/"
           chmod +x "$PACKAGE/install.sh" "$PACKAGE/install_apk.sh" \
             "$PACKAGE/uninstall.sh" "$PACKAGE/nexora" "$PACKAGE/Nexora"
-          tar -C dist -czf dist/Nexora-Arch-Linux-x86_64-beta.tar.gz Nexora-Arch-Linux-x86_64
+          tar -C dist -czf dist/Nexora-Arch-Linux-x86_64.tar.gz Nexora-Arch-Linux-x86_64
 
-      - name: Upload Arch Linux beta package
+      - name: Upload Arch Linux package
         uses: actions/upload-artifact@v4
         with:
-          name: Nexora-Arch-Linux-x86_64-beta
-          path: dist/Nexora-Arch-Linux-x86_64-beta.tar.gz
+          name: Nexora-Arch-Linux-x86_64
+          path: dist/Nexora-Arch-Linux-x86_64.tar.gz
           if-no-files-found: error
-

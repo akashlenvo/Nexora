@@ -2,14 +2,14 @@
 
 ## Recommended: GitHub Actions
 
-Push the complete repository, including `.github`, then open the **Actions** tab. The Android, Windows, Linux Mint, FreeBSD and Arch Linux beta workflows build their respective artifacts without requiring Android Studio or Visual Studio on your computer.
+Push the complete repository, including `.github`, then open the **Actions** tab. The Android, Windows, Linux Mint, FreeBSD and Arch Linux workflows build their respective artifacts without requiring Android Studio or Visual Studio on your computer.
 
-For a public release, create and push a tag such as `v1.3.0-beta.1`. The release workflow produces four platform downloads:
+For a public release, create and push a tag such as `v1.3.0`. The release workflow produces four platform downloads:
 
-- `Nexora-v1.3.0-beta.1.zip` for Windows and Android
-- `Nexora-Linux-Mint-x86_64-v1.3.0-beta.1.tar.gz` for Linux Mint
-- `Nexora-FreeBSD-amd64-v1.3.0-beta.1.tar.gz` for FreeBSD 15.1
-- `Nexora-Arch-Linux-x86_64-v1.3.0-beta.1.tar.gz` for Arch Linux
+- `Nexora-v1.3.0.zip` for Windows and Android
+- `Nexora-Linux-Mint-x86_64-v1.3.0.tar.gz` for Linux Mint
+- `Nexora-FreeBSD-amd64-v1.3.0.tar.gz` for FreeBSD 15.1
+- `Nexora-Arch-Linux-x86_64-v1.3.0.tar.gz` for Arch Linux
 
 The package contains the Windows application, Android APK, ADB, installer scripts, licenses and per-file SHA-256 checksums. GitHub adds its standard source archives automatically.
 
@@ -79,5 +79,5 @@ cmake --build build/archlinux --parallel
 ```
 
 The application binary is written to `build/archlinux/Nexora`. Installer and
-packaging files are under `archlinux/`. The beta is build-validated but not
-runtime-tested.
+packaging files are under `archlinux/`. Arch builds are validated automatically,
+and runtime operation has been confirmed through community testing on CachyOS.

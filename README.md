@@ -79,7 +79,7 @@ Nexora is maintained by **Godoy** and distributed under the MIT License. It is a
     <td>USB and WiFi</td>
   </tr>
   <tr>
-    <td>Arch Linux (beta, untested)</td>
+    <td>Arch Linux and CachyOS</td>
     <td>x86_64</td>
     <td>V4L2 Loopback</td>
     <td>USB and WiFi</td>
@@ -92,7 +92,7 @@ Nexora is maintained by **Godoy** and distributed under the MIT License. It is a
   </tr>
 </table>
 
-Windows 11, Linux Mint 22 and FreeBSD 15.1 have been tested manually, including WiFi and USB connections. Ubuntu 24.04 is validated by the automated build workflow. Arch Linux is currently an untested beta with automated source-build validation only.
+Windows 11, Linux Mint 22 and FreeBSD 15.1 have been tested manually, including WiFi and USB connections. Ubuntu 24.04 is validated by the automated build workflow. Arch Linux builds are validated automatically, and runtime operation has been confirmed through community testing on CachyOS.
 
 ## Download and install
 
@@ -123,14 +123,14 @@ The installer configures **Nexora Virtual Camera** as `/dev/video10`. Secure Boo
 
 The installer uses CUSE and `webcamd` to expose the virtual camera as `/dev/video10`. See [freebsd/README.md](freebsd/README.md) for VirtualBox, WiFi, USB and diagnostic instructions.
 
-### Arch Linux beta
+### Arch Linux and CachyOS
 
-1. Download the Arch Linux package from the `v1.3.0-beta.1` prerelease.
+1. Download the Arch Linux package from the latest release.
 2. Extract `Nexora-Arch-Linux-x86_64-*.tar.gz`.
 3. Open a terminal inside the extracted directory and run `./install.sh`.
 4. Reboot if DKMS was installed for the first time, then start Nexora from the application menu.
 
-This package has not been tested manually. It detects the standard Arch, LTS, Zen and Hardened kernels and configures `/dev/video10`. See [archlinux/README.md](archlinux/README.md) for details.
+The package detects the standard Arch, LTS, Zen and Hardened kernels and configures `/dev/video10`. Runtime operation has been confirmed on CachyOS. See [archlinux/README.md](archlinux/README.md) for details.
 
 ## Connect your phone
 
@@ -150,14 +150,14 @@ Always use the desktop client and Android APK from the same Nexora release. An o
 
 ## Building from source
 
-GitHub Actions builds Android, Windows, Linux, FreeBSD and the Arch Linux beta automatically. Local build instructions are available in [docs/BUILDING.md](docs/BUILDING.md).
+GitHub Actions builds Android, Windows, Linux, FreeBSD and Arch Linux automatically. Local build instructions are available in [docs/BUILDING.md](docs/BUILDING.md).
 
 <p>
   <strong>Android:</strong> <code>android/</code><br>
   <strong>Windows:</strong> <code>windows/Nexora.sln</code><br>
   <strong>Linux:</strong> <code>windows/CMakeLists.txt</code> and <code>linux/</code><br>
   <strong>FreeBSD:</strong> <code>windows/CMakeLists.txt</code> and <code>freebsd/</code><br>
-  <strong>Arch Linux beta:</strong> <code>windows/CMakeLists.txt</code> and <code>archlinux/</code><br>
+  <strong>Arch Linux:</strong> <code>windows/CMakeLists.txt</code> and <code>archlinux/</code><br>
   <strong>Brand assets:</strong> <code>assets/brand/</code><br>
   <strong>Release workflows:</strong> <code>.github/workflows/</code>
 </p>

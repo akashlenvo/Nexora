@@ -1,14 +1,16 @@
 # Changelog
 
-## Nexora 1.3.0 Beta 1 - 2026-07-27
+## Nexora 1.3.0 - 2026-08-14
 
-- Added beta Arch Linux support for x86-64
+- Added stable Arch Linux and CachyOS support for x86-64
 - Added a `pacman` installer with automatic default, LTS, Zen and Hardened kernel-header detection
 - Added automatic `v4l2loopback-dkms` setup and `/dev/video10` configuration
 - Added Arch Linux launcher, application-menu integration, APK installer and uninstaller
 - Added native Arch Linux builds using current wxWidgets, FFmpeg and Asio packages
-- Added an Arch Linux CI workflow and beta release packaging with the matching Android APK and SHA-256 checksums
-- Arch Linux source compilation is validated automatically, but runtime, Wi-Fi, USB/ADB and virtual-camera operation remain untested
+- Added an Arch Linux CI workflow and release packaging with the matching Android APK and SHA-256 checksums
+- Fixed incorrect colours in the Linux desktop preview, including purple skin tones on GTK-based systems
+- Fixed valid QR codes being rejected depending on phone orientation
+- Confirmed runtime and virtual-camera operation on CachyOS through community testing
 - Preserved stable Windows 10/11, Linux Mint 22.x, Ubuntu 24.04 and FreeBSD 15.1 support
 
 ## Nexora 1.2.0 - 2026-07-27
