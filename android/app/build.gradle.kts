@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = "com.godoy.nexora"
-        minSdk = 28
+        minSdk = 24
         targetSdk = 35
         versionCode = 6
         versionName = "1.3.0"

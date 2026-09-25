@@ -136,7 +136,9 @@ The package detects the standard Arch, LTS, Zen and Hardened kernels and configu
 
 ### WiFi
 
-Keep the phone and computer on the same local network. Open **Connect with QR** in Nexora Studio and scan the code using the Android application.
+Keep the phone and computer on the same local network. Open **Connect with QR** in Nexora Studio and scan the code using the Android application. The Android app can also use **Connect by IP address** with the computer's IPv4 address and port (usually `6969`).
+
+If the QR shows an address from another network adapter, enter the computer's IPv4 address for the phone's network in the desktop QR window and choose **Update QR**. On Windows, `ipconfig` shows the IPv4 address for each adapter. If the connection still times out, check that the computer allows Nexora through its firewall on the local network and that the WiFi or hotspot does not isolate connected devices.
 
 ### USB
 
@@ -147,6 +149,8 @@ Choose the phone under **Video source**. In OBS, Discord, Zoom or another applic
 ## Compatibility note
 
 Always use the desktop client and Android APK from the same Nexora release. An older upstream bundle mixed incompatible protocol versions and could crash in `VCRUNTIME140.dll` while reading the phone model. Nexora includes a matching Android descriptor and a bounds checked Windows parser.
+
+Current source builds target Android 7.0 (API 24) and newer. Previously released v1.3.0 APKs require Android 9 (API 28); use an APK built from this source for Android 7 or 8.
 
 ## Building from source
 

@@ -3,5 +3,7 @@
     <string name="brand_tagline">Your phone. Your camera. Connected.</string>
     <string name="scan_title">Connect to Nexora Studio</string>
     <string name="scan_help">Open the QR code on your computer and place it inside the frame.</string>
-    <string name="connection_hint">USB is detected automatically · Wi-Fi uses QR</string>
+    <string name="connection_hint">USB is detected automatically · Wi-Fi uses QR or IP</string>
+    <string name="connect_by_ip">Connect by IP address</string>
+    <string name="ip_address_hint">Computer IP:port (for example 192.168.1.5:6969)</string>
 </resources>

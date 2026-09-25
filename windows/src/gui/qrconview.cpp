@@ -1,4 +1,5 @@
 #include "gui/qrconview.h"
+#include <asio.hpp>
 
 QrconView::QrconView(std::string name, std::string address, std::string port, wxSize displaySize) : wxDialog(nullptr, wxID_ANY, "Connect with QR code")
 {
@@ -14,8 +15,27 @@ QrconView::QrconView(std::string name, std::string address, std::string port, wx
 	wrapper->Add(new wxStaticText(this, wxID_ANY, "Scan the QR to connect automatically"), 0, wxALIGN_CENTER | wxTOP, FromDIP(30));
 	wrapper->Add(canvas, 0, wxALIGN_CENTER | wxALL, FromDIP(15));
 	wrapper->Add(new wxStaticText(this, wxID_ANY, wxString::FromUTF8(name)), 0, wxALIGN_CENTER | wxBOTTOM, FromDIP(2));
-	wrapper->Add(new wxStaticText(this, wxID_ANY, "Address: " + wxString::FromUTF8(address)), 0, wxALIGN_CENTER);
+	auto addressLabel = new wxStaticText(this, wxID_ANY, "Address: " + wxString::FromUTF8(address));
+	wrapper->Add(addressLabel, 0, wxALIGN_CENTER);
 	wrapper->Add(new wxStaticText(this, wxID_ANY, "Port: " + wxString::FromUTF8(port)), 0, wxALIGN_CENTER | wxBOTTOM, FromDIP(30));
+	wrapper->Add(new wxStaticText(this, wxID_ANY, "Wrong network? Enter this computer's IPv4 address:"), 0, wxALIGN_CENTER | wxBOTTOM, FromDIP(5));
+	auto addressInput = new wxTextCtrl(this, wxID_ANY, wxString::FromUTF8(address));
+	wrapper->Add(addressInput, 0, wxEXPAND | wxBOTTOM, FromDIP(8));
+	auto updateButton = new wxButton(this, wxID_ANY, "Update QR");
+	wrapper->Add(updateButton, 0, wxALIGN_CENTER | wxBOTTOM, FromDIP(20));
+	updateButton->Bind(wxEVT_BUTTON, [this, addressInput, addressLabel, canvas, port, displaySize](wxCommandEvent&) {
+		const auto updatedAddress = addressInput->GetValue().ToStdString();
+		asio::error_code error;
+		const auto ip = asio::ip::make_address_v4(updatedAddress, error);
+		if (error || ip.is_unspecified() || ip.is_loopback()) {
+			wxMessageBox("Enter a valid IPv4 address for this computer's local network.", "Invalid address", wxOK | wxICON_WARNING, this);
+			return;
+		}
+		const auto updatedImage = GenerateImageFromQR(GenerateQRCode(updatedAddress + ":" + port));
+		canvas->SetBitmap(wxBitmap(updatedImage.Scale(displaySize.GetWidth(), displaySize.GetHeight())));
+		addressLabel->SetLabel("Address: " + wxString::FromUTF8(updatedAddress));
+		Layout();
+	});
 
 	sizer->Add(wrapper, 1, wxALIGN_CENTER | wxLEFT | wxRIGHT, FromDIP(50));
 

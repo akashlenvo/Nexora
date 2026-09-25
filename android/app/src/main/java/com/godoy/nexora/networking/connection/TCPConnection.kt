@@ -5,6 +5,7 @@ import com.godoy.nexora.util.Logger
 import java.io.InputStream
 import java.io.OutputStream
 import java.net.Socket
+import java.net.InetSocketAddress
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -34,7 +35,14 @@ class TCPConnection(
 
     init {
         try {
-            socket = Socket(ipAddress, port)
+            socket = Socket().apply {
+                try {
+                    connect(InetSocketAddress(ipAddress, port), 8000)
+                } catch (e: Exception) {
+                    close()
+                    throw e
+                }
+            }
 
             outputStream = socket.getOutputStream()
             inputStream = socket.getInputStream()

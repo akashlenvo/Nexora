@@ -1,28 +1,21 @@
 package com.godoy.nexora
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.hardware.camera2.CaptureRequest
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import android.util.Size
-import android.view.View
-import android.view.WindowManager
+import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
-import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.godoy.nexora.databinding.ActivityMainBinding
@@ -30,7 +23,6 @@ import com.godoy.nexora.networking.ConnectionManager
 import com.godoy.nexora.util.Logger
 import com.godoy.nexora.video.Camera
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import java.security.Permission
 
 class MainActivity : AppCompatActivity(), ConnectionManager.ConnectionStateCallback {
 
@@ -39,10 +31,6 @@ class MainActivity : AppCompatActivity(), ConnectionManager.ConnectionStateCallb
     private val qrscanner = QRScanner()
     private var connectionManager = ConnectionManager.getInstance(this)
     private var camera: Camera? = null
-
-    private var isConnecting = false
-
-    private val TAG = "Nexora"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,6 +41,7 @@ class MainActivity : AppCompatActivity(), ConnectionManager.ConnectionStateCallb
             val intent = Intent(this, LogActivity::class.java)
             startActivity(intent)
         }
+        viewBinding.manualConnectButton.setOnClickListener { showManualConnectDialog() }
 
         enableEdgeToEdge()
         initialize()
@@ -96,24 +85,23 @@ class MainActivity : AppCompatActivity(), ConnectionManager.ConnectionStateCallb
     }
 
     override fun onConnectionSuccessful(connectionMode: ConnectionManager.Mode) {
-        qrscanner.stop()
-        Logger.log("MAIN", "Connection successful $connectionMode")
-
-        val intent = Intent(this, StreamActivity::class.java)
-        startActivity(intent)
+        runOnUiThread {
+            qrscanner.stop()
+            Logger.log("MAIN", "Connection successful $connectionMode")
+            startActivity(Intent(this, StreamActivity::class.java))
+        }
     }
 
     override fun onConnectionFailed(connectionMode: ConnectionManager.Mode) {
         runOnUiThread {
-            if (connectionMode == ConnectionManager.Mode.USB && hasWifiConnection()) {
+            if (connectionMode == ConnectionManager.Mode.USB) {
                 // If usb connection failed try again over wifi
                 connectWIFI()
-                Toast.makeText(this, "Connection failed. Try in WiFi mode or restart app", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "USB connection failed. Scan the QR or enter the computer IP.", Toast.LENGTH_LONG).show()
             } else {
-                isConnecting = false
-                qrscanner.stop()
+                qrscanner.start()
                 Logger.log("MAIN", "Error: Cannot connect!")
-                Toast.makeText(this, "Connection failed. Restart app to retry connecting again", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Connection failed. Check the computer IP and port, then try again.", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -148,7 +136,7 @@ class MainActivity : AppCompatActivity(), ConnectionManager.ConnectionStateCallb
             // Prioritize the usb connection through adb
             if (hasUsbConnection()) {
                 connectUSB()
-            } else if (hasWifiConnection()) {
+            } else {
                 connectWIFI()
             }
         }
@@ -160,20 +148,15 @@ class MainActivity : AppCompatActivity(), ConnectionManager.ConnectionStateCallb
         // only if start() was called before
         qrscanner.launchScanTask(imageProxy) { result ->
             runOnUiThread {
-                if(result != null) {
-                    qrscanner.stop()
-                    MaterialAlertDialogBuilder(this)
-                        .setTitle("Connect via WiFi")
-                        .setMessage("Connect to ${result.address}:${result.port}?")
-                        .setPositiveButton("Connect") { _, _ ->
-                            connectionManager.connect(result.address, result.port)
-                        }
-                        .setNegativeButton("Cancel") { _, _ -> qrscanner.start() }
-                        .show()
-                } else {
-                    Logger.log("MAIN", "Invalid QR code")
-                    Toast.makeText(this, "Invalid QR code", Toast.LENGTH_SHORT).show()
-                }
+                qrscanner.stop()
+                MaterialAlertDialogBuilder(this)
+                    .setTitle("Connect via WiFi")
+                    .setMessage("Connect to ${result.address}:${result.port}?")
+                    .setPositiveButton("Connect") { _, _ ->
+                        connectionManager.connect(result.address, result.port)
+                    }
+                    .setNegativeButton("Cancel") { _, _ -> qrscanner.start() }
+                    .show()
             }
         }
     }
@@ -186,11 +169,31 @@ class MainActivity : AppCompatActivity(), ConnectionManager.ConnectionStateCallb
         return intent?.getBooleanExtra("connected", false) == true
     }
 
-    private fun hasWifiConnection(): Boolean {
-        val connectivityManager = applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val network = connectivityManager.activeNetwork ?: return false
-        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-        return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+    private fun showManualConnectDialog() {
+        qrscanner.stop()
+        val input = EditText(this).apply {
+            hint = getString(R.string.ip_address_hint)
+            setSingleLine(true)
+        }
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.connect_by_ip)
+            .setView(input)
+            .setPositiveButton("Connect", null)
+            .setNegativeButton("Cancel") { _, _ -> qrscanner.start() }
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val endpoint = QRScanner.parseEndpoint(input.text.toString())
+                if (endpoint == null) {
+                    input.error = "Enter a valid IPv4 address and port (1–65535)"
+                } else {
+                    dialog.dismiss()
+                    connectionManager.connect(endpoint.address, endpoint.port)
+                }
+            }
+        }
+        dialog.setOnCancelListener { qrscanner.start() }
+        dialog.show()
     }
 
     private fun connectUSB() {
