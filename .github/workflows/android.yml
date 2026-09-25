@@ -32,7 +32,7 @@ jobs:
 
       - name: Build release APK
         working-directory: android
-        run: ./gradlew --no-daemon assembleRelease
+        run: ./gradlew --no-daemon testReleaseUnitTest assembleRelease
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

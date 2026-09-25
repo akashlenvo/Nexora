@@ -16,12 +16,22 @@ class QRScanner() {
         var port: Int
     )
 
-    private var options: BarcodeScannerOptions
-    private var scanner: BarcodeScanner
+    private val options: BarcodeScannerOptions
+    private val scanner: BarcodeScanner
 
-    private var addressRegex = Regex("""\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b""")
+    companion object {
+        private val addressRegex = Regex("""((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)""")
 
-    private var enabled = false
+        fun parseEndpoint(value: String): Result? {
+            val parts = value.trim().split(":")
+            if (parts.size != 2 || !parts[0].matches(addressRegex)) return null
+            val port = parts[1].toIntOrNull() ?: return null
+            if (port !in 1..65535) return null
+            return Result(parts[0], port)
+        }
+    }
+
+    @Volatile private var enabled = false
 
     init {
         options = BarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build()
@@ -37,7 +47,7 @@ class QRScanner() {
     }
 
     @OptIn(ExperimentalGetImage::class)
-    fun launchScanTask(imageProxy: ImageProxy, callback: (QRScanner.Result?) -> Unit) {
+    fun launchScanTask(imageProxy: ImageProxy, callback: (Result) -> Unit) {
         if(!enabled) {
             imageProxy.close()
             return
@@ -46,31 +56,26 @@ class QRScanner() {
         val mediaImage = imageProxy.image
         if(mediaImage != null) {
             val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
-            val result = scanner.process(image)
+            scanner.process(image)
                 .addOnSuccessListener { barcodes ->
                     for (barcode in barcodes) {
+                        if (!enabled) break
+                        val endpoint = parseEndpoint(barcode.rawValue ?: "") ?: continue
                         // Stop the scanner. Further attempts at connecting should be
                         // manually triggered otherwise multiple connection might be established
                         // (for each frame of the camera)
                         stop()
-                        callback(parseResult(barcode.rawValue ?: ""))
+                        callback(endpoint)
+                        break
                     }
                     imageProxy.close()
                 }
                 .addOnFailureListener {
                     imageProxy.close()
                 }
+        } else {
+            imageProxy.close()
         }
     }
 
-    private fun parseResult(value: String): Result? {
-        val splits = value.split(":")
-        if(splits.size != 2) {
-            return null
-        }
-        if(splits[0].matches(addressRegex)) {
-            return Result(splits[0], splits[1].toInt())
-        }
-        return null
-    }
 }
